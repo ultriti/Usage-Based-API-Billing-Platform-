@@ -18,10 +18,7 @@ router.get("/userDetail", isAunthenticate, getUserDetail);
 router.put("/userUpdate", isAunthenticate, updateUserDetail);
 router.get("/promoteUser/:userId", isAunthenticate, promoteUser); // promote existing user
 // router.get("/codegen",isAunthenticate, codeGen)
-router.get("/codegen",isAunthenticate, codeGen)
-
-
-
+router.get("/codegen",isAunthenticate, codeGen);
 
 
 module.exports = router;    

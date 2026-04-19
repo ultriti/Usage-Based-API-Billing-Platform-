@@ -249,4 +249,22 @@ Find the models here:
 
 ---
 
+## Applied changes (2026-04-19)
+
+The `user.model.js` file was updated to align with the documentation and security recommendations. Key changes:
+
+- Passwords are now hashed on save using `bcryptjs` and the `password` field is omitted from queries by default (`select: false`).
+- Added an instance method `comparePassword(candidate)` to verify plaintext passwords against the stored hash.
+- Added a `toJSON` transform to sanitize API responses (maps `_id` to `id`, removes `password`, removes `verificationCode`, removes `__v`).
+- Fixed the `api.url` schema property (`required: true` instead of the previous typo `require: true`).
+- Added unique indexes for `email` and `username`.
+
+Controller/developer notes:
+
+- When verifying passwords (login, account deletion), queries should request the password explicitly: `User.findOne({ email }).select('+password')` and then use `user.comparePassword(password)`.
+- Do not return verification codes or raw secrets in API responses. The model's `toJSON` removes verification codes by default.
+- Install the runtime dependency: `npm install bcryptjs`.
+
+---
+
 End of document.

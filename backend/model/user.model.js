@@ -1,4 +1,22 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+/**
+ * User model
+ *
+ * Modifications (2026-04-19):
+ * - Hash passwords on save using bcryptjs.
+ * - Default `password` to `select: false` so it's not returned by queries.
+ * - Added `comparePassword()` instance method.
+ * - Added `toJSON` transform to sanitize output: map `_id` -> `id`, remove `password` and `verificationCode`, drop `__v`.
+ * - Fixed `api.url` property to use `required: true`.
+ * - Added unique indexes for `email` and `username`.
+ *
+ * Notes for controllers:
+ * - When verifying password (login/delete), query with `.select('+password')` and use `user.comparePassword(candidate)`.
+ * - Do not return verification codes in API responses.
+ * - Install dependency: `npm install bcryptjs`
+ */
 
 const userSchema = new mongoose.Schema({
     username: {
@@ -14,7 +32,7 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        select : true
+        select: false
     },
     profilePicture:{
         url:{
@@ -46,7 +64,7 @@ const userSchema = new mongoose.Schema({
             url : {
                 type:String,
                 default:"",
-                require : true
+                required : true
             },
             purchased : {
                 type:Boolean,
@@ -89,6 +107,40 @@ const userSchema = new mongoose.Schema({
 
 
 }, { timestamps: true });
+
+// Hash password before save if modified
+userSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        return next();
+    } catch (err) {
+        return next(err);
+    }
+});
+
+// Instance method to compare password
+userSchema.methods.comparePassword = async function(candidatePassword) {
+    return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Sanitize output when converting to JSON
+userSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: (doc, ret) => {
+        ret.id = ret._id;
+        delete ret._id;
+        delete ret.password;
+        if (ret.verificationCode) delete ret.verificationCode;
+        return ret;
+    }
+});
+
+// Indexes
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ username: 1 }, { unique: true });
 
 const userModel = mongoose.model('User', userSchema);
 module.exports = userModel;
