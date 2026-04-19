@@ -1,5 +1,5 @@
-# User API Reference
-
+# ---> User API Reference
+---
 This document describes the user-related HTTP endpoints implemented in the backend and how to call them: request/response shapes, authentication behavior, example requests, and recommended production changes.
 
 Source code: [backend/router/user.router.js](backend/router/user.router.js) and [backend/controller/user.controller.js](backend/controller/user.controller.js)
@@ -266,4 +266,198 @@ Sanitized API response recommendation: exclude `password` and any raw verificati
 ---
 
 If you want, I can implement these fixes (hash passwords, remove verification codes from responses, correct `promoteUser`, add input validation, and adjust status codes). Tell me which items to prioritize and I will update the code and tests.
+
+---
+
+---
+# ---> Provider API Reference
+---
+
+This document describes the provider-related HTTP endpoints implemented in the backend and how to call them: request/response shapes, authentication behavior, example requests, and recommended production changes.
+
+Source code: [backend/router/provider.route.js](backend/router/provider.route.js) and [backend/controller/provider.controller.js](backend/controller/provider.controller.js)
+
+## Authentication
+
+- The app issues a JWT in an HTTP-only cookie named `apiProviderToken` on successful register/login. Cookie properties set in code: `httpOnly: true`, `sameSite: 'none'`, `secure: true`, expires ~30 days.
+- Protected endpoints use the `isProviderAuthenticate` middleware. The middleware is expected to validate the cookie/JWT and populate `req.id` with the authenticated provider's id.
+
+Note: the current implementation contains several insecure patterns (returning verification codes). See the Recommendations section for remediation steps.
+
+---
+
+## Conventions
+
+- Requests: `Content-Type: application/json` for JSON bodies.
+- Responses: success responses include `message` and `success: true`. Error responses include `message` and `success: false` and may include `error` for diagnostics.
+- Use consistent HTTP status codes: `200` for OK, `201` for creation, `400` for bad request, `401/403` for auth issues, `404` for not found, `500` for server error.
+
+---
+
+## Routes (summary)
+
+- POST `/providerRegister` — register a new provider (public)
+- POST `/providerLogin` — authenticate and set session cookie (public)
+- GET `/providerLogout` — clear session cookie (public)
+- GET `/providerDetail` — get authenticated provider details (protected)
+- PUT `/providerUpdate` — update authenticated provider profile (protected)
+- GET `/providerCodegen` — generate verification code (protected)
+- DELETE `/providerDelete` — delete authenticated provider after verification (protected)
+
+Detailed descriptions follow.
+
+---
+
+### POST /providerRegister
+
+- Purpose: create a provider and set an auth cookie. If a user with the same email exists and is verified, promote to provider.
+- Public: no authentication required.
+
+Request body (JSON): `username`, `email`, `password` (required). Username optional if user exists.
+
+Example request:
+
+```json
+{
+  "username": "bob",
+  "email": "bob@example.com",
+  "password": "P@ssw0rd!"
+}
+```
+
+Successful response (implemented): `201 Created` with the created provider.
+
+Errors: `400` for missing fields or existing provider, `500` for server errors.
+
+---
+
+### POST /providerLogin
+
+- Purpose: authenticate a provider, set `apiProviderToken` cookie and return provider details.
+- Public: no authentication required.
+
+Request body: `{ "email": string, "password": string }`.
+
+Notes: uses `comparePassword` method; passwords are hashed.
+
+---
+
+### GET /providerLogout
+
+- Purpose: clear the `apiProviderToken` cookie and end session.
+
+Successful response: `200 OK` with a logout confirmation.
+
+---
+
+### GET /providerDetail
+
+- Purpose: return the authenticated provider's profile.
+- Protected: `isProviderAuthenticate` required (must set `req.id`).
+
+Successful response: `201 OK` (should be `200`).
+
+---
+
+### PUT /providerUpdate
+
+- Purpose: update profile fields for the authenticated provider.
+- Request body may include `username`, `profileUrl`, `ProfileImgId` (only provided fields are updated).
+
+Successful response: `200 OK` with updated `providerDetail`.
+
+---
+
+### GET /providerCodegen — Verification code generation
+
+- Path: `/providerCodegen`
+- Auth: protected — requires `isProviderAuthenticate` and a valid session cookie.
+
+Behavior (current implementation):
+
+- The controller generates a 6-digit numeric code using `crypto.randomInt(100000, 999999)`, saves that value to `provider.verificationCode.email`, and currently returns the code in the JSON response (for debugging).
+
+Recommended production behavior: same as user, send via email.
+
+---
+
+### DELETE /providerDelete
+
+- Path: `/providerDelete` (protected). Purpose: permanently delete the authenticated provider's account after verification.
+- Accepted verification methods (as implemented): `password` or `emailCode` (from `/providerCodegen`).
+
+Implementation notes:
+
+- If neither `password` nor `emailCode` is provided the controller returns `201` with an error message — this should be `400 Bad Request`.
+- The controller compares plaintext `password` to stored `provider.password` — this is insecure. Use hashed password verification.
+- When `emailCode` verification is used, clear the code and proceed to deletion; in production prefer a soft-delete pattern or retention policy.
+
+---
+
+## Email verification flow (recommended)
+
+Same as user.
+
+---
+
+## Model notes
+
+- `profilePicture`: `{ url: String, imageId: String }`
+- `verificationCode`: `{ email: Number|null, phone: Number|null }` — store codes and expiry metadata.
+- `membership`: Boolean — indicates provider status.
+- `subscriptionPlan`: enum ['free', 'pro', 'enterprise']
+- `apiCreated`: array of { apiId: ObjectId, purchased: Boolean }
+- `activityLogs`: array of { action: String, timestamp: Date }
+
+---
+
+## Implementation issues & recommended fixes
+
+1. Remove verification codes from API responses; send them by email and store a hashed code + expiry.
+2. Standardize HTTP status codes across controllers (use `200`/`201`/`400`/`401`/`403`/`404`/`500`).
+3. Add request validation (Joi, express-validator) and more precise error messages.
+4. Consider a soft-delete strategy for `DELETE /providerDelete` and require re-authentication for destructive actions.
+
+---
+
+## Provider schema updates (from `provider.model.js`)
+
+Current fields of interest:
+
+- `profilePicture` (object) — `{ url: String, imageId: String }` — stores a public URL and external image id.
+- `verificationCode` (object) — `{ email: Number|null, phone: Number|null }` — stores one-time numeric codes for verification workflows.
+- `verificationCodeExpires` (object) — `{ email: Date|null, phone: Date|null }` — expiry timestamps.
+- `membership` (Boolean) — flags provider membership status.
+- `subscriptionPlan` (String) — enum ['free', 'pro', 'enterprise']
+- `apiCreated` (array) — array of `{ apiId: ObjectId, purchased: Boolean }` references.
+- `activityLogs` (array) — array of `{ action: String, timestamp: Date }`
+- `role` enum includes `'provider'` as default.
+
+Stored document example (partial):
+
+```json
+{
+  "_id": "645b1f...",
+  "username": "bob",
+  "email": "bob@example.com",
+  "profilePicture": { "url": "", "imageId": "" },
+  "verificationCode": { "email": 123456, "phone": null },
+  "membership": false,
+  "role": "provider"
+}
+```
+
+Sanitized API response recommendation: exclude `password` and any raw verification codes. Use `toJSON` transforms to map `_id` to `id`, drop `__v`, and remove secrets.
+
+---
+
+## Implementation issues observed (action items)
+
+1. `providerCodegen` currently returns the verification code in the response — send codes via email/SMS and never echo them to API clients.
+2. `providerDelete` compares plaintext passwords. Use hashed password verification.
+3. Status codes are inconsistent (many 201 responses for non-creation actions). Standardize to `200`/`204`/`400`/`401`/`403`/`404`/`500` as appropriate.
+
+---
+
+If you want, I can implement these fixes (remove verification codes from responses, add validation, and update status codes). Tell me which items to prioritize and I will update the code and tests.
 

@@ -5,6 +5,7 @@ const connectDB = require("./config/DB");
 const cookieParser = require("cookie-parser");
 
 const user = require("./router/user.router")
+const provider = require("./router/provider.route")
 
 
 dotenv.config();
@@ -29,7 +30,8 @@ app.post('/data', (req, res) => {
 });
 
 
-app.use("/api/user", user)
+app.use("/api/user", user);
+app.use("/api/provider", provider);
 
 
 app.listen(PORT, () => {
