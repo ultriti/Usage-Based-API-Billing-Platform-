@@ -16,6 +16,16 @@ const userSchema = new mongoose.Schema({
         required: true,
         select : true
     },
+    profilePicture:{
+        url:{
+            type:String,
+            default:""
+        },
+        imageId:{
+            type:String,
+            default:""
+        }
+    },
     isVerified: {
         email: {
             type: Boolean,
@@ -28,7 +38,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['consumer', 'admin', "provider"],
+        enum: ['user', 'admin', "provider"],
         default: 'user'
     },
     api : [
@@ -65,7 +75,18 @@ const userSchema = new mongoose.Schema({
     membership:{
         type:Boolean,
         default:false
+    },
+    verificationCode: {
+        email: {
+            type: Number,
+            default: null
+        },
+        phone: {
+            type: Number,
+            default: null
+        }
     }
+
 
 }, { timestamps: true });
 
