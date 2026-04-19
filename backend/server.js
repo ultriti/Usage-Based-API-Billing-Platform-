@@ -1,12 +1,16 @@
 const express = require('express');
 const cors = require("cors");
 const dotenv = require("dotenv");
+const connectDB = require("./config/DB");
+
+
 
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+connectDB();
 
 
 app.use(express.json());
@@ -20,6 +24,8 @@ app.post('/data', (req, res) => {
   const body = req.body;
   res.json({ message: 'Data received', data: body });
 });
+
+
 
 
 app.listen(PORT, () => {
