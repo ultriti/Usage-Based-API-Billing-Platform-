@@ -13,7 +13,8 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        select : true
     },
     isVerified: {
         email: {
@@ -61,5 +62,12 @@ const userSchema = new mongoose.Schema({
             }
         }
     ],
+    membership:{
+        type:Boolean,
+        default:false
+    }
 
 }, { timestamps: true });
+
+const userModel = mongoose.model('User', userSchema);
+module.exports = userModel;

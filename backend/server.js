@@ -2,8 +2,9 @@ const express = require('express');
 const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/DB");
+const cookieParser = require("cookie-parser");
 
-
+const user = require("./router/user.router")
 
 
 dotenv.config();
@@ -13,8 +14,10 @@ const PORT = process.env.PORT || 3000;
 connectDB();
 
 
+
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser());
 
 app.get('/', (req, res) => {
   res.send('Hello from Express!');
@@ -26,6 +29,7 @@ app.post('/data', (req, res) => {
 });
 
 
+app.use("/api/user", user)
 
 
 app.listen(PORT, () => {
