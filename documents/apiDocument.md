@@ -1,46 +1,51 @@
 # User API Reference
 
-This document describes the user-related HTTP endpoints implemented in the backend and how to call them: request shape, required fields, success and error responses, authentication behavior, example requests and example JSON responses.
+This document describes the user-related HTTP endpoints implemented in the backend and how to call them: request/response shapes, authentication behavior, example requests, and recommended production changes.
 
 Source code: [backend/router/user.router.js](backend/router/user.router.js) and [backend/controller/user.controller.js](backend/controller/user.controller.js)
 
-## Authentication (how the API currently handles it)
+## Authentication
 
 - The app issues a JWT in an HTTP-only cookie named `apiProviderToken` on successful register/login. Cookie properties set in code: `httpOnly: true`, `sameSite: 'none'`, `secure: true`, expires ~30 days.
-- Endpoints that require authentication use the middleware named `isAunthenticate` (see router). The middleware is expected to read the cookie, verify the JWT and populate `req.id` with the authenticated user id.
+- Protected endpoints use the `isAunthenticate` middleware. The middleware is expected to validate the cookie/JWT and populate `req.id` with the authenticated user's id.
 
-Note: the code stores and compares passwords in plaintext — this is insecure. See "Recommendations" at the end for fixes.
-
----
-
-## Common request/response conventions
-
-- Content-Type: `application/json` for request bodies.
-- Successful responses typically include `message` and `success: true`. User objects are returned under `user` or `userDetail`. Error responses include `message`, `success: false` and sometimes `error`.
-- Recommendation: Use consistent HTTP status codes (200 for OK, 201 for created, 400 for client errors, 401/403 for auth issues, 404 for not found, 500 for server errors).
+Note: the current implementation contains several insecure patterns (plaintext password comparisons, returning verification codes). See the Recommendations section for remediation steps.
 
 ---
 
-## Endpoints
+## Conventions
+
+- Requests: `Content-Type: application/json` for JSON bodies.
+- Responses: success responses include `message` and `success: true`. Error responses include `message` and `success: false` and may include `error` for diagnostics.
+- Use consistent HTTP status codes: `200` for OK, `201` for creation, `400` for bad request, `401/403` for auth issues, `404` for not found, `500` for server error.
+
+---
+
+## Routes (summary)
+
+- POST `/userRegister` — register a new user (public)
+- POST `/userLogin` — authenticate and set session cookie (public)
+- GET  `/userLogout` — clear session cookie (public)
+- GET  `/userDetail` — get authenticated user details (protected)
+- PUT  `/userUpdate` — update authenticated user profile (protected)
+- GET  `/codegen` — generate verification code (protected)
+- GET  `/promoteUser/:userId` — (buggy) promote user to provider (protected)
+- DELETE `/userDelete` — delete authenticated user after verification (protected)
+
+Detailed descriptions follow.
+
+---
 
 ### POST /userRegister
 
-- Purpose: Register a new user and set a session JWT cookie.
-- Public: No authentication required.
+- Purpose: create a user and set an auth cookie.
+- Public: no authentication required.
 
-Request body (JSON):
-
-- `username` (string, required) — unique username.
-- `email` (string, required) — unique email address.
-- `password` (string, required) — plain password in current implementation (must be hashed in production).
-- `role` (string, optional) — ignored by controller; controller sets `role` to `consumer` on creation.
+Request body (JSON): `username`, `email`, `password` (required).
 
 Example request:
 
 ```json
-POST /userRegister
-Content-Type: application/json
-
 {
   "username": "alice",
   "email": "alice@example.com",
@@ -48,356 +53,152 @@ Content-Type: application/json
 }
 ```
 
-Successful response (implemented):
+Successful response (implemented): `201 Created` with the created user (the controller currently removes `password` before returning but verify schema transforms).
 
-HTTP 201 Created
-
-```json
-{
-  "message": "User registered successfully",
-  "success": true,
-  "user": {
-    "_id": "645b1f...",
-    "username": "alice",
-    "email": "alice@example.com",
-    "profilePicture": { "url": "", "imageId": "" },
-    "isVerified": { "email": false, "phone": false },
-    "role": "consumer",
-    "api": [],
-    "cart": [],
-    "wishlist": [],
-    "membership": false,
-    "createdAt": "2026-04-19T12:34:56.000Z",
-    "updatedAt": "2026-04-19T12:34:56.000Z"
-  }
-}
-```
-
-Behavior note: The controller sets a cookie `apiProviderToken` (JWT) in the response. The current controller returns the created user document directly — in production you must remove `password` before returning.
-
-Error responses:
-
-- HTTP 400 — missing fields:
-
-```json
-{ "message": "All fields are required", "success": false }
-```
-
-- HTTP 400 — user exists:
-
-```json
-{ "message": "User already exists", "success": false }
-```
-
-- HTTP 500 — internal server error (example):
-
-```json
-{ "message": "internal server error", "error": "<error message>", "success": false }
-```
+Errors: `400` for missing fields or existing user, `500` for server errors.
 
 ---
 
 ### POST /userLogin
 
-- Purpose: Authenticate a user, set JWT cookie and return the user.
-- Public: No authentication required.
+- Purpose: authenticate a user, set `apiProviderToken` cookie and return user details.
+- Public: no authentication required.
 
-Request body (JSON):
+Request body: `{ "email": string, "password": string }`.
 
-- `email` (string, required)
-- `password` (string, required)
-
-Example request:
-
-```json
-POST /userLogin
-Content-Type: application/json
-
-{
-  "email": "alice@example.com",
-  "password": "P@ssw0rd!"
-}
-```
-
-Successful response (implemented):
-
-HTTP 200 OK
-
-```json
-{
-  "message": "User logged in successfully",
-  "success": true,
-  "user": {
-    "_id": "645b1f...",
-    "username": "alice",
-    "email": "alice@example.com",
-    "role": "consumer",
-    "isVerified": { "email": false, "phone": false },
-    "createdAt": "2026-04-19T12:34:56.000Z"
-  }
-}
-```
-
-Behavior note: The controller compares `user.password` to provided `password` as plain text; this must be replaced with secure hashed password verification. A cookie `apiProviderToken` (JWT) is set on success.
-
-Error responses:
-
-- HTTP 400 — user not found:
-
-```json
-{ "message": "User not found", "success": false }
-```
-
-- HTTP 400 — invalid credentials:
-
-```json
-{ "message": "Invalid credentials", "success": false }
-```
+Notes: the controller currently uses a `comparePassword` method; ensure passwords are stored hashed and compared securely.
 
 ---
 
 ### GET /userLogout
 
-- Purpose: Clear the auth cookie and log the user out.
-- Public: No authentication required to call; it clears the cookie server-side.
+- Purpose: clear the `apiProviderToken` cookie and end session.
 
-Example request:
-
-```
-GET /userLogout
-```
-
-Successful response:
-
-HTTP 200 OK
-
-```json
-{ "msg": "Logged out successfully" }
-```
-
-Error response (implemented):
-
-HTTP 400
-
-```json
-{ "msg": "user cant logout " }
-```
+Successful response: `200 OK` with a logout confirmation.
 
 ---
 
 ### GET /userDetail
 
-- Purpose: Return details for the authenticated user.
-- Protected: Requires authentication via `isAunthenticate` middleware which must set `req.id`.
+- Purpose: return the authenticated user's profile.
+- Protected: `isAunthenticate` required (must set `req.id`).
 
-Request: no body. The middleware must provide `req.id`.
-
-Successful response (implemented):
-
-HTTP 201 (controller uses 201; recommended to return 200)
-
-```json
-{
-  "message": "user found",
-  "success": true,
-  "userDetail": {
-    "_id": "645b1f...",
-    "username": "alice",
-    "email": "alice@example.com",
-    "profilePicture": { "url": "", "imageId": "" },
-    "role": "consumer",
-    "isVerified": { "email": false, "phone": false }
-  }
-}
-```
-
-Error responses:
-
-- HTTP 404 — user not found:
-
-```json
-{ "messgae": "user not found! ", "success": false }
-```
-
-- HTTP 500 — internal server error.
+Successful response: `200 OK` (controller currently returns `201`).
 
 ---
 
 ### PUT /userUpdate
 
-- Purpose: Update authenticated user's profile fields.
-- Protected: Requires authentication.
+- Purpose: update profile fields for the authenticated user.
+- Request body may include `username`, `profileUrl`, `ProfileImgId` (only provided fields are updated).
 
-Request body (JSON) — all fields optional, only provided fields are updated:
-
-- `username` (string) — new username
-- `profileUrl` (string) — new `profilePicture.url`
-- `ProfileImgId` (string) — new `profilePicture.imageId`
-
-Example request:
-
-```json
-PUT /userUpdate
-Content-Type: application/json
-
-{
-  "username": "alice_w",
-  "profileUrl": "https://cdn.example.com/alice.jpg",
-  "ProfileImgId": "img-123456"
-}
-```
-
-Successful response (implemented):
-
-HTTP 200 OK
-
-```json
-{
-  "message": "user detail updated successfully",
-  "success": true,
-  "userDetail": {
-    "_id": "645b1f...",
-    "username": "alice_w",
-    "email": "alice@example.com",
-    "profilePicture": { "url": "https://cdn.example.com/alice.jpg", "imageId": "img-123456" }
-  }
-}
-```
-
-Error responses:
-
-- HTTP 404 — user not found:
-
-```json
-{ "messgae": "user not found! ", "success": false }
-```
-
-- HTTP 500 — internal server error.
+Successful response: `200 OK` with updated `userDetail`.
 
 ---
 
-## Example curl flows
+### GET /codegen — Verification code generation
 
-Register and store cookie (curl will save cookies into `cookies.txt`):
+- Path: `/codegen`
+- Auth: protected — requires `isAunthenticate` and a valid session cookie.
 
-```bash
-curl -c cookies.txt -H "Content-Type: application/json" -d '{"username":"alice","email":"alice@example.com","password":"P@ssw0rd!"}' http://localhost:3000/userRegister
-```
+Behavior (current implementation):
 
-Login and reuse cookie:
+- The controller generates a 6-digit numeric code using `crypto.randomInt(100000, 999999)`, saves that value to `user.verificationCode.email`, and currently returns the code in the JSON response (for debugging).
 
-```bash
-curl -c cookies.txt -b cookies.txt -H "Content-Type: application/json" -d '{"email":"alice@example.com","password":"P@ssw0rd!"}' http://localhost:3000/userLogin
+Recommended production behavior:
 
-curl -b cookies.txt http://localhost:3000/userDetail
-```
+1. Generate a time-limited verification code (store either a hashed code and expiry or the code with an expiry timestamp).
+2. Send the code to the user's email address using a transactional email provider (SendGrid, SES, Mailgun, SMTP via Nodemailer).
+3. Return an acknowledgement response `200 OK` or `202 Accepted` (do not include the code in the API response).
 
-Logout:
+Example safe flow (recommended):
 
-```bash
-curl -b cookies.txt http://localhost:3000/userLogout
-```
-
----
-
-## Recommendations & To-Do (important)
-
-- Hash and salt passwords (bcrypt or argon2). Never store or compare plaintext passwords.
-- Do not return the `password` field in API responses. Use schema transforms to remove it.
-- Normalize and validate `email` and `username` inputs (format, length, character set).
-- Standardize HTTP status codes (use 200 for OK, 201 for created, 401/403 for auth issues, etc.).
-- Use consistent endpoint naming (`/users`, `/auth/login`, `/auth/register`) and REST conventions.
-- Make the auth middleware robust: check cookie, verify token, set `req.id` and `req.user` and return 401 when invalid.
-- Add request body validation (Joi, express-validator) to produce clear client errors.
-
----
-
-If you want, I can implement the recommended fixes: hash passwords, remove password from responses, add validation, and add consistent status codes. Also I can convert these routes to more RESTful paths and add unit tests.
-
----
-
-## Additions from recent code changes (2026-04-19)
-
-The codebase was updated to add /modify several user routes in [backend/router/user.router.js](backend/router/user.router.js) and [backend/controller/user.controller.js]. The documentation below reflects the endpoints as implemented, notes known issues, and gives production recommendations.
-
-### GET /codegen
-
-- Path: `GET /codegen`
-- Auth: Protected — requires the `apiProviderToken` cookie and `isAunthenticate` middleware.
-- Purpose: Generate a 6-digit numeric verification code, persist it to the authenticated user's `verificationCode.email` field, and (currently) return the code in the response.
-
-Behavior (implemented):
-- The controller function uses `crypto.randomInt(100000, 999999)` to generate a numeric string, saves it as `userDetail.verificationCode.email`, and returns HTTP 201 with the code.
-
-Example request (curl):
-
-```bash
-curl -b cookies.txt http://localhost:3000/codegen
-```
-
-Example implemented response:
-
-HTTP 201
+1. Client calls `GET /codegen` (authenticated).
+2. Server generates code, sends email to `user.email`, stores hash + expiry on the user record, and returns:
 
 ```json
-{ "message": "code gen", "code": "123456" }
+{ "message": "Verification code sent to the registered email address", "success": true }
 ```
 
-Security note (recommended):
-- Do NOT return verification codes in API responses in production. Instead, send the code to the user's email or phone and return an acknowledgement (200/202). Store codes with an expiry and/or hashed form to avoid disclosure if the DB is leaked.
+If you currently rely on the controller's debug response, remove that before shipping.
+
+Sample email template (suggestion):
+
+```
+Subject: Your verification code
+
+Hi {username},
+
+Use the following code to verify your email: 123456
+
+This code expires in 15 minutes.
+
+If you did not request this, ignore this email.
+```
 
 ---
 
 ### GET /promoteUser/:userId
 
-- Path: `GET /promoteUser/:userId`
-- Auth: Protected — requires `isAunthenticate` and the auth cookie.
-- Purpose: Promote the authenticated user to a provider/seller membership.
+- Path currently implemented as `GET /promoteUser/:userId` (protected).
+- Intended purpose: promote the authenticated user to a provider/seller (membership flag or role change).
 
-Behavior (implemented):
-- The controller compares `req.params.userId` with `req.id` (the authenticated id); if they differ, it returns an error. If they match, it attempts to set the user's membership and save the document. The current implementation calls `userDetail.membership(true)` which is a bug — it should assign `userDetail.membership = true` (or update a `role` field).
+Implementation issues observed:
 
-Example request (curl):
-
-```bash
-curl -b cookies.txt http://localhost:3000/promoteUser/645b1f...
-```
-
-Example implemented response (current):
-
-HTTP 201
-
-```json
-{
-  "messgae": "you are promoted to provider/seller",
-  "success": true,
-  "userDetail": { /* user document */ }
-}
-```
-
-Recommendations:
-- Use `PUT` or `POST` rather than `GET` for state changes.
-- Fix the assignment to `userDetail.membership = true` and/or set `userDetail.role = 'provider'` depending on intended semantics.
-- Return `403 Forbidden` for unauthorized attempts (instead of 404), and `200/204` on successful update.
+- The controller compares `req.params.userId` to `req.id` and returns a 404 on mismatch (use `403 Forbidden` instead).
+- The code calls `userDetail.membership(true)` which is a bug — it should set `userDetail.membership = true` or update `role`.
+- Use a state-changing verb (`PUT` or `POST`) for this operation instead of `GET`.
 
 ---
 
 ### DELETE /userDelete
 
-- Path: `DELETE /userDelete`
-- Auth: Protected — requires `isAunthenticate`.
-- Purpose: Permanently delete the authenticated user's account after verifying ownership via password or a previously generated email verification code.
+- Path: `/userDelete` (protected). Purpose: permanently delete the authenticated user's account after verification.
+- Accepted verification methods (as implemented): `password` or `emailCode` (from `/codegen`).
 
-Request body (JSON): provide at least one of the following:
+Implementation notes:
 
-- `password` (string) — the user's password (in current implementation compared as plain text).
-- `emailCode` (string) — the 6-digit email verification code previously generated by `/codegen`.
+- If neither `password` nor `emailCode` is provided the controller returns `201` with an error message — this should be `400 Bad Request`.
+- The controller compares plaintext `password` to stored `user.password` — this is insecure. Use hashed password verification.
+- When `emailCode` verification is used, clear the code and proceed to deletion; in production prefer a soft-delete pattern or retention policy.
 
-Behavior (implemented):
-- If neither `password` nor `emailCode` is provided the controller returns HTTP 201 with a message to provide credentials (this should be 400 in production).
-- If `password` is provided the controller compares it directly to the stored `userDetail.password` (insecure if passwords are not hashed).
-- If `emailCode` is provided the controller checks `userDetail.verificationCode.email` and, on match, clears it and proceeds.
-- The current flow saves the user document (clearing code if used) then calls `userModel.findByIdAndDelete(id)` and returns HTTP 201 with success message.
+---
+
+## Email verification flow (recommended)
+
+1. User requests a verification code via `/codegen` (authenticated).
+2. Server generates a 6-digit code, stores a hashed version with an expiry (e.g., 15 minutes).
+3. Server sends the plaintext code to the user's email address via an email provider.
+4. Client submits the code to a verification endpoint (not currently implemented) or includes it where required (e.g., account deletion).
+
+Security considerations:
+
+- Never echo verification codes in API responses in production.
+- Store codes hashed where possible and associate an expiry timestamp.
+- Rate-limit requests to `/codegen` and verification endpoints to prevent abuse.
+
+---
+
+## Model notes
+
+- `profilePicture`: `{ url: String, imageId: String }`
+- `verificationCode`: `{ email: Number|null, phone: Number|null }` — store codes and expiry metadata.
+- `membership`: Boolean — indicates provider/seller status.
+
+---
+
+## Implementation issues & recommended fixes
+
+1. Hash passwords (bcrypt or argon2) and use secure compare helpers.
+2. Remove verification codes from API responses; send them by email and store a hashed code + expiry.
+3. Fix `promoteUser` to use assignment (`userDetail.membership = true`) and a safer HTTP verb (`PUT`/`POST`).
+4. Standardize HTTP status codes across controllers (use `200`/`201`/`400`/`401`/`403`/`404`/`500`).
+5. Add request validation (Joi, express-validator) and more precise error messages.
+6. Consider a soft-delete strategy for `DELETE /userDelete` and require re-authentication for destructive actions.
+
+---
+
+If you'd like, I can implement the recommended fixes (hash passwords, remove verification codes from responses, fix the `promoteUser` bug, add validation, and update status codes). Tell me which items to prioritize and I will update the code and tests.
 
 Example request:
 

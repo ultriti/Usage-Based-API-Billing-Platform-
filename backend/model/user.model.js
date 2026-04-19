@@ -1,22 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-/**
- * User model
- *
- * Modifications (2026-04-19):
- * - Hash passwords on save using bcryptjs.
- * - Default `password` to `select: false` so it's not returned by queries.
- * - Added `comparePassword()` instance method.
- * - Added `toJSON` transform to sanitize output: map `_id` -> `id`, remove `password` and `verificationCode`, drop `__v`.
- * - Fixed `api.url` property to use `required: true`.
- * - Added unique indexes for `email` and `username`.
- *
- * Notes for controllers:
- * - When verifying password (login/delete), query with `.select('+password')` and use `user.comparePassword(candidate)`.
- * - Do not return verification codes in API responses.
- * - Install dependency: `npm install bcryptjs`
- */
+
 
 const userSchema = new mongoose.Schema({
     username: {
@@ -34,14 +19,14 @@ const userSchema = new mongoose.Schema({
         required: true,
         select: false
     },
-    profilePicture:{
-        url:{
-            type:String,
-            default:""
+    profilePicture: {
+        url: {
+            type: String,
+            default: ""
         },
-        imageId:{
-            type:String,
-            default:""
+        imageId: {
+            type: String,
+            default: ""
         }
     },
     isVerified: {
@@ -59,40 +44,57 @@ const userSchema = new mongoose.Schema({
         enum: ['user', 'admin', "provider"],
         default: 'user'
     },
-    api : [
+    api: [
         {
-            url : {
-                type:String,
-                default:"",
-                required : true
+            apiId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "API"
             },
-            purchased : {
-                type:Boolean,
-                default:false
+            url: {
+                type: String,
+                default: "",
+                required: true
+            },
+            purchased: {
+                type: Boolean,
+                default: false
+            },
+            usage: {
+                type: Number,
+                default: 0
+            },
+            apiBill: {
+                type: Number,
+                default: 0
             }
         }
     ],
-    cart:[
+    cart: [
         {
-            apiId : {
+            apiId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Api', 
+                ref: 'Api',
                 required: true
             }
         }
     ],
-    wishlist:[
+    wishlist: [
         {
-            apiId : {
+            apiId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Api', 
+                ref: 'Api',
                 required: true
             }
         }
     ],
-    membership:{
-        type:Boolean,
-        default:false
+    subscriptionPlan: {
+        type: String,
+        enum: ['free', 'pro', 'enterprise'],
+        default: 'free'
+    },
+    subscriptionExpires: {
+        type: Date,
+        default: null
     },
     verificationCode: {
         email: {
@@ -103,44 +105,31 @@ const userSchema = new mongoose.Schema({
             type: Number,
             default: null
         }
-    }
-
+    },
+    verificationCodeExpires: {
+        email: {
+            type: Date,
+            default: null
+        },
+        phone: {
+            type: Date,
+            default: null
+        }
+    },
 
 }, { timestamps: true });
 
-// Hash password before save if modified
-userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        return next();
-    } catch (err) {
-        return next(err);
-    }
-});
 
-// Instance method to compare password
-userSchema.methods.comparePassword = async function(candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password);
-};
+userSchema.methods.hashPassword = async function (password) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    return hashedPassword;
+}
 
-// Sanitize output when converting to JSON
-userSchema.set('toJSON', {
-    virtuals: true,
-    versionKey: false,
-    transform: (doc, ret) => {
-        ret.id = ret._id;
-        delete ret._id;
-        delete ret.password;
-        if (ret.verificationCode) delete ret.verificationCode;
-        return ret;
-    }
-});
+userSchema.methods.comparePassword = async function (password, userpassword) {
+    console.log('String(password), String(userpassword)', String(password), String(userpassword));
+    return await bcrypt.compare(String(password), String(userpassword));
+}
 
-// Indexes
-userSchema.index({ email: 1 }, { unique: true });
-userSchema.index({ username: 1 }, { unique: true });
 
 const userModel = mongoose.model('User', userSchema);
 module.exports = userModel;

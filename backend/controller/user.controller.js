@@ -57,12 +57,17 @@ module.exports.userRegister = async (req, res) => {
             return res.status(400).json({ message: "User already exists", success: false });
         }
 
+        const hashedPassword = await userModel.prototype.hashPassword(password);
+
         const createdUser = await userModel.create({
             username,
             email,
-            password,
+            password: hashedPassword,
             role: "user"
         });
+
+        const userResponse = createdUser.toObject();
+        delete userResponse.password;
 
 
         // Generate token 
@@ -74,7 +79,7 @@ module.exports.userRegister = async (req, res) => {
             expires: new Date(Date.now() + 3600000 * 24 * 30)
         });
 
-        return res.status(201).json({ message: "User registered successfully", success: true, user: createdUser });
+        return res.status(201).json({ message: "User registered successfully", success: true, user: userResponse });
 
     } catch (error) {
         console.log("error :", error)
@@ -91,16 +96,18 @@ module.exports.userLogin = async (req, res) => {
 
     try {
 
-        const user = await userModel.findOne({ email })
+        const user = await userModel.findOne({ email }).select("+password");
         console.log("user :", user)
 
         if (!user) {
             return res.status(400).json({ message: "User not found", success: false });
         }
 
+        const isMatch = await user.comparePassword(password, user.password);
+
         console.log("user :", user.password, password)
 
-        if (user.password != password) {
+        if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials", success: false });
         }
 
