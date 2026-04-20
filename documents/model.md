@@ -206,4 +206,130 @@ Find the models here:
 
 ---
 
+## Recent model changes (2026-04-20)
+
+This section documents recent additions and modifications in the `user`, `provider`, and `api` models and explains how controllers should integrate with them.
+
+### User model updates
+
+- New/changed fields (in `api` subdocument):
+  - `apiId` (ObjectId, ref: `API`) — reference to the purchased API.
+  - `url` (String, required) — provider API base URL.
+  - `purchased` (Boolean) — purchase flag.
+  - `keyCode` (String) — consumer-facing key identifier (mask before showing in UI).
+  - `keyPassword` (String) — API secret/password (must be stored hashed).
+  - `usage` (Number) — per-API usage counter.
+  - `apiBill` (Number) — per-API billing amount (store in cents).
+
+- Subscription and verification fields:
+  - `subscriptionPlan`: enum `['free','pro','enterprise']`, default `'free'`.
+  - `subscriptionExpires`: Date | null.
+  - `verificationCode` and `verificationCodeExpires` for `email`/`phone` (short TTL recommended).
+
+- Helper methods added:
+  - `hashPassword(password)` — returns bcrypt hash.
+  - `comparePassword(candidate, hashed)` — bcrypt compare boolean.
+
+Developer guidance:
+
+- Password handling: the model exposes `hashPassword()` and `comparePassword()` helpers. Controllers must either:
+  - explicitly call `await user.hashPassword(password)` before creating/saving, or
+  - (preferred) add a `pre('save')` hook to the schema to always hash when `password` is modified.
+
+- API keys/secrets: Do NOT store or return raw `keyPassword`/`keyCode`. Hash secrets with bcrypt/HMAC and return only a masked preview (e.g., `****abcd`). Consider moving keys to a dedicated `api_keys` collection for easier rotation and indexing.
+
+Example (safe creation pattern):
+
+```js
+const hashed = await bcrypt.hash(password, 10);
+const user = await User.create({ username, email, password: hashed });
+
+const rawKey = generateApiKey();
+const hashedKey = await bcrypt.hash(rawKey, 10);
+user.api.push({ apiId, url, purchased: true, keyCode: maskKey(rawKey), keyPassword: hashedKey });
+await user.save();
+// deliver rawKey to consumer out-of-band once
+```
+
+### Provider model updates
+
+- New/changed fields:
+  - `apiCreated` — array of `{ apiId: ObjectId(ref: 'API'), purchased: Boolean }` indicating APIs the provider created.
+  - `membership` (Boolean), `subscriptionPlan`, `subscriptionExpires`.
+  - `verificationCode` / `verificationCodeExpires` fields.
+  - `activityLogs` — `{ action: String, timestamp: Date }[]` for audit trails.
+
+- Helper methods:
+  - `hashPassword(password)` and `comparePassword(candidate, hashed)` using bcrypt.
+
+Developer note: `provider.model.js` contains a duplicated `module.exports` in the current file. Keep a single export, for example:
+
+```js
+const Provider = mongoose.model('Provider', providerSchema);
+module.exports = Provider;
+```
+
+### API model updates
+
+- Ownership: model now uses `providerId: ObjectId(ref: 'Provider')` to associate APIs with providers.
+
+- `apiKeys` subdocument changed to include:
+  - `consumerId` (ObjectId, ref `User`) — optional consumer reference.
+  - `key` (String) — identifier; treat carefully (hash if secret).
+  - `apiPassword` (String) — secret/password for API key (must be hashed).
+  - `status`, `createdAt`.
+
+- New helper methods:
+  - `hashKeys(raw)` — returns bcrypt hash for keys or secrets.
+  - `compareKeys(raw, storedHash)` — validates incoming keys/secrets.
+
+- Usage logs: current schema uses array-wrapped fields (arrays for `timestamp`, `status`, `latency`) which results in parallel arrays and is error-prone. Recommended schema:
+
+```js
+usageLogs: [{ apiKey: String, endpoint: String, timestamp: Date, status: Number, latency: Number }]
+```
+
+Security & operational guidance (API keys):
+
+- Always hash API secrets (`apiPassword`) and consider hashing `key` if it is secret. Use `hashKeys()` when creating keys and `compareKeys()` for authentication.
+- Avoid `unique: true` inside nested arrays without creating an appropriate top-level index; prefer a separate `api_keys` collection with a unique index on `hashedKey`.
+- Do not return raw keys in API responses — return masked previews only.
+
+Example (create API key safely):
+
+```js
+const rawKey = generateApiKey();
+const rawSecret = generateSecret();
+const hashedKey = await api.hashKeys(rawKey);
+const hashedSecret = await api.hashKeys(rawSecret);
+apiDoc.apiKeys.push({ consumerId, key: hashedKey, apiPassword: hashedSecret });
+await apiDoc.save();
+// deliver rawKey/rawSecret to the consumer out-of-band once
+```
+
+### Controller integration checklist
+
+- Registration `/userRegister`: hash password before saving (or add `pre('save')` hook). Never return `password` or verification codes in responses.
+- Login `/userLogin`: query with `.select('+password')` and use `await user.comparePassword(password, user.password)`.
+- Delete `/userDelete`: require `.select('+password')` + `comparePassword` or validated `verificationCode` + expiry check; prefer soft-delete or retention policy.
+- Code generation `/codegen`: persist code with expiry (`verificationCodeExpires`) and send via email/SMS; return `202 Accepted` without the code in JSON.
+- API key verification: look up hashed key (or use a keys collection) and use `compareKeys()` to validate incoming key and secret.
+
+### Migration & testing notes
+
+- Migration tasks:
+  - Add `verificationCodeExpires` fields with `null` defaults for existing users/providers.
+  - Migrate any stored raw API keys to hashed values and rotate keys where necessary.
+
+- Tests to add:
+  - `hashPassword` / `comparePassword` unit tests.
+  - `hashKeys` / `compareKeys` unit tests.
+  - `codegen` TTL, delivery, and deletion flows.
+
+---
+
+If you'd like, I can implement the controller changes (hashing in registration, secure login/delete flows, codegen behavior), fix the provider model export, and prepare migration scripts. Tell me which item to prioritize and I will prepare the code patch and tests.
+
+---
+
 End of document.
