@@ -51,6 +51,11 @@ module.exports.createApi = async (req, res) => {
 
     try {
         const providerDetail = await providerModel.findById(provId);
+        const apiDetail = await apiModel.findOne({ baseUrl: baseUrl });
+
+        if (apiDetail) {
+            return res.status(400).json({ message: "api areldy exists with provide api", success: false })
+        }
 
         if (!providerDetail) {
             return res.status(400).json({ message: "provider already exists", success: false });
@@ -98,7 +103,22 @@ module.exports.setApiKey = async (req, res) => {
 
         const hashedApiPasswordCode = await apiModel.prototype.hashKeys(apiPasswordCode);
 
-        const existingApi = userDetail.api.find(item => item.apiId.equals(api._id));
+        console.log("api:--------------\n", api?._id)
+
+        // Assume providerApiId is the ObjectId or string you want to check
+        let existingApi = false;
+
+        if (userDetail?.api && Array.isArray(userDetail.api)) {
+            existingApi = userDetail.api.some(item =>
+                String(item.apiId) === String(providerApiId)
+            );
+        }
+
+        console.log("existingApi:", existingApi);
+
+
+
+        console.log("------------->", existingApi)
 
         if (existingApi) {
             return res.status(400).json({ message: "API already purchased!", success: false });
@@ -111,7 +131,6 @@ module.exports.setApiKey = async (req, res) => {
             status: 'active'
         });
 
-        await api.save();
 
 
 
@@ -119,11 +138,27 @@ module.exports.setApiKey = async (req, res) => {
             return res.status(400).json({ message: "User not found!", success: false });
         }
 
+        // const apiKeyEntry = userDetail.apiKeys.find(item => item.apiId.equals(api._id));
+
+
         userDetail.api.push({
             apiId: api._id,
             url: api.baseUrl,
-            purchased: false
+            purchased: false,
+            keyCode : apiKeyCode,
+            keyPassword : apiPasswordCode
+
         });
+
+
+
+        // if (apiKeyEntry) {
+        //     apiKeyEntry.keyCode = apiKeyCode;
+        //     apiKeyEntry.keyPassword = apiPasswordCode;
+        // }
+
+
+        await api.save();
 
         await userDetail.save();
 
@@ -255,16 +290,14 @@ module.exports.requestApiRoute = async (req, res) => {
 
         const providerUrl = `${api.baseUrl}${endpoint}`;
 
-        console.log("---------> url provider", providerUrl)
-
         const providerApiResponse = await axios.get(providerUrl, {
             params: req.query
         });
 
 
-        // user usage per request
+        // user usage per request ----------
         const userApi = userDetail.api.find(k => k.apiId.equals(api._id));
-        // api request per
+        // api request per -------------- 
         if (api) {
 
             const latency = Date.now() - startTime;
@@ -281,11 +314,11 @@ module.exports.requestApiRoute = async (req, res) => {
 
                 try {
 
-                    console.log("latency",latency);
+                    console.log("latency", latency);
 
-                    // --- InfluxDB write ---
+                    //  InfluxDB put -------
                     const point = new Point('api_usage')
-                        .tag('apiId', api._id.toString())       // link to Mongo API doc
+                        .tag('apiId', api._id.toString())
                         .tag('endpoint', providerUrl)
                         .intField('status_code', res.statusCode)
                         .floatField('latency_ms', Number(latency))
@@ -319,21 +352,92 @@ module.exports.requestApiRoute = async (req, res) => {
 
 
 
-
+            // api billing -----------------------> 
             if (typeof userApi.usage !== 'number') {
                 userApi.usage = 0;
             }
             userApi.usage += 1;
 
             if (userApi.usage > 500) {
+
                 if (userApi.purchased == true) {
-                    api.billing.amount += 0;
+                    // userApi.apiBill += 0;
+                    // api.billing.amount += 0;
                     api.billing.totalRequests += 1;
+                } else {
+
+                    console.log("userApi.usage % 100 === 0", userApi.usage % 100, 0)
+                    if (userApi.partialPayment == true) {
+
+                        // api.billing.amount += 1;
+                        api.billing.totalRequests += 1;
+                        userApi.apiBill += .2;
+
+
+                        if (userApi.usage % 100 === 99) {
+                            userApi.partialPayment = false;
+                        }
+
+                    } else {
+                        if (userApi.usage % 100 === 0) {
+                            return res.status(400).json({ messgae: "free limit has been crosed ! ", sucess: false })
+
+                        } else {
+
+                            if (userApi.partialPayment) {
+                                // api.billing.amount += 0
+                                api.billing.totalRequests += 1;
+                                userApi.apiBill += .2;
+
+                            }
+                        }
+                    }
+
                 }
-                api.billing.amount += 0.2
-                api.billing.totalRequests += 1;
             } else {
-                api.billing.totalRequests += 1;
+                // api.billing.totalRequests += 1;
+                // userApi.apiBill += 0.2;
+
+                if (userApi.partialPayment == true) {
+
+                    // api.billing.amount += 1;
+                    api.billing.totalRequests += 1;
+                    userApi.apiBill += 0.2;
+
+
+                    if (userApi.usage % 100 === 99) {
+                        userApi.partialPayment = false;
+                    }
+
+                } else {
+
+                    console.log("----------- else ", userApi.usage)
+
+                    if (userApi.usage % 100 === 0) {
+                        return res.status(400).json({ messgae: "free limit has been crosed ! ", sucess: false })
+
+                    } else {
+
+                        if (userApi.usage < 500) {
+                            api.billing.totalRequests += 1;
+                            userApi.apiBill = 20;
+
+                        } else {
+                            if (userApi.partialPayment) {
+                                // api.billing.amount += 0
+                                api.billing.totalRequests += 0;
+                                userApi.apiBill += 0.2;
+
+                            } else {
+                                api.billing.totalRequests += 1;
+                                userApi.apiBill += 0.2;
+                            }
+                        }
+
+
+                    }
+                }
+
             }
 
 
@@ -343,14 +447,6 @@ module.exports.requestApiRoute = async (req, res) => {
         } else {
             console.log("API not linked to user yet");
         }
-
-
-
-
-
-
-
-
 
         return res.status(201).json({ messgae: "got the response", data: providerApiResponse.data, success: true, status: providerApiResponse.status });
 
@@ -368,4 +464,108 @@ module.exports.requestApiRoute = async (req, res) => {
 
 
 // get 
+module.exports.getProviderStats = async (req, res) => {
 
+    const client = new InfluxDB({ url: 'http://localhost:8086', token: 'my-token' });
+    const queryApi = client.getQueryApi('MeterFlow');
+
+    const fluxQuery = `
+    from(bucket: "api_logs")
+      |> range(start: -1h)
+      |> filter(fn: (r) => r._measurement == "api_usage")
+  `;
+
+    // let results = [];
+    // let resultsTime = [];
+    let resultsLatency = [];
+    let resultsStatus = [];
+
+    queryApi.queryRows(fluxQuery, {
+        next(row, tableMeta) {
+            const o = tableMeta.toObject(row);
+            if (o._field === "latency_ms") {
+                resultsLatency.push({
+                    time: o._time,
+                    latency: o._value
+                });
+            } else if (o._field === "status_code") {
+                resultsStatus.push({
+                    time: o._time,
+                    status: o._value
+                });
+            }
+
+
+        },
+        error(err) {
+            console.error(err);
+            res.status(500).send({ error: err.message });
+        },
+        complete() {
+            console.log('Query finished');
+            console.log('resultsStatus, resultsLatency : ', resultsStatus, resultsLatency);
+
+            res.json({ resultsStatus, resultsLatency });
+        },
+    });
+}
+
+
+// pay api proider
+module.exports.apiPartialPayment = async (req, res) => {
+
+    const consumerId = req.id;
+
+    const { apiId } = req.body;
+
+
+    if (!consumerId || !apiId) {
+        return res.status(401).json({ message: "Api or user not found ! ", success: false, error: 'error fetching he user detail' });
+    }
+
+    try {
+
+
+        const api = await apiModel.findById(apiId);
+        const userDetail = await userModel.findById(consumerId);
+        const userApi = userDetail.api.find(k => k.apiId.equals(api._id));
+
+        if (userApi.partialPayment) {
+            return res.status(400).json({ message: "payment alredy done ( 20)", success: false })
+        }
+
+
+
+
+        if (userApi.usage % 100 === 99) {
+
+            api.billing.amount += userApi.apiBill;
+            userApi.partialPayment = true;
+
+
+        }
+
+        userApi.apiBill = 0;
+
+        await api.save()
+        await userDetail.save()
+
+
+
+
+
+        return res.status(201).json({ message: "payment done sucessfully", success: true })
+
+
+    } catch (error) {
+
+        console.log("error :", error)
+        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
+
+    }
+
+
+
+
+
+} 

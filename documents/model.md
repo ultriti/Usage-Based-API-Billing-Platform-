@@ -193,7 +193,7 @@ Recommendations:
 
 ---
 
-If you want, I can:
+If you'd like, I can:
 
 - Fix the `provider.model.js` duplicate export and open a PR.
 - Update `deleteUser` and `promoteUser` controllers to use `comparePassword()` and correct update semantics.
@@ -206,11 +206,177 @@ Find the models here:
 
 ---
 
-## Recent model changes (2026-04-20)
+## Recent Modified Code & Endpoint Examples (2026-04-21)
 
-This section documents recent additions and modifications in the `user`, `provider`, and `api` models and explains how controllers should integrate with them.
+This section concisely documents the actual code changes applied to models and controllers and shows concrete request/response examples (success and error status codes) for the endpoints that directly interact with these models.
 
-### User model updates
+### Model method examples (current code)
+- `userSchema.methods.hashPassword(password)` — bcrypt hash helper. Example use (controller):
+
+```js
+const hashed = await user.hashPassword(rawPassword);
+user.password = hashed;
+await user.save();
+```
+
+- `userSchema.methods.comparePassword(candidate, stored)` — bcrypt compare. Example (login):
+
+```js
+const user = await User.findOne({ email }).select('+password');
+if (!user) return res.status(400).json({ message: 'User not found', success: false });
+const ok = await user.comparePassword(password, user.password);
+if (!ok) return res.status(400).json({ message: 'Invalid credentials', success: false });
+// success -> issue cookie
+```
+
+### Endpoint: POST /api/user/userRegister
+- Purpose: create user and set auth cookie
+- Request: `Content-Type: application/json`
+
+Request body example:
+```json
+{ "username":"alice","email":"alice@example.com","password":"P@ssw0rd!" }
+```
+- Success (201 Created):
+
+```json
+{ "message":"User registered successfully","success":true,"user":{ "_id":"...","username":"alice","email":"alice@example.com" } }
+```
+- Error (400 Bad Request): missing fields or user exists
+
+```json
+{ "message":"All fields are required","success":false }
+```
+
+Implementation note: controller must call `await user.hashPassword(password)` and save; `password` field must not be returned.
+
+### Endpoint: POST /api/user/userLogin
+- Purpose: authenticate user
+- Request example:
+
+```json
+{ "email":"alice@example.com","password":"P@ssw0rd!" }
+```
+- Success (200 OK): sets `apiProviderToken` cookie and returns sanitized user
+
+```json
+{ "message":"User logged in successfully","success":true,"user":{ "_id":"...","email":"alice@example.com" } }
+```
+- Error (400 Bad Request): invalid credentials or not found
+
+```json
+{ "message":"Invalid credentials","success":false }
+```
+
+### Endpoint: DELETE /api/user/userDelete
+- Purpose: delete authenticated user (requires verification)
+- Request body: provide either `password` or `emailCode`.
+
+Request example (password):
+```json
+{ "password": "P@ssw0rd!" }
+```
+- Behavior (implementation):
+  - `const user = await User.findById(req.id).select('+password')`
+  - If password provided -> `await user.comparePassword(password, user.password)`
+  - If emailCode provided -> compare hashed code and check expiry
+  - On success: prefer soft-delete (set `isDeleted=true`, `deletedAt=Date.now()`)
+
+- Success (204 No Content) — recommended; current code returns 201 in places.
+- Errors:
+  - 400: missing credentials
+  - 400: invalid credentials / invalid code
+
+Example error payload:
+```json
+{ "message":"invalid credentials","success":false }
+```
+
+### Endpoint: GET /api/provider/providerCodegen (current behavior)
+- Purpose: generate a 6-digit code and store `provider.verificationCode.email` (currently returned in response for debugging)
+- Success (201 Created) current (temporary):
+
+```json
+{ "message":"code gen","code":"654321" }
+```
+- Recommended (production):
+
+Response (200 OK):
+```json
+{ "message":"Verification code sent to your registered email","success":true }
+```
+
+Security: store only hashed code + expiry in provider record. Do not return plaintext code.
+
+### Endpoint: POST /api/apiGen/setApi/:consumerId (current implementation)
+- Purpose: generate one-time `apiKey` and `apiPassword` for a consumer and attach to `api.apiKeys` and `user.api`.
+- Request body:
+
+```json
+{ "providerApiId": "645c3f..." }
+```
+- Success (201 Created): returns credentials once:
+
+```json
+{ "message":"API purchased successfully","success":true,"apiKey":"ABCD...","apiPassword":"XyZ..." }
+```
+- Error (400): API not found / already purchased / user not found
+
+Implementation notes / security fixes applied:
+- `api.apiKeys.push({ consumerId, key: apiKey, apiPassword: hashedPassword, status:'active' })` (note: stored hashed password)
+- `userDetail.api.push({ apiId, url, purchased:false, keyCode: apiKey, keyPassword: apiPassword })` — current code stores raw key/password on user; recommended: remove raw storage and return only once. If raw values exist in DB, plan migration to hashed values.
+
+### Endpoint: POST /api/apiGen/apiRequest/:endpoint
+- Purpose: consumer calls a subscribed API through gateway.
+- Authentication: headers `api_provide_key` and `api_provide_password` required.
+- Flow:
+  1. Lookup: `api = await Api.findOne({ 'apiKeys.key': apiKey, 'apiKeys.status':'active' })`
+  2. Validate password: `bcrypt.compare(apiPassword, keyObj.apiPassword)`
+  3. Build provider URL: `providerUrl = api.baseUrl + endpoint`
+  4. Proxy via `axios` and capture response and latency
+  5. Write metrics to InfluxDB and update `api.usageLogs` (recommended: use object entries)
+  6. Update `user.api.usage` and billing according to rules
+
+- Success (201 Created or upstream status):
+```json
+{ "message":"got the response","success":true,"status":200,"data":{ /* provider data */ } }
+```
+- Errors:
+  - 401: missing credentials
+  - 401: user not found
+  - 401: invalid api key or inactive key
+  - 400: invalid key credential (password mismatch)
+  - 500: upstream API failure
+
+Example error payload:
+```json
+{ "message":"please provide the authentication keys!","success":false,"error":"API key and password required" }
+```
+
+### Migration note — re-hash raw API secrets
+- If your DB contains raw `keyPassword`/`keyCode` in `user.api` or `api.apiKeys`, run a migration:
+
+1. For each `api` doc with `apiKeys` containing raw `apiPassword`:
+   - generate new secret or require rotation, or
+   - replace stored raw secret with `await bcrypt.hash(rawSecret, 10)` and mark as rotated.
+
+2. For each `user.api` entry storing raw keys, remove raw fields after delivering to user once, and store only masked preview and usage/billing metadata.
+
+### Quick checklist of implemented modifications
+- `user.model.js`: added `hashPassword` and `comparePassword` methods (bcrypt). `password` field is `select:false`.
+- `provider.model.js`: add `hashPassword`/`comparePassword`; remove duplicate exports if present.
+- `api.model.js`: `providerId` used for ownership; `apiKeys` now include `consumerId`, `key`, `apiPassword`(hashed); helper `hashKeys()`/`compareKeys()` added; `usageLogs` recommended to be object-array.
+
+---
+
+If you want, I can now:
+- implement a migration script to hash any raw stored secrets, or
+- change controllers to stop persisting raw credentials and rotate existing ones.
+Tell me which action to take next and I will prepare the code patch and tests.
+
+---
+
+End of document.
 
 - New/changed fields (in `api` subdocument):
   - `apiId` (ObjectId, ref: `API`) — reference to the purchased API.

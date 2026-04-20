@@ -147,18 +147,12 @@ Response (200 OK):
         "purchased": true
       }
     ],
-    "createdAt": "2026-04-20T10:30:00Z",
-    "updatedAt": "2026-04-20T11:45:00Z"
-  }
 }
-```
 
 Errors:
 - 404: "user not found!"
 - 401: Authentication required
 - 500: Server error
-
----
 
 ## Update User Profile
 
@@ -198,20 +192,14 @@ Success Response (200 OK):
 Errors:
 - 404: "user not found!"
 - 500: Server error
-
----
-
 ## Generate Verification Code
 
 GET /api/user/codegen
-
 Protected endpoint.
 
 Current Response (201 Created):
 ```json
 {
-  "message": "code gen",
-  "code": "123456"
 }
 ```
 
@@ -255,19 +243,12 @@ Example: GET /api/user/promoteUser/645a1f2c3d5e6f7g8h9i0j1k
 Success Response (201 Created):
 ```json
 {
-  "message": "you are promoted to provider/seller",
-  "success": true,
-  "userDetail": {
-    "_id": "645a1f2c3d5e6f7g8h9i0j1k",
     "username": "alice",
-    "membership": true,
     "updatedAt": "2026-04-20T13:15:00Z"
   }
 }
 ```
 
-Errors:
-- 404: "you are not authorized" (userId doesn't match authenticated user)
 - 404: "user not found!"
 - 500: Server error
 
@@ -325,10 +306,7 @@ Security issues to fix:
 POST /api/provider/providerRegister
 
 Public endpoint.
-
-Request:
 ```json
-{
   "username": "bob_provider",
   "email": "bob@provider.com",
   "password": "SecurePass123!"
@@ -359,13 +337,8 @@ Errors:
 - 400: "email not verified!" (if promoting from user account)
 - 500: Server error
 
-Note: If email matches a verified user, that user is promoted to provider. Otherwise, a new provider account is created.
-
----
-
 ## Login Provider
 
-POST /api/provider/providerLogin
 
 Public endpoint.
 
@@ -376,8 +349,6 @@ Request:
   "password": "SecurePass123!"
 }
 ```
-
-Success Response (200 OK):
 ```json
 {
   "message": "provider logged in successfully",
@@ -408,12 +379,6 @@ Errors:
 
 GET /api/provider/providerLogout
 
-Public endpoint.
-
-Response (200 OK):
-```json
-{
-  "msg": "Logged out successfully"
 }
 ```
 
@@ -426,11 +391,7 @@ GET /api/provider/providerDetail
 Protected endpoint (provider authentication required).
 
 Response (200 OK):
-```json
-{
-  "message": "provider found",
   "success": true,
-  "providerDetail": {
     "_id": "645b2f3c4d5e6f7g8h9i0j1k",
     "username": "bob_provider",
     "email": "bob@provider.com",
@@ -459,7 +420,6 @@ Errors:
 
 ## Update Provider Profile
 
-PUT /api/provider/providerUpdate
 
 Protected endpoint.
 
@@ -478,84 +438,26 @@ Success Response (200 OK):
 ```json
 {
   "message": "provider detail updated successfully",
-  "success": true,
   "providerDetail": {
     "_id": "645b2f3c4d5e6f7g8h9i0j1k",
     "username": "bob_provider_updated",
     "profilePicture": {
-      "url": "https://example.com/bob-updated.png",
-      "imageId": "img_bob_new_456"
-    },
-    "updatedAt": "2026-04-20T16:00:00Z"
-  }
-}
-```
-
-Errors:
-- 404: "provider not found!"
-- 500: Server error
-
 ---
 
-## Generate Provider Verification Code
-
-GET /api/provider/providerCodegen
-
-Protected endpoint.
-
-Current Response (201 Created):
-```json
-{
-  "message": "code gen",
-  "code": "654321"
-}
-```
 
 Same as user codegen - generates a 6-digit code.
-
-Production response should be:
-```json
-{
-  "message": "Verification code sent to your registered email",
-  "success": true
-}
-```
-
 Errors:
-- 401: Authentication required
 - 500: Server error
 
 ---
-
-## Delete Provider Account
-
-DELETE /api/provider/providerDelete
-
-Protected endpoint.
 
 Request (password):
 ```json
-{
-  "password": "SecurePass123!"
-}
-```
-
 Or (email code):
 ```json
-{
-  "emailCode": "654321"
-}
-```
-
-Success Response (201 Created):
 ```json
 {
-  "message": "provider deleted successfully!",
-  "success": true
-}
-```
 
-Errors:
 - 400: "fill all the credentials"
 - 400: "invalid credentials"
 - 500: Server error
@@ -946,3 +848,123 @@ POST /api/apiGen/createApi
 ---
 
 That's it! This documentation covers all the endpoints and how to use them. For questions or issues, check the error messages returned - they usually explain what went wrong.
+
+---
+
+## Recent Modified Code & Examples (2026-04-21)
+
+This section highlights code-level behavior that was added or changed in the backend controllers and models. It shows concrete request/response examples (success and error), status codes, and short implementation notes so beginners can understand how the platform enforces authentication, issues API credentials, and proxies requests to provider APIs.
+
+### Key controller behaviors (summary)
+- `POST /api/apiGen/createApi` (provider): validates `providerId`, `baseUrl`, `name`; creates API document.
+- `GET /api/apiGen/setApi/:consumerId` (consumer): generates a one-time `apiKey` (25 chars) and `apiPassword` (12 chars), stores hashed password in `api.apiKeys`, returns raw credentials once to caller.
+- `POST /api/apiGen/apiRequest/:endpoint` (consumer gateway): requires headers `api_provide_key` and `api_provide_password`; validates key and password using `bcrypt.compare`; proxies request to provider `baseUrl + endpoint` via `axios`; records latency/status to InfluxDB; updates usage/billing in `api` and `user` documents.
+
+### Endpoint: GET /api/apiGen/setApi/:consumerId
+- Purpose: purchase / provision a one-time API key and password for a consumer.
+- Request: `Content-Type: application/json` with body:
+
+```json
+{ "providerApiId": "645c3f4c5d6e7f8g9h0i1j2k" }
+```
+- Success (201 Created): credentials are returned exactly once. Save them securely.
+
+Response example:
+```json
+{
+  "message": "API purchased successfully",
+  "success": true,
+  "apiKey": "ABCD...25chars...WXYZ",
+  "apiPassword": "XyZ12!@#"
+}
+```
+- Errors:
+  - 400 Bad Request: API not found / API already purchased / user not found
+  - 500 Internal Server Error: DB or server error
+
+Notes / Implementation details:
+- `api.apiKeys` stores `{ consumerId, key, apiPassword (hashed), status }` — passwords are hashed with bcrypt before saving.
+- The raw `apiPassword` is returned once in the response and should not be saved in plaintext in long-term storage. If your DB contains raw secrets, run a migration to hash/rotate them.
+
+### Endpoint: POST /api/apiGen/apiRequest/:endpoint
+- Purpose: consumer calls a provider API through the marketplace gateway.
+- Required headers:
+  - `api_provide_key`: the apiKey from `setApi`
+  - `api_provide_password`: the apiPassword from `setApi`
+- Parameters: `:endpoint` — the path appended to the provider `baseUrl` (no leading slash required if your client already provides it).
+- Example request (calling weather endpoint):
+
+POST /api/apiGen/apiRequest/weather/current?city=London
+Headers:
+```
+api_provide_key: ABCD...25chars
+api_provide_password: XyZ12!@#
+Content-Type: application/json
+```
+Body (optional):
+```json
+{ "latitude": 51.5074, "longitude": -0.1278 }
+```
+
+- Success (201 Created or upstream status forwarded):
+```json
+{
+  "messgae": "got the response",
+  "data": { /* provider response body */ },
+  "success": true,
+  "status": 200
+}
+```
+- Errors and status codes:
+  - 401 Unauthorized: missing `api_provide_key` or `api_provide_password`
+    - Example: `{ "message": "please provide the authhontication keys!", "success": false, "error": "API key and password required" }`
+  - 401 Unauthorized: user not found
+  - 401 Unauthorized: invalid API key (no matching active key)
+  - 401 Unauthorized: API key found but not active
+  - 400 Bad Request: password mismatch for key
+    - Example: `{ "message": "invalid api key credentail!", "success": false }`
+  - 500 Internal Server Error: upstream API failure, DB, or Influx errors
+
+Implementation details:
+- Lookup: `api = Api.findOne({ 'apiKeys.key': apiKey, 'apiKeys.status': 'active' })`.
+- Password validation: `bcrypt.compare(apiPassword, keyObj.apiPassword)` where `keyObj.apiPassword` is the hashed secret saved in `api.apiKeys`.
+- Proxy: construct `providerUrl = api.baseUrl + endpoint`, forward the request using `axios` with original query and body.
+- Telemetry: capture latency = `Date.now() - startTime`, write a Point to InfluxDB with tags `apiId` and `endpoint`, and fields `status_code` and `latency_ms`.
+- Usage logs: current implementation pushes parallel arrays (`status`, `latency`, `timestamp`) per endpoint; recommended improvement — use an array of objects `{ status, latency, timestamp }` for clarity and ease of queries.
+- Billing: user usage increments on each successful proxied call. Free tier: first 500 requests free; after that billing logic applies (partial payments supported). Review `user.api.usage`, `user.api.apiBill`, and `api.billing.totalRequests` updates in controller.
+
+### Endpoint: GET /api/user/codegen and /api/provider/providerCodegen
+- Current behavior (development/testing): generates a 6-digit code and returns it in the API response for debugging.
+- Current Response (201 Created):
+```json
+{ "message": "code gen", "code": "654321" }
+```
+- Recommended production behavior:
+  - Do NOT return the code in the API response.
+  - Hash the code with bcrypt and store `verificationCode: { hash, expiresAt }` on the user/provider record.
+  - Send the plaintext code to the user's email only.
+  - Return acknowledgement: `{ "message": "Verification code sent to your registered email address", "success": true }`
+
+Errors:
+  - 401 Unauthorized: authentication required
+  - 500 Internal Server Error: email send or DB failure
+
+### Migration recommendation — re-hash raw API secrets
+If you find stored raw `keyPassword`/`keyCode` values in `user.api` or `api.apiKeys`, rotate or re-hash them:
+
+1. Export or identify records with plaintext secrets.
+2. For each plaintext secret, either:
+   - rotate: generate a new secret, persist hashed secret in `api.apiKeys`, and require consumers to fetch a new secret, or
+   - hash in-place (less secure): store `bcrypt.hash(rawSecret, 10)` in place of plaintext and mark the record as rotated.
+3. Update any code that depends on reading raw secrets from DB (controllers should never read raw secrets).
+
+### Quick checklist of code-level changes to verify in your repo
+- `user.model.js`: `hashPassword()` and `comparePassword()` implemented; `password` is `select:false` — controllers must use `.select('+password')` when comparing.
+- `api.model.js`: `apiKeys[].apiPassword` should be hashed; controllers use bcrypt.compare for checks.
+- `apiProvider.controller.js`: `setApiKey()` now generates raw credentials and returns them once; `requestApiRoute()` validates headers, uses bcrypt.compare, proxies requests, writes to InfluxDB, and updates billing.
+
+If you want, I can:
+- add these examples into SDK snippets (curl / fetch) for developers, or
+- implement a migration script to rotate/hash any plaintext API secrets now.
+
+---

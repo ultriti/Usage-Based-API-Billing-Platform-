@@ -1,7 +1,170 @@
 # ---> User API Reference
 ---
-This document describes the user-related HTTP endpoints implemented in the backend and how to call them: request/response shapes, authentication behavior, example requests, and recommended production changes.
 
+### API Provider — Router & Controller (implemented changes)
+
+Source code: [backend/router/apiProvider.route.js](backend/router/apiProvider.route.js) and [backend/controller/apiProvider.controller.js](backend/controller/apiProvider.controller.js)
+
+#### Router (as implemented)
+- Mounted prefix: `/api/apiGen` (router exported at [backend/router/apiProvider.route.js](backend/router/apiProvider.route.js))
+- Routes (implemented mapping):
+  - `POST /createApi` — middleware: `isProviderAuthenticate` — handler: `createApi`
+  - `POST /getProviderInfo` — middleware: `isProviderAuthenticate` — handler: `getProviderStats`
+  - `POST /getApi` — middleware: `isAunthenticate` — handler: `createApi`  (NOTE: router maps `/getApi` to `createApi` in code — likely bug; see "Router inconsistencies" below)
+  - `GET /setApi/:consumerId` — middleware: `isAunthenticate` — handler: `setApiKey`
+  - `POST /partialPayApi/:consumerId` — middleware: `isAunthenticate` — handler: `apiPartialPayment`
+  - `POST /apiRequest/:endpoint` — middleware: `isAunthenticate` — handler: `requestApiRoute`
+
+#### POST /api/apiGen/getProviderInfo
+- Purpose: return provider usage status & latency metrics from InfluxDB (controller: `getProviderStats`).
+- Availability: Protected — `isProviderAuthenticate`.
+- Method: `POST`
+- Request: none
+- Success Response (200):
+
+```json
+{
+  "resultsStatus": [
+    { "time": "2026-04-20T15:00:00Z", "status": 200 },
+    { "time": "2026-04-20T15:05:00Z", "status": 500 }
+  ],
+  "resultsLatency": [
+    { "time": "2026-04-20T15:00:00Z", "latency": 120.4 },
+    { "time": "2026-04-20T15:05:00Z", "latency": 350.2 }
+  ]
+}
+```
+- Notes:
+  - Controller queries InfluxDB using:
+
+```flux
+from(bucket: "api_logs")
+  |> range(start: -1h)
+  |> filter(fn: (r) => r._measurement == "api_usage")
+```
+  - Requires env `INFLUXDB_TOKEN`. Response format is `resultsStatus` and `resultsLatency` arrays.
+
+#### POST /api/apiGen/partialPayApi/:consumerId
+- Purpose: consumer pays a pending partial payment (controller: `apiPartialPayment`).
+- Availability: Protected — `isAunthenticate`.
+- HTTP Method: `POST`
+- Request Body:
+
+```json
+{ "apiId": "645c3f4c5d6e7f8g9h0i1j2k" }
+```
+- Success Response (201):
+
+```json
+{ "message": "payment done sucessfully", "success": true }
+```
+- Behavior:
+  - Finds consumer `userDetail` by `req.id` and `api` by `apiId`.
+  - If `userApi.partialPayment` already true, returns 400.
+  - If `userApi.usage % 100 === 99` it applies `api.billing.amount += userApi.apiBill`, sets `userApi.partialPayment = true`, zeroes `userApi.apiBill`, saves.
+
+#### GET /api/apiGen/setApi/:consumerId — (setApiKey) implementation notes
+- Purpose: Generate one-time credentials for a consumer to access an API (controller: `setApiKey`).
+- Availability: Protected — `isAunthenticate`.
+- Method: `GET` (note: modifies state — consider POST)
+- Request: path param `consumerId` (must match `req.id`) and body:
+
+```json
+{ "providerApiId": "645c3f4c5d6e7f8g9h0i1j2k" }
+```
+- Generated credentials:
+  - `apiKey`: 25-character secure string
+  - `apiPassword`: 12-character secure string
+- Storage behavior (current implementation):
+  - `api.apiKeys.push({ consumerId, key: apiKey, apiPassword: <hashedPassword>, status: 'active' })`
+  - `userDetail.api.push({ apiId, url, purchased: false, keyCode: apiKey, keyPassword: apiPassword })` — note: this currently stores raw key/password in the user record.
+- Success Response (201):
+
+```json
+{
+  "message": "API purchased successfully",
+  "success": true,
+  "apiKey": "ABCD1234EFGH5678IJKL9012MN",
+  "apiPassword": "XyZ123!@#"
+}
+```
+- Security notes:
+  - `apiPassword` is hashed before storage (bcrypt via `apiModel.prototype.hashKeys`).
+  - `apiKey` is currently stored in plaintext on the API document for lookup — consider hashing or encrypting at rest.
+  - Do not persist raw `apiPassword`/`apiKey` on user records; return them once and store only hashes.
+
+#### POST /api/apiGen/apiRequest/:endpoint — implementation details (controller: `requestApiRoute`)
+- Authentication:
+  - Headers required: `api_provide_key` and `api_provide_password`.
+  - Lookup: `apiModel.findOne({ "apiKeys.key": apiKey, "apiKeys.status": "active" })`
+  - Password check: `bcrypt.compare(apiPassword, keyObj.apiPassword)`
+- Proxy behavior:
+  - Constructs `providerUrl = api.baseUrl + endpoint`.
+  - Forwards request to provider via `axios.get(providerUrl, { params: req.query })` (current implementation forwards only query params).
+  - Captures latency: `Date.now() - startTime`.
+- Metrics (InfluxDB):
+  - Writes `api_usage` point with tags `apiId`, `endpoint` and fields `status_code`, `latency_ms`.
+  - Bucket: `api_logs`, org: `MeterFlow`.
+- Usage & Billing (summary of implemented logic):
+  - `userApi.usage` increments per request.
+  - Free tier: first 500 requests per consumer per API are considered free.
+  - After 500 requests, consumers who have not purchased (`userApi.purchased === false`) are billed per-request (implementation uses complex partial-payment rules).
+  - `userApi.partialPayment` flags are used to track periodic partial payments (controller sets `partialPayment` to true when `usage % 100 === 99` and requires `/partialPayApi` to settle).
+  - `api.billing.totalRequests` is incremented for charged requests and `userApi.apiBill` accumulates monetary charge (controller uses increments of `0.2`).
+- Implementation caveats & recommendations:
+  - The current billing logic is complex and hard to reason about; recommend simplifying to:
+    - Track `totalRequests` per consumer and compute charges by formula on invoice generation.
+    - Use a single `usageLogs` array of objects (timestamp, status, latency) instead of parallel arrays.
+    - Use atomic updates (`$inc`) to avoid race conditions under concurrency.
+
+#### Key generation & storage (utility & security)
+- Utility: `generateSecureCode(length)` creates secure random strings using `crypto.randomInt` and a wide `charset`. Used to create API keys and API passwords.
+- Recommendations:
+  - Return credentials to the consumer only once (one-time display) and store only hashes in the DB.
+  - Consider using `crypto.randomBytes` + base64/url-safe encoding for keys.
+  - Store API keys in a separate `api_keys` collection if you need to rotate or revoke keys without modifying API documents.
+
+#### InfluxDB integration (write & query)
+- Write (controller uses):
+```javascript
+const point = new Point('api_usage')
+  .tag('apiId', api._id.toString())
+  .tag('endpoint', providerUrl)
+  .intField('status_code', res.statusCode)
+  .floatField('latency_ms', Number(latency))
+  .timestamp(new Date(startTime))
+
+writeClient.writePoint(point)
+writeClient.flush().catch(err => { console.error('Influx flush error', err) })
+```
+- Read (getProviderStats query):
+```flux
+from(bucket: "api_logs")
+  |> range(start: -1h)
+  |> filter(fn: (r) => r._measurement == "api_usage")
+```
+- Env: `INFLUXDB_TOKEN` must be set for the client to authenticate.
+
+#### Router inconsistencies (observed in files) — recommended fixes
+- `router.post('/getApi', isAunthenticate, createApi)` — in code `/getApi` is mapped to `createApi`. This is likely a bug; `/getApi` should be mapped to a read/list handler.
+- `GET /setApi/:consumerId` modifies state (creates credentials) — consider changing to `POST`.
+- `POST /getProviderInfo` returns metrics — consider using `GET` and allow optional query params (time range).
+- Avoid storing raw `apiKey`/`apiPassword` on user documents — return once and store hashes.
+- Standardize status codes (many endpoints return `201` where `200` or `204` is appropriate).
+
+#### Model fields & helper methods relevant to these endpoints
+- `api.model.js` changes used by controller:
+  - `providerId` (ObjectId) — owner of API
+  - `apiKeys` entries — `{ consumerId, key, apiPassword (hashed), status }`
+  - helper methods: `hashKeys()`, `compareKeys()` (bcrypt wrappers)
+  - `usageLogs` currently uses arrays for status/latency/timestamp; recommend changing to `[{ status, latency, timestamp }]`
+- `user.model.js` (consumer-side):
+  - `api` subdocument now tracks `{ apiId, url, purchased, keyCode?, keyPassword?, usage, apiBill, partialPayment }` — controller currently pushes `keyCode` and `keyPassword` raw values (insecure).
+- `provider.model.js` remains the provider profile; `getProviderStats` reads InfluxDB rather than provider DB for real-time metrics.
+
+---
+
+## Model Schemas
 Source code: [backend/router/user.router.js](backend/router/user.router.js) and [backend/controller/user.controller.js](backend/controller/user.controller.js)
 
 ## Authentication
@@ -35,6 +198,21 @@ Note: the current implementation contains several insecure patterns (plaintext p
 Detailed descriptions follow.
 
 ---
+
+### User Router — Router (as implemented)
+
+Source code: [backend/router/user.route.js](backend/router/user.route.js)
+
+- Mounted prefix: `/api/user` (router exported at [backend/router/user.route.js](backend/router/user.route.js))
+- Routes (implemented mapping):
+  - `POST /userRegister` — middleware: none — handler: `userRegister`
+  - `POST /userLogin` — middleware: none — handler: `userLogin`
+  - `GET /userLogout` — middleware: none — handler: `userLogout`
+  - `DELETE /userDelete` — middleware: `isAunthenticate` — handler: `deleteUser`
+  - `GET /promoteUser/:userId` — middleware: `isAunthenticate` — handler: `promoteUser`
+  - `GET /userDetail` — middleware: `isAunthenticate` — handler: `getUserDetail`
+  - `PUT /userUpdate` — middleware: `isAunthenticate` — handler: `updateUserDetail`
+  - `GET /codegen` — middleware: `isAunthenticate` — handler: `codeGen`
 
 ### POST /api/user/userRegister
 
@@ -893,6 +1071,20 @@ If you want, I can implement these fixes (hash passwords, remove verification co
 
 ## API Provider Routes (Detailed)
 ---
+
+### Provider Router — Router (as implemented)
+
+Source code: [backend/router/provider.route.js](backend/router/provider.route.js)
+
+- Mounted prefix: `/api/provider` (router exported at [backend/router/provider.route.js](backend/router/provider.route.js))
+- Routes (implemented mapping):
+  - `POST /providerRegister` — middleware: none — handler: `providerRegister`
+  - `POST /providerLogin` — middleware: none — handler: `providerLogin`
+  - `GET /providerLogout` — middleware: none — handler: `providerLogout`
+  - `DELETE /providerDelete` — middleware: `isProviderAuthenticate` — handler: `deleteProvider`
+  - `GET /providerDetail` — middleware: `isProviderAuthenticate` — handler: `getProviderDetail`
+  - `PUT /providerUpdate` — middleware: `isProviderAuthenticate` — handler: `updateProviderDetail`
+  - `GET /providerCodegen` — middleware: `isProviderAuthenticate` — handler: `codeGen`
 
 ### POST /api/provider/providerRegister
 

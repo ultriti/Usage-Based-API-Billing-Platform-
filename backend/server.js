@@ -8,8 +8,6 @@ const user = require("./router/user.route")
 const provider = require("./router/provider.route")
 const apiGen = require("./router/apiProvider.route")
 
-const { exec } = require("child_process");
-
 
 dotenv.config();
 
@@ -46,57 +44,6 @@ app.get('/data', (req, res) => {
 
   res.json({ message: 'Data received', data: data });
 });
-
-
-// get from influx
-const { InfluxDB } = require('@influxdata/influxdb-client');
-
-app.post("/influx", async (req, res) => {
-  const client = new InfluxDB({ url: 'http://localhost:8086', token: 'my-token' });
-  const queryApi = client.getQueryApi('MeterFlow');
-
-  const fluxQuery = `
-    from(bucket: "api_logs")
-      |> range(start: -1h)
-      |> filter(fn: (r) => r._measurement == "api_usage")
-  `;
-
-  // let results = [];
-  // let resultsTime = [];
-  let resultsLatency = [];
-  let resultsStatus = [];
-
-  queryApi.queryRows(fluxQuery, {
-    next(row, tableMeta) {
-      const o = tableMeta.toObject(row);
-      if (o._field === "latency_ms") {
-        resultsLatency.push({
-          time: o._time,
-          latency: o._value
-        });
-      } else if (o._field === "status_code") {
-        resultsStatus.push({
-          time: o._time,
-          status: o._value
-        });
-      }
-
-
-    },
-    error(err) {
-      console.error(err);
-      res.status(500).send({ error: err.message });
-    },
-    complete() {
-      console.log('Query finished');
-      res.json({resultsStatus , resultsLatency}); // send results back to client
-    },
-  });
-});
-
-
-
-
 
 
 app.use("/api/user", user);

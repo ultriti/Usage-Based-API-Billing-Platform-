@@ -44,37 +44,76 @@ const userSchema = new mongoose.Schema({
         enum: ['user', 'admin', "provider"],
         default: 'user'
     },
-    api: [
-        {
-            apiId: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "API"
-            },
-            url: {
-                type: String,
-                default: "",
-                required: true
-            },
-            purchased: {
-                type: Boolean,
-                default: false
-            },
-            keyCode: {
-                type: String
-            },
-            keyPassword: {
-                type: String
-            },
-            usage: {
-                type: Number,
-                default: 0
-            },
-            apiBill: {
-                type: Number,
-                default: 0
-            }
+    api: [{
+        apiId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "API",
+            required: true
+        },
+        url: {
+            type: String,
+            default: ""
+        },
+        purchased: {
+            type: Boolean,
+            default: false
+        },
+        partialPayment: {
+            type: Boolean,
+            default: false
+        },
+        // keyCode: {
+        //     type: String,
+        //     default: ""
+        // },
+        // keyPassword: {
+        //     type: String,
+        //     default: ""
+        // },
+        usage: {
+            type: Number,
+            default: 0
+        },
+        apiBill: {
+            type: Number,
+            default: 0
         }
-    ],
+    }],
+    // api: [
+    //     {
+    //         apiId: {
+    //             type: mongoose.Schema.Types.ObjectId,
+    //             ref: "API"
+    //         },
+    //         url: {
+    //             type: String,
+    //             default: "",
+    //             required: true
+    //         },
+    //         purchased: {
+    //             type: Boolean,
+    //             default: false
+    //         },
+    //         partialPayment: {
+    //             type: Boolean,
+    //             default: false
+    //         },
+    //         keyCode: {
+    //             type: String
+    //         },
+    //         keyPassword: {
+    //             type: String
+    //         },
+    //         usage: {
+    //             type: Number,
+    //             default: 0
+    //         },
+    //         apiBill: {
+    //             type: Number,
+    //             default: 0
+    //         }
+    //     }
+    // ],
     cart: [
         {
             apiId: {
