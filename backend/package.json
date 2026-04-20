@@ -10,7 +10,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@influxdata/influxdb-client": "^1.35.0",
+    "axios": "^1.15.1",
     "bcryptjs": "^3.0.3",
+    "child_process": "^1.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "crypto": "^1.0.1",

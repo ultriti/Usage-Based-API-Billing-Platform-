@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const cookie_parser = require('cookie-parser');
 
+
+// consumer middleware
 module.exports.isAunthenticate = async (req, res, next) => {
     const token = req.cookies.apiProviderToken || req.headers["apiProviderToken"];
     console.log('--->', token);
