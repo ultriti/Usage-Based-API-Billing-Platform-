@@ -9,7 +9,7 @@ const providerModel = require("../model/provider.model");
 
 
 // code generation for verification --------------> 
-const codegenerate = async (req,res) => {
+const codegenerate = async (req, res) => {
     const crypto = require('crypto');
 
     function generateVerificationCode() {
@@ -31,7 +31,7 @@ const codegenerate = async (req,res) => {
 // demo code for code gen
 module.exports.codeGen = async (req, res) => {
 
-    const code = await codegenerate(req,res);
+    const code = await codegenerate(req, res);
     return res.status(201).json({ message: "code gen", code })
 
 }
@@ -78,7 +78,7 @@ module.exports.providerRegister = async (req, res) => {
             await createdProvider.save()
 
             // Generate token 
-            const token = jwt.sign({ userId: createdProvider._id, email: createdProvider.email, role : createdProvider.role }, process.env.SECRET_KEY);
+            const token = jwt.sign({ userId: createdProvider._id, email: createdProvider.email, role: createdProvider.role }, process.env.SECRET_KEY);
             res.cookie('apiProviderToken', token, {
                 httpOnly: true,
                 sameSite: 'none',
@@ -103,7 +103,7 @@ module.exports.providerRegister = async (req, res) => {
             await createdProvider.save()
 
             // Generate token 
-            const token = jwt.sign({ userId: createdProvider._id, email: createdProvider.email, role :createdProvider.role  }, process.env.SECRET_KEY);
+            const token = jwt.sign({ userId: createdProvider._id, email: createdProvider.email, role: createdProvider.role }, process.env.SECRET_KEY);
             res.cookie('apiProviderToken', token, {
                 httpOnly: true,
                 sameSite: 'none',
@@ -143,12 +143,19 @@ module.exports.providerLogin = async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials", success: false });
         }
 
-        const token = jwt.sign({ email: email, userId: providerDetail._id, role : providerDetail.role }, process.env.SECRET_KEY);
+        const token = jwt.sign({ email: email, userId: providerDetail._id, role: providerDetail.role }, process.env.SECRET_KEY);
+
+        // res.cookie("apiProviderToken", token, {
+        //     httpOnly: true,
+        //     sameSite: 'lax',
+        //     secure: false,
+        //     expires: new Date(Date.now() + 3600000 * 24 * 30)
+        // });
 
         res.cookie("apiProviderToken", token, {
             httpOnly: true,
-            sameSite: 'none',
-            secure: true,
+            sameSite: "lax",   // or "strict"
+            secure: false,     // only true in production HTTPS
             expires: new Date(Date.now() + 3600000 * 24 * 30)
         });
 
@@ -186,7 +193,7 @@ module.exports.getProviderDetail = async (req, res) => {
         return res.status(500).json({ message: "internal server error", error: error.message, success: false });
     }
 
-} 
+}
 
 
 // logout provider

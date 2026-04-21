@@ -505,7 +505,7 @@ module.exports.getProviderStats = async (req, res) => {
             console.log('Query finished');
             console.log('resultsStatus, resultsLatency : ', resultsStatus, resultsLatency);
 
-            res.json({ resultsStatus, resultsLatency });
+            res.status(201).json({ resultsStatus, resultsLatency });
         },
     });
 }

@@ -1,0 +1,47 @@
+.mainFrameDashboard {
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #979797;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* natural scroll */
+}
+
+.mainFrameDashboard::-webkit-scrollbar {
+  width: 5px;
+  background-color: rgba(39, 39, 39, 0.728);
+}
+
+.mainFrameDashboard::-webkit-scrollbar-thumb {
+  background-color: #737373;
+}
+
+.navbarFrame {
+  height: 4vw;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #ffffff1f;
+  z-index: 999;
+}
+
+.sidebarFrame {
+  height: 100%;
+  width: 16vw;
+  position: fixed;
+  top: 4vw;
+  left: 0;
+  background-color: #ffffff2d;
+  z-index: 899;
+}
+
+.providerMainFrame {
+  flex: 1; 
+  margin-left: 16vw;
+  margin-top: 4vw;
+  background-color: rgba(255, 0, 0, 0.678);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 2vw;
+}

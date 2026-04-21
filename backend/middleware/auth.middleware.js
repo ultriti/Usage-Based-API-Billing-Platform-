@@ -4,6 +4,8 @@ const cookie_parser = require('cookie-parser');
 
 // consumer middleware
 module.exports.isAunthenticate = async (req, res, next) => {
+
+    console.log("req.cookies.apiProviderToken ",req.cookies.apiProviderToken )
     const token = req.cookies.apiProviderToken || req.headers["apiProviderToken"];
     console.log('--->', token);
 
@@ -30,8 +32,10 @@ module.exports.isAunthenticate = async (req, res, next) => {
 
 // provider middleware
 module.exports.isProviderAuthenticate = async (req, res, next) => {
+    
     const token = req.cookies.apiProviderToken || req.headers["apiProviderToken"];
-    console.log('--->', token);
+    console.log('---> prpvider', token);
+    console.log('---> prpvider -> ', req.headers["apiProviderToken"] );
 
 
     try {

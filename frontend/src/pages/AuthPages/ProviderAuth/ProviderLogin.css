@@ -1,0 +1,14 @@
+.userLoginFrame {
+  background-image: url("https://thf.bing.com/th/id/OIP.bWnQfwxojIKdCXr4DOcDIAHaEo?w=320&h=180&c=7&r=0&o=7&cb=thfc1&dpr=1.5&pid=1.7&rm=3");
+  background-size: cover;       /* scales image proportionally to cover container */
+  background-position: center;  /* centers the image */
+  background-repeat: no-repeat; /* prevents tiling */
+  height: 100vh;                /* full viewport height */
+  width: 100%;                  /* full width */
+}
+
+.userLoginFrameCont{
+  backdrop-filter: blur(10px);
+  background-color: #222222b3;
+  box-shadow: 0 0 13px 5px rgb(28, 28, 28);
+}

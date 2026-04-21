@@ -15,10 +15,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 connectDB();
 
-
-
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:5174"],
+  credentials: true
+}));
 app.use(express.json());
-app.use(cors());
 app.use(cookieParser());
 
 app.get('/', (req, res) => {
@@ -45,6 +46,10 @@ app.get('/data', (req, res) => {
   res.json({ message: 'Data received', data: data });
 });
 
+app.use((req, res, next) => {
+  console.log("Incoming cookies:", req.cookies);
+  next();
+});
 
 app.use("/api/user", user);
 app.use("/api/provider", provider);
