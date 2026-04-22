@@ -20,11 +20,16 @@ import { fetchProviderApis } from './Provider Dashboard/GetProviderApis';
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Title, Tooltip, Legend);
 
+
+
 const ProviderDashboard = () => {
+
     const [chartData, setChartData] = useState(null);
     const [query, setQuery] = useState("");
     const [providerApis, setproviderApis] = useState([])
 
+
+    // fitions 
     const handleSearch = (e) => {
         e.preventDefault();
         console.log("Searching for:", query);
@@ -45,6 +50,8 @@ const ProviderDashboard = () => {
         }
     };
 
+
+    // use effects 
     useEffect(() => {
         fetchData();
         // const interval = setInterval(fetchData, 5000);
@@ -52,27 +59,35 @@ const ProviderDashboard = () => {
     }, [10000]);
 
 
-    
-
 
 
     return (
         <div className="mainFrameDashboard">
+
+            {/* nabbar frame */}
             <div className="navbarFrame">
                 <NavbarFrame />
             </div>
 
+
+            {/* side bar frame */}
             <div className="sidebarFrame">
                 <ProviderSidebarFrame />
             </div>
 
+
+
+            {/* main frame */}
+
             <div className="providerMainFrame">
+
+
                 {/* Chart Section */}
-                <div className="providerChartFrame flex flex-row bg-amber-200 p-4">
+                <div className="providerChartFrame flex flex-row p-4">
 
 
-                    <div className="bg-gray-50 w-[70%] h-[70vh] flex flex-col items-center p-2">
-                        <h2>API Latency & Status Graph</h2>
+                    <div className="bg-gray-900 w-[70%] h-[70vh] text-white flex flex-col items-center p-4 rounded-lg shadow-lg">
+                        <h2 className="text-xl font-semibold mb-4">API Latency & Status Graph</h2>
                         {chartData ? (
                             <Line data={chartData.data} options={chartData.options} />
                         ) : (
@@ -80,7 +95,8 @@ const ProviderDashboard = () => {
                         )}
                     </div>
 
-                    <div className="allChartsLeft w-[30%] bg-amber-500 flex flex-col">
+
+                    <div className="allChartsLeft w-[30%] flex flex-col">
 
                     </div>
 
@@ -88,10 +104,9 @@ const ProviderDashboard = () => {
                 </div>
 
                 {/* API List Section */}
-                <div className="providerListApiFrame bg-gray-200 mt-6">
-                    <div className="apiListTitle flex justify-between items-center p-5 bg-gray-50">
-                        <p className="apiTitle text-lg font-medium">Your API's Lists</p>
-
+                <div className="providerListApiFrame mt-6">
+                    <div className="apiListTitle flex justify-between items-center p-5 bg-gray-700">
+                        <p className="apiTitle text-[1.5vw] font-medium  text-gray-50">Your API's Lists</p>
 
                         <form
                             onSubmit={handleSearch}
@@ -123,11 +138,11 @@ const ProviderDashboard = () => {
 
                     {/* apis list  */}
                     <div className="h-[80vh] w-full bg-gray-900 mb-5 flex flex-col items-center ">
-                        <div className="apiListCont flex flex-col items-center  w-[95%] bg-gray-300 mt-5 gap-3">
+                        <div className="apiListCont flex flex-col items-center  w-[95%]  mt-5 gap-3">
 
                             {
                                 providerApis?.map((api, i) => (
-                                    
+
                                     <>
                                         <ProviderApiInfo
                                             key={api._id}
@@ -138,6 +153,7 @@ const ProviderDashboard = () => {
                                             active={api.status}
                                             chartData={"api.chartData"}
                                             baseUrl={api.baseUrl}
+                                            revenue={api.billing.amount}
                                         />
                                     </>
 
@@ -149,6 +165,8 @@ const ProviderDashboard = () => {
 
                     </div>
                 </div>
+
+
             </div>
         </div>
     );

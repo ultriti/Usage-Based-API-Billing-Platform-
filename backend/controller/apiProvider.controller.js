@@ -485,7 +485,7 @@ module.exports.requestApiRoute = async (req, res) => {
 }
 
 
-// get 
+// get provide api stats
 module.exports.getProviderStats = async (req, res) => {
 
     const client = new InfluxDB({ url: 'http://localhost:8086', token: 'my-token' });

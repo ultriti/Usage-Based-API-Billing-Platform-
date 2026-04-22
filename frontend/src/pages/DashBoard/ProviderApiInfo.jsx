@@ -2,7 +2,10 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 
-const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, baseUrl }) => {
+import copyCodePng from "../../../public/icon/copyCode.webp"
+import apiPng from "../../../public/icon/10329422.png"
+
+const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, baseUrl , revenue}) => {
   const [status_, setstatus_] = useState(active)
 
   const apiStatusUpdate = async (apiId, status) => {
@@ -35,25 +38,25 @@ const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, baseUrl 
 
 
   return (
-    <div className="apisListInfo h-[12vh] w-full bg-gray-700 rounded-2xl flex items-center px-6 shadow-md">
+    <div className="apisListInfo h-[12vh] w-full bg-gray-600 rounded-2xl flex items-center px-6 shadow-md">
 
       {/* Logo + Name */}
-      <div className="flex flex-row w-[30vw] items-center space-x-4 bg-gray-500 overflow-hidden">
-        <img src={logo} alt={name} className="w-10 h-10 rounded-full" />
-        <p className="text-white font-semibold text-lg">{name}</p>
+      <div className="flex flex-row w-[30vw] h-full items-center space-x-4 overflow-hidden">
+        <img src={apiPng} alt={name} className="w-12 h-12 rounded-full bg-gray-200 p-1" />
+        <p className="text-white font-semibold text-[1.5vw]">{name}</p>
       </div>
 
       {/* Requests */}
 
-      <div className="RequestFrame w-[15vw] h-full bg-amber-400 flex flex-row items-center justify-center overflow-hidden">
+      <div className="RequestFrame w-[15vw] h-full flex flex-row items-center justify-center overflow-hidden">
 
-        <p className="text-gray-200 text-md pl-4 pr-2">{requests.toLocaleString()} requests</p>
+        <p className="text-gray-200 text-[1.2vw] font-[600] pl-4 pr-2">{requests.toLocaleString()} requests</p>
 
       </div>
 
 
       {/* Mini Graph */}
-      <div className="w-32 h-12 w-[20vw] bg-red-200">
+      <div className="w-32 h-12 w-[20vw] flex flex-row items-center justify-center ">
         {/* <Line
           data={chartData.data}
           options={{
@@ -62,10 +65,11 @@ const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, baseUrl 
             scales: { x: { display: false }, y: { display: false } }
           }}
         /> */}
+        <p className="text-[1.2vw] font-[600]">$ {revenue}</p>
       </div>
 
-      <div className="apiUrlCopyFrame h-full w-[5vw] bg-gray-300 p-4 ">
-        <img onClick={() => { handleCopy(baseUrl) }} className="h-full w-full cursor-pointer" src="https://png.pngtree.com/png-clipart/20220627/original/pngtree-coding-file-code-custom-development-png-image_8222589.png" alt="" />
+      <div className="apiUrlCopyFrame h-[5vw] w-[5vw] py-5 px-5 ">
+        <img onClick={() => { handleCopy(baseUrl) }} className="h-full w-full px-1 rounded-2xl bg-gray-200 cursor-pointer" src={copyCodePng} alt="" />
       </div>
 
       {/* Toggle */}
