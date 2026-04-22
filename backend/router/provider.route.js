@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { providerRegister, providerLogin, getProviderDetail, providerLogout, updateProviderDetail, codeGen, deleteProvider } = require("../controller/provider.controller");
+const { providerRegister, providerLogin, getProviderDetail, providerLogout, updateProviderDetail, codeGen, deleteProvider, getProviderApi } = require("../controller/provider.controller");
 const { isAunthenticate, isProviderAuthenticate } = require('../middleware/auth.middleware');
 
 
@@ -10,14 +10,17 @@ router.post("/providerRegister", providerRegister);
 router.post("/providerLogin", providerLogin);
 router.get("/providerLogout", providerLogout);
 
-router.delete("/providerDelete",isProviderAuthenticate, deleteProvider);
+
+router.get("/getProviderApi", isProviderAuthenticate, getProviderApi);
+
+router.delete("/providerDelete", isProviderAuthenticate, deleteProvider);
 
 
 
 // provider route
 router.get("/providerDetail", isProviderAuthenticate, getProviderDetail);
 router.put("/providerUpdate", isProviderAuthenticate, updateProviderDetail);
-router.get("/providerCodegen",isProviderAuthenticate, codeGen);
+router.get("/providerCodegen", isProviderAuthenticate, codeGen);
 
 
 module.exports = router;    

@@ -15,12 +15,15 @@ import {
     Legend
 } from "chart.js";
 import { getGraphData } from "./Graph";
+import ProviderApiInfo from './ProviderApiInfo';
+import { fetchProviderApis } from './Provider Dashboard/GetProviderApis';
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Title, Tooltip, Legend);
 
 const ProviderDashboard = () => {
     const [chartData, setChartData] = useState(null);
     const [query, setQuery] = useState("");
+    const [providerApis, setproviderApis] = useState([])
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -32,6 +35,11 @@ const ProviderDashboard = () => {
             const res = await axios.post("http://localhost:3000/api/apiGen/getProviderInfo", {}, { withCredentials: true });
             const formatted = getGraphData(res.data);
             setChartData(formatted);
+
+            const data = await fetchProviderApis();
+            console.log("providerApis", data)
+            setproviderApis(data.providerApi);
+
         } catch (err) {
             console.error("Error fetching graph data:", err);
         }
@@ -39,9 +47,14 @@ const ProviderDashboard = () => {
 
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, 5000);
-        return () => clearInterval(interval);
-    }, []);
+        // const interval = setInterval(fetchData, 5000);
+        // return () => clearInterval(interval);
+    }, [10000]);
+
+
+    
+
+
 
     return (
         <div className="mainFrameDashboard">
@@ -56,6 +69,8 @@ const ProviderDashboard = () => {
             <div className="providerMainFrame">
                 {/* Chart Section */}
                 <div className="providerChartFrame flex flex-row bg-amber-200 p-4">
+
+
                     <div className="bg-gray-50 w-[70%] h-[70vh] flex flex-col items-center p-2">
                         <h2>API Latency & Status Graph</h2>
                         {chartData ? (
@@ -64,13 +79,20 @@ const ProviderDashboard = () => {
                             <p>Loading...</p>
                         )}
                     </div>
-                    <div className="allChartsLeft w-[30%] bg-amber-500 flex flex-col"></div>
+
+                    <div className="allChartsLeft w-[30%] bg-amber-500 flex flex-col">
+
+                    </div>
+
+
                 </div>
 
                 {/* API List Section */}
                 <div className="providerListApiFrame bg-gray-200 mt-6">
                     <div className="apiListTitle flex justify-between items-center p-5 bg-gray-50">
                         <p className="apiTitle text-lg font-medium">Your API's Lists</p>
+
+
                         <form
                             onSubmit={handleSearch}
                             className="flex w-[40vw] items-center bg-white rounded-lg shadow-md overflow-hidden"
@@ -82,19 +104,46 @@ const ProviderDashboard = () => {
                                 onChange={(e) => setQuery(e.target.value)}
                                 className="flex-grow px-4 py-2 text-gray-700 focus:outline-none"
                             />
+
                             <button
                                 type="submit"
                                 className="px-4 py-2 bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
                             >
                                 Search
                             </button>
+
                         </form>
+
+
                         <button className="h-[3vw] w-[12vw] bg-gray-800 rounded-2xl text-[1.3vw] font-semibold text-gray-100">
                             Create API
                         </button>
+
                     </div>
+
+                    {/* apis list  */}
                     <div className="h-[80vh] w-full bg-gray-900 mb-5 flex flex-col items-center ">
-                        <div className="apiListCont h-[60vh] w-[95%] rounded-2xl bg-gray-300 mt-5 mb-5">
+                        <div className="apiListCont flex flex-col items-center  w-[95%] bg-gray-300 mt-5 gap-3">
+
+                            {
+                                providerApis?.map((api, i) => (
+                                    
+                                    <>
+                                        <ProviderApiInfo
+                                            key={api._id}
+                                            id={api._id}
+                                            logo={"api.logo"}
+                                            name={api.name}
+                                            requests={api.billing.totalRequests}
+                                            active={api.status}
+                                            chartData={"api.chartData"}
+                                            baseUrl={api.baseUrl}
+                                        />
+                                    </>
+
+                                ))
+                            }
+
 
                         </div>
 

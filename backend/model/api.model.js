@@ -16,6 +16,11 @@ const apiSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  status: {
+    type: String,
+    enum: ['active', 'revoked'],
+    default: 'active'
+  },
 
   // API Keys 
   apiKeys: [{

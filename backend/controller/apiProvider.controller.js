@@ -14,13 +14,17 @@ const { CLIENT_RENEG_WINDOW } = require("tls");
 
 const { InfluxDB, Point } = require('@influxdata/influxdb-client')
 
-const token = process.env.INFLUXDB_TOKEN
-const url = 'http://localhost:8086'
-const org = 'MeterFlow'
-const bucket = 'api_logs'
 
-const client = new InfluxDB({ url, token })
-const writeClient = client.getWriteApi(org, bucket, 'ns')
+const url = process.env.INFLUXDB_URL;
+const token = process.env.INFLUXDB_TOKEN;
+const org = process.env.INFLUXDB_ORG;
+const bucket = process.env.INFLUXDB_BUCKET;
+
+console.log("----------?\n\n\n\n",url)
+
+const client = new InfluxDB({ url, token });
+const writeClient = client.getWriteApi(org, bucket, 'ns');
+
 
 
 
@@ -42,9 +46,9 @@ module.exports.createApi = async (req, res) => {
 
     const provId = req.id;
 
-    const { providerId, baseUrl, name } = req.body;
+    const { baseUrl, name } = req.body;
 
-    if (!providerId || !baseUrl || !name) {
+    if (!baseUrl || !name) {
         return res.status(400).json({ message: "All fields are required", success: false });
 
     }
@@ -63,11 +67,29 @@ module.exports.createApi = async (req, res) => {
         }
 
         const createdApi = await apiModel.create({
-            providerId: providerId,
+            providerId: provId,
             name: name,
-            baseUrl: baseUrl
+            baseUrl: baseUrl,
+            apiKeys: []
 
         })
+
+        // Generate codes
+        const apiKeyCode = generateSecureCode(25);
+        const apiPasswordCode = generateSecureCode(12);
+
+        createdApi.apiKeys.push({
+            consumerId: provId,
+            key: apiKeyCode,
+            apiPassword: apiPasswordCode,
+            status: 'active'
+        });
+
+        await createdApi.save()
+
+
+
+
 
         return res.status(201).json({ message: "api created successfullly", success: true, createdApi });
 
@@ -145,8 +167,8 @@ module.exports.setApiKey = async (req, res) => {
             apiId: api._id,
             url: api.baseUrl,
             purchased: false,
-            keyCode : apiKeyCode,
-            keyPassword : apiPasswordCode
+            keyCode: apiKeyCode,
+            keyPassword: apiPasswordCode
 
         });
 
@@ -247,7 +269,7 @@ module.exports.requestApiRoute = async (req, res) => {
 
 
     // const { apiUrl } = req.body;
-    const endpoint = req.params.endpoint;
+    const endpoint = req.query.endpoint;
     const consumerId = req.id;
 
     const apiKey = req.headers['api_provide_key'];
@@ -288,7 +310,7 @@ module.exports.requestApiRoute = async (req, res) => {
         }
 
 
-        const providerUrl = `${api.baseUrl}${endpoint}`;
+        const providerUrl = `${api.baseUrl}${endpoint? endpoint : ""}`;
 
         const providerApiResponse = await axios.get(providerUrl, {
             params: req.query
@@ -468,10 +490,11 @@ module.exports.getProviderStats = async (req, res) => {
 
     const client = new InfluxDB({ url: 'http://localhost:8086', token: 'my-token' });
     const queryApi = client.getQueryApi('MeterFlow');
+    const timeApi = req.query.time;
 
     const fluxQuery = `
     from(bucket: "api_logs")
-      |> range(start: -1h)
+      |> range(start: ${timeApi ? String(timeApi) : '-1h'})
       |> filter(fn: (r) => r._measurement == "api_usage")
   `;
 
@@ -568,4 +591,44 @@ module.exports.apiPartialPayment = async (req, res) => {
 
 
 
-} 
+}
+
+
+// active / deactive toggle 
+module.exports.toggleStatus = async (req, res) => {
+
+    const apiId = req.params.apiId;
+    const { status } = req.body;
+    const providerId = req.id;
+
+    try {
+
+        const api = await apiModel.findById(apiId);
+
+        console.log("api.providerId !== providerId", api.providerId, providerId)
+
+        if (api.providerId != providerId) {
+            return res.status(201).json({ message: "you are not the provider of this api!", success: false })
+        }
+
+        console.log("-------->", status)
+
+        if (status == "active") {
+            api.status = "revoked";
+        } else {
+            api.status = "active";
+        }
+
+        await api.save();
+
+        return res.status(201).json({ message: "api status updated!", success: true, status : api.status })
+
+
+    } catch (error) {
+
+        console.log("error :", error)
+        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
+
+    }
+
+}

@@ -4,6 +4,7 @@ const crypto = require("crypto");
 
 const userModel = require("../model/user.model");
 const providerModel = require("../model/provider.model");
+const apiModel = require("../model/api.model");
 
 
 
@@ -129,9 +130,13 @@ module.exports.providerLogin = async (req, res) => {
 
     const { email, password } = req.body;
 
+    console.log("body",req.body)
+
     try {
 
-        const providerDetail = await providerModel.findOne({ email }).select("+password");;
+        const providerDetail = await providerModel.findOne({ email }).select("+password");
+
+        console.log("providerDetail",providerDetail)
 
         if (!providerDetail) {
             return res.status(400).json({ message: "provider not found", success: false });
@@ -288,6 +293,39 @@ module.exports.deleteProvider = async (req, res) => {
         return res.status(500).json({ message: "internal server error", error: error.message, success: false });
 
     }
+
+}
+
+
+// get provider apis
+module.exports.getProviderApi = async (req, res) => {
+
+    const providerId = req.id;
+
+    try {
+        const providerDetails = await providerModel.findById(providerId);
+        const providerApi = await apiModel.find({ providerId })
+
+        if (!providerDetails) {
+            return res.status(400).json({ message: "provider account not found!", success: false })
+        }
+        if (!providerApi) {
+            return res.status(400).json({ message: "error fetching the api's!", success: false })
+        }
+
+        console.log("apis : ", providerApi)
+
+        return res.status(200).json({ message: "provider api fetch!", success: true , providerApi})
+
+
+
+
+    } catch (error) {
+        console.log("error", error)
+        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
+
+    }
+
 
 }
 
