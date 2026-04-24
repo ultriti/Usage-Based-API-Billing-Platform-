@@ -6,3 +6,11 @@
   box-sizing: border-box;
 } */
 
+*::-webkit-scrollbar {
+  width: 10px;
+  background-color: rgba(39, 39, 39, 0.728);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #737373;
+}

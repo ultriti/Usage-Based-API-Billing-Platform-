@@ -8,10 +8,11 @@ const { createApi, requestApiRoute, setApiKey, getProviderStats, apiPartialPayme
 router.post("/createApi", isProviderAuthenticate, createApi);
 router.post("/getProviderInfo", isProviderAuthenticate, getProviderStats);
 router.put("/updateApiStatus/:apiId", isProviderAuthenticate, toggleStatus);
+router.delete("/deleteApi/:apiId", isProviderAuthenticate, toggleStatus);
 
 
 
-// user/consuner
+// user/consumer
 router.post("/getApi", isAunthenticate, createApi);
 router.post("/apiRequest", isAunthenticate, requestApiRoute);
 router.get("/setApi/:consumerId", isAunthenticate, setApiKey);

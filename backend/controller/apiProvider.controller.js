@@ -20,7 +20,7 @@ const token = process.env.INFLUXDB_TOKEN;
 const org = process.env.INFLUXDB_ORG;
 const bucket = process.env.INFLUXDB_BUCKET;
 
-console.log("----------?\n\n\n\n",url)
+console.log("----------?\n\n\n\n", url)
 
 const client = new InfluxDB({ url, token });
 const writeClient = client.getWriteApi(org, bucket, 'ns');
@@ -86,9 +86,6 @@ module.exports.createApi = async (req, res) => {
         });
 
         await createdApi.save()
-
-
-
 
 
         return res.status(201).json({ message: "api created successfullly", success: true, createdApi });
@@ -310,7 +307,7 @@ module.exports.requestApiRoute = async (req, res) => {
         }
 
 
-        const providerUrl = `${api.baseUrl}${endpoint? endpoint : ""}`;
+        const providerUrl = `${api.baseUrl}${endpoint ? endpoint : ""}`;
 
         const providerApiResponse = await axios.get(providerUrl, {
             params: req.query
@@ -491,17 +488,25 @@ module.exports.getProviderStats = async (req, res) => {
     const client = new InfluxDB({ url: 'http://localhost:8086', token: 'my-token' });
     const queryApi = client.getQueryApi('MeterFlow');
     const timeApi = req.query.time;
+    const apiId = req.query.apiId;
+
+
 
     const fluxQuery = `
-    from(bucket: "api_logs")
-      |> range(start: ${timeApi ? String(timeApi) : '-1h'})
-      |> filter(fn: (r) => r._measurement == "api_usage")
-  `;
+  from(bucket: "api_logs")
+    |> range(start: ${timeApi ? String(timeApi) : '-2h'})
+    |> filter(fn: (r) => r._measurement == "api_usage")
+    |> filter(fn: (r) => r.apiId == "${apiId}")  // <-- filter by ID
+`;
 
     // let results = [];
     // let resultsTime = [];
     let resultsLatency = [];
     let resultsStatus = [];
+
+    const api = await apiModel.findById(apiId);
+
+
 
     queryApi.queryRows(fluxQuery, {
         next(row, tableMeta) {
@@ -527,10 +532,14 @@ module.exports.getProviderStats = async (req, res) => {
         complete() {
             console.log('Query finished');
             console.log('resultsStatus, resultsLatency : ', resultsStatus, resultsLatency);
+            console.log('resultsStatus, resultsLatency : ', api?.billing?.totalRequests);
 
-            res.status(201).json({ resultsStatus, resultsLatency });
+
+
+            res.status(201).json({ resultsStatus, resultsLatency, "request": api?.billing?.totalRequests });
         },
     });
+
 }
 
 
@@ -621,7 +630,7 @@ module.exports.toggleStatus = async (req, res) => {
 
         await api.save();
 
-        return res.status(201).json({ message: "api status updated!", success: true, status : api.status })
+        return res.status(201).json({ message: "api status updated!", success: true, status: api.status })
 
 
     } catch (error) {
@@ -632,3 +641,7 @@ module.exports.toggleStatus = async (req, res) => {
     }
 
 }
+
+
+// delete api
+module.exports.

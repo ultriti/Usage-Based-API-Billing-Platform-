@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import "./ProviderDashboard.css";
-import NavbarFrame from '../../components/NavbarFrame';
-import ProviderSidebarFrame from '../../components/providerComponents/ProviderSidebarFrame';
+import NavbarFrame from '../../../components/NavbarFrame';
+import ProviderSidebarFrame from '../../../components/providerComponents/ProviderSidebarFrame';
 import axios from "axios";
+
+import { getGraphData } from "../Graph";
+import ProviderApiInfo from './ProviderApiInfo';
+import { fetchProviderApis } from './GetProviderApis';
+import { useNavigate } from "react-router-dom";
+
+
 import { Line } from "react-chartjs-2";
+import { Pie } from "react-chartjs-2";
 import {
     Chart as ChartJS,
     LineElement,
@@ -12,21 +20,23 @@ import {
     CategoryScale,
     Title,
     Tooltip,
-    Legend
+    Legend,
+    ArcElement
 } from "chart.js";
-import { getGraphData } from "./Graph";
-import ProviderApiInfo from './ProviderApiInfo';
-import { fetchProviderApis } from './Provider Dashboard/GetProviderApis';
 
-ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Title, Tooltip, Legend);
+
+ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, ArcElement, Title, Tooltip, Legend);
 
 
 
 const ProviderDashboard = () => {
 
+    const navigate = useNavigate()
+
     const [chartData, setChartData] = useState(null);
     const [query, setQuery] = useState("");
     const [providerApis, setproviderApis] = useState([])
+    const [pieChart, setpieChart] = useState(null)
 
 
     // fitions 
@@ -35,15 +45,40 @@ const ProviderDashboard = () => {
         console.log("Searching for:", query);
     };
 
-    const fetchData = async () => {
+    const fetchData = async (apiId) => {
+        // alert(`${apiId}`)
         try {
-            const res = await axios.post("http://localhost:3000/api/apiGen/getProviderInfo", {}, { withCredentials: true });
+            const res = await axios.post(`http://localhost:3000/api/apiGen/getProviderInfo?apiId=${apiId}`, {}, { withCredentials: true });
             const formatted = getGraphData(res.data);
+            console.log("--------->", res.data.request)
+            // console.log("---------> datasets",formatted.data.datasets.data)
             setChartData(formatted);
 
-            const data = await fetchProviderApis();
-            console.log("providerApis", data)
-            setproviderApis(data.providerApi);
+
+            // navigate("/graphChart")
+            setpieChart({
+                labels: ['requestSent', 'totalRequests'],
+                datasets: [
+                    {
+                        data: [res.data.request, 500], // values for each slice
+                        backgroundColor: ["#10B981", "#EF4444"], // green, red, amber
+                        borderColor: "#1F2937", // dark border
+                    },
+                ],
+            });
+
+            setpieChart({
+                labels: ['requestSent', 'totalRequests'],
+                datasets: [
+                    {
+                        data: [res.data.request, 500], // values for each slice
+                        backgroundColor: ["#10B981", "#EF4444"], // green, red, amber
+                        borderColor: "#1F2937", // dark border
+                    },
+                ],
+            });
+
+
 
         } catch (err) {
             console.error("Error fetching graph data:", err);
@@ -51,9 +86,32 @@ const ProviderDashboard = () => {
     };
 
 
+    const getProviderApiFuntion = async () => {
+        const data = await fetchProviderApis();
+        console.log("providerApis", data)
+        setproviderApis(data.providerApi);
+    }
+
+    const options = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: "bottom",
+                labels: {
+                    color: "#fff", // white text for dark mode
+                },
+            },
+            tooltip: {
+                enabled: true,
+            },
+        },
+    };
+
+
     // use effects 
     useEffect(() => {
-        fetchData();
+        // fetching api here ---
+        getProviderApiFuntion()
         // const interval = setInterval(fetchData, 5000);
         // return () => clearInterval(interval);
     }, [10000]);
@@ -86,8 +144,8 @@ const ProviderDashboard = () => {
                 <div className="providerChartFrame flex flex-row p-4">
 
 
-                    <div className="bg-gray-900 w-[70%] h-[70vh] text-white flex flex-col items-center p-4 rounded-lg shadow-lg">
-                        <h2 className="text-xl font-semibold mb-4">API Latency & Status Graph</h2>
+                    <div id='graphChart' className="bg-gray-900 w-[70%] h-[70vh] text-white flex flex-col items-center p-4 rounded-lg shadow-lg">
+                        <h2 className="text-xl font-semibold mb-4 ">API Latency & Status Graph</h2>
                         {chartData ? (
                             <Line data={chartData.data} options={chartData.options} />
                         ) : (
@@ -96,7 +154,17 @@ const ProviderDashboard = () => {
                     </div>
 
 
-                    <div className="allChartsLeft w-[30%] flex flex-col">
+                    <div className="allChartsLeft h-[70vh] px-5  w-[30%] flex flex-col justify-between">
+
+                        <div className=" w-[100%] h-[32vh] bg-gray-900 text-white flex flex-col items-center p-4 rounded-lg shadow-lg">
+
+                            {pieChart ? <Pie data={pieChart} options={options} /> : <p>Loading...</p>}
+
+                        </div>
+                        {/* <div className=" w-[100%] h-[32vh] text-white bg-gray-100 flex flex-col items-center p-4 rounded-lg shadow-lg">
+                            <h2 className="text-xl font-semibold mb-4">API Status Distribution</h2>
+                            <Pie data={data} options={options} />
+                        </div> */}
 
                     </div>
 
@@ -143,7 +211,7 @@ const ProviderDashboard = () => {
                             {
                                 providerApis?.map((api, i) => (
 
-                                    <>
+                                    <div >
                                         <ProviderApiInfo
                                             key={api._id}
                                             id={api._id}
@@ -154,8 +222,10 @@ const ProviderDashboard = () => {
                                             chartData={"api.chartData"}
                                             baseUrl={api.baseUrl}
                                             revenue={api.billing.amount}
+                                            fetchData={fetchData}
                                         />
-                                    </>
+
+                                    </div>
 
                                 ))
                             }

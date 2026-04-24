@@ -2,10 +2,12 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 
-import copyCodePng from "../../../public/icon/copyCode.webp"
-import apiPng from "../../../public/icon/10329422.png"
+import copyCodePng from "../../../../public/icon/copyCode.webp"
+import apiPng from "../../../../public/icon/10329422.png"
+import { fetchProviderApis } from './GetProviderApis';
 
-const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, baseUrl , revenue}) => {
+
+const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, baseUrl, revenue, fetchData }) => {
   const [status_, setstatus_] = useState(active)
 
   const apiStatusUpdate = async (apiId, status) => {
@@ -37,8 +39,24 @@ const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, baseUrl 
   };
 
 
+  const getProviderApiFuntion = async () => {
+    const data = await fetchProviderApis();
+    console.log("providerApis", data)
+    setproviderApis(data.providerApi);
+  }
+
+
+  // use effects 
+  useEffect(() => {
+    // fetching api here ---
+    getProviderApiFuntion()
+    // const interval = setInterval(fetchData, 5000);
+    // return () => clearInterval(interval);
+  }, []);
+
+
   return (
-    <div className="apisListInfo h-[12vh] w-full bg-gray-600 rounded-2xl flex items-center px-6 shadow-md">
+    <div className="apisListInfo h-[12vh] w-full bg-gray-600 rounded-2xl flex items-center px-6 shadow-md" onClick={() => { fetchData(id) }}>
 
       {/* Logo + Name */}
       <div className="flex flex-row w-[30vw] h-full items-center space-x-4 overflow-hidden">

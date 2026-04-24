@@ -90,7 +90,22 @@ const apiSchema = new mongoose.Schema({
     invoiceDate: {
       type: Date,
       default: Date.now
-    }
+    },
+    consumerDetail: [
+      {
+        customerId: mongoose.Schema.Types.ObjectId,
+        ammountPaid: {
+          type: Number,
+          default: 0
+        },
+        paidAt: { type: Date, default: Date.now },
+        status: {
+          type: String,
+          enum: ['pending', 'paid'],
+          default: 'pending'
+        },
+      }
+    ]
   },
 
   createdAt: { type: Date, default: Date.now }
