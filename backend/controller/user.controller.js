@@ -94,13 +94,16 @@ module.exports.userLogin = async (req, res) => {
 
     const { email, password } = req.body;
 
+    console.log("--------->login:",req.body)
+
     try {
 
         const user = await userModel.findOne({ email }).select("+password");
-        console.log("user :", user)
+        
 
         if (!user) {
-            return res.status(400).json({ message: "User not found", success: false });
+            console.log("user :", user)
+            return res.status(400).json({ message: "User not found!", success: false });
         }
 
         const isMatch = await user.comparePassword(password, user.password);

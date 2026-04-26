@@ -62,7 +62,7 @@ const ProviderApiDetaiFrame = ({ api }) => {
 
     return (
         <>
-            <div className="apiListedFrame h-[50vh] mb-5 w-full bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="apiListedFrame h-[60vh] mb-5 w-full bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
 
                 {/* Top Frame */}
                 <div className="apiTitleInfo h-[8vh] w-full bg-gray-700 flex flex-row items-center px-6 justify-between">
@@ -107,7 +107,7 @@ const ProviderApiDetaiFrame = ({ api }) => {
                 </div>
 
                 {/* Middle Frame */}
-                <div className="h-[90%] w-full bg-gray-800 flex flex-row p-4">
+                <div className="h-[70%] w-full bg-gray-800 flex flex-row p-4">
 
                     {/* Left Section */}
                     <div className="apiDetailFrameLeft h-full w-[70%] flex flex-col gap-4">
@@ -121,11 +121,11 @@ const ProviderApiDetaiFrame = ({ api }) => {
                         <div className="h-[12vh] w-[90%] bg-gray-700 flex items-center justify-center rounded-lg">
                             <div
                                 className="w-[90%] flex rounded-lg shadow-md cursor-pointer"
-                                onClick={() => handleCopy(api.baseUrl)}
+                                onClick={() => handleCopy(api.platformUrl)}
                             >
                                 <input
                                     type="text"
-                                    value={api.baseUrl}
+                                    value={api.platformUrl}
                                     readOnly
                                     className="flex-grow px-3 py-2 bg-gray-800 text-gray-400 truncate rounded-l-md focus:outline-none cursor-pointer"
                                 />
@@ -156,6 +156,13 @@ const ProviderApiDetaiFrame = ({ api }) => {
 
                         </div>
                     </div>
+                </div>
+
+                {/* lower frame */}
+                <div className='h-[7vh] w-full  flex items-center justify-end px-15'>
+                        <button className='h-[3vw] w-[12vw] bg-red-700 rounded-2xl text-[1.5vw] font-[600] text-gray-300 cursor-pointer hover:bg-red-800'>
+                            <p>delete</p>
+                        </button>
                 </div>
 
 

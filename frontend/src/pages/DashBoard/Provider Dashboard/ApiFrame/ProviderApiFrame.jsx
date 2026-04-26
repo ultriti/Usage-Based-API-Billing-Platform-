@@ -81,7 +81,7 @@ const ProviderApiFrame = () => {
             {
                 ToggleCreatApiFrom ? (
                     <div className='toggleCreateFrame h-[100%] w-[100%] z-900 flex items-center justify-center bg-gray-900 fixed top-0 left-0 '>
-                        <CreateApiForm toggleCreateApiFrameFun={toggleCreateApiFrameFun}/>
+                        <CreateApiForm toggleCreateApiFrameFun={toggleCreateApiFrameFun} />
                     </div>
                 ) : (
                     <></>
@@ -105,7 +105,7 @@ const ProviderApiFrame = () => {
 
                     <p className='text-gray-100 text-[2vw] font-[600] capitalize'>your api's list</p>
 
-                    <button className="h-[3vw] w-[12vw] bg-gray-800 rounded-2xl text-[1.3vw] font-semibold text-gray-100 cursor-pointer" onClick={()=>{toggleCreateApiFrameFun(true)}}>
+                    <button className="h-[3vw] w-[12vw] bg-gray-800 rounded-2xl text-[1.3vw] font-semibold text-gray-100 cursor-pointer" onClick={() => { toggleCreateApiFrameFun(true) }}>
                         Create API
                     </button>
 
@@ -115,11 +115,27 @@ const ProviderApiFrame = () => {
 
                     <div className="apiListInfoCont p-5">
 
-                        {providerApis?.map((api, i) => (
-                            <ProviderApiDetaiFrame
-                                api={api}
-                            />
-                        ))
+                        {
+                            providerApis?.length > 0 ? (
+                                <>
+
+
+                                    {
+
+                                        providerApis?.map((api, i) => (
+                                            <ProviderApiDetaiFrame
+                                                api={api}
+                                            />
+                                        ))
+
+                                    }
+                                </>
+
+                            ) : (
+                                <div className='h-[20vh] w-[100%] bg-gray-600 rounded-2xl flex items-center justify-center'>
+                                    <p className='text-[2vw] font-[600] text-gray-300 capitalize'>no api list </p>
+                                </div>
+                            )
                         }
 
                     </div>

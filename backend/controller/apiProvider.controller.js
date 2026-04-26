@@ -50,7 +50,6 @@ module.exports.createApi = async (req, res) => {
 
     if (!baseUrl || !name) {
         return res.status(400).json({ message: "All fields are required", success: false });
-
     }
 
     try {
@@ -58,7 +57,7 @@ module.exports.createApi = async (req, res) => {
         const apiDetail = await apiModel.findOne({ baseUrl: baseUrl });
 
         if (apiDetail) {
-            return res.status(400).json({ message: "api areldy exists with provide api", success: false })
+            return res.status(400).json({ message: "api areldy exists with provide api", success: false });
         }
 
         if (!providerDetail) {
@@ -66,26 +65,37 @@ module.exports.createApi = async (req, res) => {
 
         }
 
+        const platformUrl = `${process.env.BACKEND_URI}`;
+
         const createdApi = await apiModel.create({
             providerId: provId,
             name: name,
             baseUrl: baseUrl,
-            apiKeys: []
-
-        })
+            apiKeys: [],
+            platformUrl: platformUrl + `?apiName=${name}`
+        });
 
         // Generate codes
         const apiKeyCode = generateSecureCode(25);
         const apiPasswordCode = generateSecureCode(12);
 
+
+
         createdApi.apiKeys.push({
             consumerId: provId,
             key: apiKeyCode,
             apiPassword: apiPasswordCode,
-            status: 'active'
+            status: 'active',
         });
 
         await createdApi.save()
+
+        providerDetail.apiCreated.push({
+            apiId: createdApi._id,
+            purchased: true,
+        });
+
+        await providerDetail.save();
 
 
         return res.status(201).json({ message: "api created successfullly", success: true, createdApi });
@@ -93,7 +103,7 @@ module.exports.createApi = async (req, res) => {
 
     } catch (error) {
 
-        console.log("error :", error)
+        console.log("error :", error);
         return res.status(500).json({ message: "internal server error", error: error.message, success: false });
 
     }
@@ -114,7 +124,7 @@ module.exports.setApiKey = async (req, res) => {
         const api = await apiModel.findById(providerApiId);
         if (!api) {
             return res.status(400).json({ message: "API not found!", success: false });
-        }
+        };
 
         // Generate codes
         const apiKeyCode = generateSecureCode(25);
@@ -122,7 +132,7 @@ module.exports.setApiKey = async (req, res) => {
 
         const hashedApiPasswordCode = await apiModel.prototype.hashKeys(apiPasswordCode);
 
-        console.log("api:--------------\n", api?._id)
+        console.log("api:--------------\n", api?._id);
 
         // Assume providerApiId is the ObjectId or string you want to check
         let existingApi = false;
@@ -134,19 +144,17 @@ module.exports.setApiKey = async (req, res) => {
         }
 
         console.log("existingApi:", existingApi);
-
-
-
         console.log("------------->", existingApi)
 
         if (existingApi) {
             return res.status(400).json({ message: "API already purchased!", success: false });
         }
 
+
         api.apiKeys.push({
             consumerId: consumerId,
             key: apiKeyCode,
-            apiPassword: hashedApiPasswordCode,
+            // apiPassword: hashedApiPasswordCode,
             status: 'active'
         });
 
@@ -300,10 +308,16 @@ module.exports.requestApiRoute = async (req, res) => {
         const keyObj = api.apiKeys.find(k => k.key === apiKey && k.status === "active");
         if (!keyObj) {
             return res.status(401).json({ message: "API key not active" });
-        }
-        const isKeyPassMatch = await bcrypt.compare(apiPassword, keyObj.apiPassword);
-        if (!isKeyPassMatch) {
-            return res.status(400).json({ message: "invalid api key credentail!", sucess: false })
+        };
+
+        const apiEntry = userDetail.api.find(api => api.keyCode === apiKey);
+        if (!apiEntry) {
+            return res.status(400).json({ message: "API key not valid" });
+        };
+
+
+        if (apiEntry.keyPassword !== apiPassword) {
+            return res.status(401).json({ message: "Invalid API password" });
         }
 
 
@@ -491,10 +505,11 @@ module.exports.getProviderStats = async (req, res) => {
     const apiId = req.query.apiId;
 
 
+    console.log("timeApi", timeApi)
 
     const fluxQuery = `
   from(bucket: "api_logs")
-    |> range(start: ${timeApi ? String(timeApi) : '-2h'})
+    |> range(start: ${timeApi ? `-${timeApi}` : '-2h'})
     |> filter(fn: (r) => r._measurement == "api_usage")
     |> filter(fn: (r) => r.apiId == "${apiId}")  // <-- filter by ID
 `;
@@ -644,4 +659,64 @@ module.exports.toggleStatus = async (req, res) => {
 
 
 // delete api
-module.exports.
+module.exports.deleteApi = async (req, res) => {
+
+    const providerId = req.id;
+    const apiId = req.params.apiId;
+
+    console.log("---------->\n-------------->", providerId);
+
+    try {
+
+        const providerDetail = await providerModel.findById(providerId);
+        const api = await apiModel.findById(apiId);
+
+        console.log(providerDetail);
+
+        if (!api) {
+            return res.status(400).json({ message: "api not found !", sucess: false });
+        };
+        if (!providerDetail) {
+            return res.status(400).json({ message: "provider not found !", sucess: false })
+        };
+
+        if (providerId != api.providerId) {
+            return res.status(400).json({ message: "you are not owner of this api !", sucess: false })
+        };
+
+        await apiModel.findByIdAndDelete(api._id);
+
+        providerDetail.apiCreated.includes(api._id);
+
+        await providerDetail.save();
+
+        return res.status(400).json({ message: "api deleted !", success: true });
+
+    } catch (error) {
+        console.log("error :", error);
+        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
+    }
+}
+
+
+// get all api
+module.exports.getAllApis = async (req, res) => {
+
+    const consumerId = req.id;
+
+    try {
+        const userDetail = await userModel.findById(consumerId);
+
+        if (!userDetail) {
+            return res.status(400).json({ message: "user not registired in !", success: false });
+        };
+
+        const allApis = await apiModel.find();
+
+        return res.status(200).json({ message: "api deleted !", success: true, allApi: allApis });
+
+    } catch (error) {
+        console.log("error :", error);
+        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
+    }
+}

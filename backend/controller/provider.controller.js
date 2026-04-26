@@ -62,6 +62,8 @@ module.exports.providerRegister = async (req, res) => {
         const hashedPassword = await providerModel.prototype.hashPassword(password);
         const userDetail = await userModel.findOne({ email });
 
+        console.log("------------>",userDetail)
+
         if (userDetail?.email === email) {
 
             if (!userDetail.isVerified.email) {
@@ -88,7 +90,7 @@ module.exports.providerRegister = async (req, res) => {
             });
 
 
-            return res.status(201).json({ message: "provider registered successfully", success: true, user: createdProvider });
+            return res.status(201).json({ message: "provider registered successfully", success: true, Provider: createdProvider });
 
         } else {
 
@@ -113,7 +115,7 @@ module.exports.providerRegister = async (req, res) => {
             });
 
 
-            return res.status(201).json({ message: "provider registered successfully", success: true, user: createdProvider });
+            return res.status(201).json({ message: "provider registered successfully", success: true, Provider: createdProvider });
 
         }
 
@@ -136,13 +138,15 @@ module.exports.providerLogin = async (req, res) => {
 
         const providerDetail = await providerModel.findOne({ email }).select("+password");
 
-        console.log("providerDetail",providerDetail)
+        
 
         if (!providerDetail) {
             return res.status(400).json({ message: "provider not found", success: false });
         }
 
         const isMatch = await providerDetail.comparePassword(password, providerDetail.password);
+
+        console.log("isMatch",isMatch)
 
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials", success: false });
@@ -164,7 +168,7 @@ module.exports.providerLogin = async (req, res) => {
             expires: new Date(Date.now() + 3600000 * 24 * 30)
         });
 
-        return res.status(200).json({ message: "provider logged in successfully", success: true, providerDetail });
+        return res.status(200).json({ message: "provider logged in successfully", success: true, providerDetail :providerDetail });
 
     } catch (error) {
 

@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const { isAunthenticate, isProviderAuthenticate } = require('../middleware/auth.middleware');
-const { createApi, requestApiRoute, setApiKey, getProviderStats, apiPartialPayment, toggleStatus } = require('../controller/apiProvider.controller');
+const { createApi, requestApiRoute, setApiKey, getProviderStats, apiPartialPayment, toggleStatus, deleteApi, getAllApis } = require('../controller/apiProvider.controller');
 
 
 // provider
 router.post("/createApi", isProviderAuthenticate, createApi);
 router.post("/getProviderInfo", isProviderAuthenticate, getProviderStats);
 router.put("/updateApiStatus/:apiId", isProviderAuthenticate, toggleStatus);
-router.delete("/deleteApi/:apiId", isProviderAuthenticate, toggleStatus);
+router.delete("/deleteApi/:apiId", isProviderAuthenticate, deleteApi);
 
 
 
 // user/consumer
-router.post("/getApi", isAunthenticate, createApi);
-router.post("/apiRequest", isAunthenticate, requestApiRoute);
+router.get("/getAllApi", isAunthenticate, getAllApis);
+router.get("/apiRequest", isAunthenticate, requestApiRoute);
 router.get("/setApi/:consumerId", isAunthenticate, setApiKey);
 router.post("/partialPayApi/:consumerId", isAunthenticate, apiPartialPayment);
 

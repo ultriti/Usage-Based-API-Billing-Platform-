@@ -1,9 +1,13 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./ProviderLogin.css"
 
+import { AdminDataContext } from "../../../context/AdminContext";
+
 const ProviderLogin = () => {
+  const {  setAdminDeatils, loadAdminDetail, removeAdminDetail  } = useContext(AdminDataContext);
+
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
@@ -27,7 +31,8 @@ const ProviderLogin = () => {
 
       if (res.status === 200) {
         alert("Login successful!");
-        console.log("Response:", res.data);
+        console.log("Response: logon ->", res.data);
+        setAdminDeatils(res.data.providerDetail);
         navigate("/provider/Dashboard");
       } else {
         alert("Login failed: " + res.data.message);

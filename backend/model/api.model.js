@@ -16,6 +16,11 @@ const apiSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  platformUrl: {
+    type: String,
+    required: true,
+    default : "http://localhost:3000/"
+  },
   status: {
     type: String,
     enum: ['active', 'revoked'],
@@ -33,11 +38,11 @@ const apiSchema = new mongoose.Schema({
       required: true,
       unique: true
     },
-    apiPassword: {
-      type: String,
-      required: true,
-      unique: true
-    },
+    // apiPassword: {
+    //   type: String,
+    //   required: true,
+    //   unique: true
+    // },
     status: {
       type: String,
       enum: ['active', 'revoked'],

@@ -62,14 +62,14 @@ const userSchema = new mongoose.Schema({
             type: Boolean,
             default: false
         },
-        // keyCode: {
-        //     type: String,
-        //     default: ""
-        // },
-        // keyPassword: {
-        //     type: String,
-        //     default: ""
-        // },
+        keyCode: {
+            type: String,
+            default: ""
+        },
+        keyPassword: {
+            type: String,
+            default: ""
+        },
         usage: {
             type: Number,
             default: 0

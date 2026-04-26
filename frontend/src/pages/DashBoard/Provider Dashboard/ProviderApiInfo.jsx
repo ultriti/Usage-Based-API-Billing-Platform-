@@ -7,8 +7,10 @@ import apiPng from "../../../../public/icon/10329422.png"
 import { fetchProviderApis } from './GetProviderApis';
 
 
-const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, baseUrl, revenue, fetchData }) => {
+const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, platformUrl, revenue, fetchData }) => {
   const [status_, setstatus_] = useState(active)
+  const [providerApis, setproviderApis] = useState([])
+
 
   const apiStatusUpdate = async (apiId, status) => {
     console.log("status:::", status)
@@ -45,13 +47,19 @@ const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, baseUrl,
     setproviderApis(data.providerApi);
   }
 
+  const deleteProviderApiAxios = async () => {
+
+    try {
+
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
 
   // use effects 
   useEffect(() => {
-    // fetching api here ---
     getProviderApiFuntion()
-    // const interval = setInterval(fetchData, 5000);
-    // return () => clearInterval(interval);
   }, []);
 
 
@@ -87,7 +95,7 @@ const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, baseUrl,
       </div>
 
       <div className="apiUrlCopyFrame h-[5vw] w-[5vw] py-5 px-5 ">
-        <img onClick={() => { handleCopy(baseUrl) }} className="h-full w-full px-1 rounded-2xl bg-gray-200 cursor-pointer" src={copyCodePng} alt="" />
+        <img onClick={() => { handleCopy(platformUrl) }} className="h-full w-full px-1 rounded-2xl bg-gray-200 cursor-pointer" src={copyCodePng} alt="" />
       </div>
 
       {/* Toggle */}

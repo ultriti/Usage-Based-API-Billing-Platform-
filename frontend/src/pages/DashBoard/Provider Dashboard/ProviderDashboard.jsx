@@ -37,6 +37,7 @@ const ProviderDashboard = () => {
     const [query, setQuery] = useState("");
     const [providerApis, setproviderApis] = useState([])
     const [pieChart, setpieChart] = useState(null)
+    const [SelectTime, setSelectTime] = useState(1)
 
 
     // fitions 
@@ -48,7 +49,7 @@ const ProviderDashboard = () => {
     const fetchData = async (apiId) => {
         // alert(`${apiId}`)
         try {
-            const res = await axios.post(`http://localhost:3000/api/apiGen/getProviderInfo?apiId=${apiId}`, {}, { withCredentials: true });
+            const res = await axios.post(`http://localhost:3000/api/apiGen/getProviderInfo?apiId=${apiId}&time=${SelectTime}`, {}, { withCredentials: true });
             const formatted = getGraphData(res.data);
             console.log("--------->", res.data.request)
             // console.log("---------> datasets",formatted.data.datasets.data)
@@ -56,6 +57,31 @@ const ProviderDashboard = () => {
 
 
             // navigate("/graphChart")
+
+            if (res.data.request < 500) {
+                setpieChart({
+                    labels: ['requestSent', 'totalRequests'],
+                    datasets: [
+                        {
+                            data: [res.data.request, 500], // values for each slice
+                            backgroundColor: ["#10B981", "#EF4444"], // green, red, amber
+                            borderColor: "#1F2937", // dark border
+                        },
+                    ],
+                });
+
+                setpieChart({
+                    labels: ['requestSent', 'totalRequests'],
+                    datasets: [
+                        {
+                            data: [res.data.request, 500], // values for each slice
+                            backgroundColor: ["#10B981", "#EF4444"], // green, red, amber
+                            borderColor: "#1F2937", // dark border
+                        },
+                    ],
+                });
+
+            }
             setpieChart({
                 labels: ['requestSent', 'totalRequests'],
                 datasets: [
@@ -108,6 +134,10 @@ const ProviderDashboard = () => {
     };
 
 
+
+    // 
+    const timeArray = ["1h", "5h", "12h", "24h", "7d", "30d"]
+
     // use effects 
     useEffect(() => {
         // fetching api here ---
@@ -145,7 +175,31 @@ const ProviderDashboard = () => {
 
 
                     <div id='graphChart' className="bg-gray-900 w-[70%] h-[70vh] text-white flex flex-col items-center p-4 rounded-lg shadow-lg">
-                        <h2 className="text-xl font-semibold mb-4 ">API Latency & Status Graph</h2>
+
+                        <div className='h-[7vh] w-full  flex flex-row items-center justify-center gap-5'>
+
+                            <h2 className="text-xl font-semibold mb-4 ">API Latency & Status Graph</h2>
+
+
+                            <div className="w-30">
+                                <select
+                                    value={SelectTime}
+                                    onChange={(e) => setSelectTime(e.target.value)}
+                                    className="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    {timeArray.map((time) => (
+                                        <option key={time} value={time} className="bg-gray-800 text-gray-100">
+                                            {time}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                        </div>
+
+
+
+
                         {chartData ? (
                             <Line data={chartData.data} options={chartData.options} />
                         ) : (
@@ -154,7 +208,7 @@ const ProviderDashboard = () => {
                     </div>
 
 
-                    <div className="allChartsLeft h-[70vh] px-5  w-[30%] flex flex-col justify-between">
+                    <div className="allChartsLeft h-[70vh] px-5 w-[30%] flex flex-col justify-between">
 
                         <div className=" w-[100%] h-[32vh] bg-gray-900 text-white flex flex-col items-center p-4 rounded-lg shadow-lg">
 
@@ -205,29 +259,37 @@ const ProviderDashboard = () => {
                     </div>
 
                     {/* apis list  */}
-                    <div className="h-[80vh] w-full bg-gray-900 mb-5 flex flex-col items-center ">
+                    <div className="h-[100%] w-full bg-gray-900 flex flex-col items-center ">
                         <div className="apiListCont flex flex-col items-center  w-[95%]  mt-5 gap-3">
 
                             {
-                                providerApis?.map((api, i) => (
+                                providerApis.length > 0 ? (
+                                    <>
+                                        {
+                                            providerApis?.map((api, i) => (
 
-                                    <div >
-                                        <ProviderApiInfo
-                                            key={api._id}
-                                            id={api._id}
-                                            logo={"api.logo"}
-                                            name={api.name}
-                                            requests={api.billing.totalRequests}
-                                            active={api.status}
-                                            chartData={"api.chartData"}
-                                            baseUrl={api.baseUrl}
-                                            revenue={api.billing.amount}
-                                            fetchData={fetchData}
-                                        />
+                                                <div >
+                                                    <ProviderApiInfo
+                                                        key={api._id}
+                                                        id={api._id}
+                                                        logo={"api.logo"}
+                                                        name={api.name}
+                                                        requests={api.billing.totalRequests}
+                                                        active={api.status}
+                                                        chartData={"api.chartData"}
+                                                        platformUrl={api.platformUrl}
+                                                        revenue={api.billing.amount}
+                                                        fetchData={fetchData}
+                                                    />
 
+                                                </div>
+                                            ))}
+                                    </>
+                                ) : (
+                                    <div className='h-[20vh] w-[100%] bg-gray-600 rounded-2xl flex items-center justify-center'>
+                                        <p className='text-[2vw] font-[600] text-gray-300 capitalize'>no api list </p>
                                     </div>
-
-                                ))
+                                )
                             }
 
 
