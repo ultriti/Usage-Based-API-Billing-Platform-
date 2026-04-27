@@ -2,6 +2,7 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import UserNavbar from '../../components/UserNavbar';
 
 const ApiDetailFrameTemplate = () => {
   const location = useLocation();
@@ -167,7 +168,7 @@ const ApiDetailFrameTemplate = () => {
     <div className="h-[100vh] w-full bg-gray-900 ">
 
       <div className="userNavbarFrame">
-
+        <UserNavbar/>
       </div>
 
 
@@ -209,7 +210,7 @@ const ApiDetailFrameTemplate = () => {
           {
             !ApiCredentails ? (
               <>
-                <button onClick={() => { getApicredentails() }} className="h-[4vw] w-[25vw] px-5 bg-blue-600 mr-15 hover:bg-blue-700 rounded text-[1.5vw] text-white font-medium cursor-pointer">
+                <button onClick={() => { getApicredentails() }} className="h-[4vw] w-[28vw] px-5 bg-blue-600 mr-15 hover:bg-blue-700 rounded text-[1.5vw] text-white font-medium cursor-pointer">
                   get api key (per 500 free credits)
                 </button>
               </>

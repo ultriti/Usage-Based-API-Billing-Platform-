@@ -136,12 +136,13 @@ module.exports.providerLogin = async (req, res) => {
 
     try {
 
-        const providerDetail = await providerModel.findOne({ email }).select("+password");
+        const providerDetail = await providerModel.findOne({ email : email }).select("+password");
 
-        
+        console.log("---------->providerDetail",providerDetail)
 
         if (!providerDetail) {
-            return res.status(400).json({ message: "provider not found", success: false });
+            
+            return res.status(400).json({ message: "provider not found", success: false, errors: [{ msg: 'provider not found' }] });
         }
 
         const isMatch = await providerDetail.comparePassword(password, providerDetail.password);

@@ -19,7 +19,7 @@ const apiSchema = new mongoose.Schema({
   platformUrl: {
     type: String,
     required: true,
-    default : "http://localhost:3000/"
+    default: "http://localhost:3000/"
   },
   status: {
     type: String,
@@ -61,6 +61,23 @@ const apiSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }],
+    categories: {
+      type: String,
+      enum: [
+        'development',
+        'character',
+        'design',
+        'testing',
+        'documentation',
+        'analytics',
+        'security',
+        'billing',
+        'support',
+        'marketing',
+        'operations'
+      ],
+      default: 'development'
+    },
     status: [{
       type: Number,
       default: 0

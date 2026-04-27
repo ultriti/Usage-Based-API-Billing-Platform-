@@ -29,7 +29,7 @@ const AdminProtectedWrapper = ({ children }) => {
 
 
 
-    return authAdmin ? <>{children}</> : <>{children}</>;
+    return authAdmin ? <>{children}</> : null;
 };
 
 export default AdminProtectedWrapper;

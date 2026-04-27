@@ -6,26 +6,6 @@ const ApiRequest = () => {
   const [data, setdata] = useState(null)
 
   const demo = async () => {
-    //   const url = "http://localhost:3000/api/apiGen/apiRequest?apiName=poke";
-
-    //   try {
-    //     const response = await axios.get(url, {
-    //       headers: {
-    //         "api_provide_key": "upNXcKOLOws3mFdur]npnnd,2",
-    //         "api_provide_password": "ohjcc@Czl|!}"
-    //       },
-    //       withCredentials: true
-
-    //     });
-
-    //     console.log(response.data);
-    //     setdata(response.data)
-
-
-    //   } catch (error) {
-    //     console.error("Error:", error);
-    //   }
-    // }
 
 
 
@@ -67,13 +47,6 @@ const ApiRequest = () => {
           <>
             {
               data.data.count
-              // .results.map((data,i)=>(
-              //   <>
-              //   {
-              //     data
-              //   }
-              //   </>
-              // ))
             }
           </>
         ) : (

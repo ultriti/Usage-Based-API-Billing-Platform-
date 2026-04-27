@@ -111,9 +111,9 @@ const ProviderApiFrame = () => {
 
                 </div>
 
-                <div className="apiListInformationList h-[120vh] w-full flex flex-col">
+                <div className="apiListInformationList  h-[120vh] w-full flex flex-col">
 
-                    <div className="apiListInfoCont p-5">
+                    <div className="apiListInfoCont p-5 bg-gray-900">
 
                         {
                             providerApis?.length > 0 ? (

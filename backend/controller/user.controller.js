@@ -123,7 +123,7 @@ module.exports.userLogin = async (req, res) => {
             expires: new Date(Date.now() + 3600000 * 24 * 30)
         });
 
-        return res.status(200).json({ message: "User logged in successfully", success: true, user });
+        return res.status(200).json({ message: "User logged in successfully", success: true, user:user });
 
     } catch (error) {
         console.log("error :", error)

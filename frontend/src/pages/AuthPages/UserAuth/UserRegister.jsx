@@ -1,8 +1,10 @@
 // UserRegister.jsx
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const UserRegister = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -29,16 +31,21 @@ const UserRegister = () => {
       } else {
         alert(res.data.message || "Registration failed");
       }
-    } catch (error) {
-      console.error(error);
-      alert(error.message);
+    } catch (err) {
+      if (err.response) {
+        console.error("Backend error:", err.response.data);
+        alert("Login failed: " + err.response.data.message);
+      } else {
+        console.error("Error logging in:", err);
+        alert("Something went wrong!");
+      }
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-700 to-blue-900">
       <div className="bg-gray-900 text-gray-100 rounded-lg shadow-lg w-full max-w-md p-8">
-        <h2 className="text-3xl font-bold text-center mb-6">MeterFlow Registration</h2>
+        <h2 className="text-3xl font-bold text-center mb-6">MeterFlow</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Username</label>
@@ -79,7 +86,12 @@ const UserRegister = () => {
             />
           </div>
 
-          <div>
+          <div className="routeRegisterFrame h-[5vh] w-full flex items-center justify-end">
+            <p className="mt-1 text-blue-500 text-sm cursor-pointer" onClick={() => { navigate("/user/login") }}>Forgot your password ?</p>
+
+          </div>
+
+          {/* <div>
             <label className="block text-sm font-medium mb-1">Role</label>
             <select
               name="role"
@@ -91,7 +103,7 @@ const UserRegister = () => {
               <option value="admin">Admin</option>
               <option value="provider">Provider</option>
             </select>
-          </div>
+          </div> */}
 
           <button
             type="submit"
@@ -100,6 +112,11 @@ const UserRegister = () => {
             Register
           </button>
         </form>
+
+        <div className="routeRegisterFrame h-[10vh] w-full flex items-center justify-center">
+          <p className="mt-1 text-gray-300 text-sm cursor-pointer" onClick={() => { navigate("/user/login") }}>Alredy have an account ? sign in</p>
+
+        </div>
       </div>
     </div>
   );

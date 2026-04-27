@@ -16,6 +16,8 @@ import UserHomePage from './pages/UserPages/UserHomePage'
 import UserLogin from './pages/AuthPages/UserAuth/UserLogin'
 import ApiDetailFrameTemplate from './pages/UserPages/ApiDetailFrameTemaplate'
 import ApiRequest from './pages/ApiRequest'
+import UserContext from './context/UserContext'
+import UserProtectedWrapper from './context/UserProtectedWrapper'
 
 const App = () => {
   return (
@@ -26,16 +28,16 @@ const App = () => {
 
         {/* user routes */}
         <Route path="/user/Register" element={<UserRegister />} />
-        <Route path="/user/login" element={<UserLogin />} />
+        <Route path="/user/login" element={<><AdminContext><UserContext><UserLogin /></UserContext></AdminContext></>} />
 
 
-        <Route path="/user/HomePage" element={<UserHomePage />} />
+        <Route path="/user/homePage" element={<><UserProtectedWrapper><UserHomePage /></UserProtectedWrapper></>} />
         <Route path="/user/apiDetailFrame" element={<ApiDetailFrameTemplate />} />
         <Route path="/user/apiDemoReq" element={<ApiRequest />} />
 
         {/* provider routes */}
         <Route path="/provider/Register" element={<ProviderRegister />} />
-        <Route path="/provider/Login" element={<><AdminContext><ProviderLogin /> </AdminContext></>} />
+        <Route path="/provider/Login" element={<><AdminContext><UserContext><ProviderLogin /></UserContext> </AdminContext></>} />
 
         <Route path="/provider/Dashboard" element={<><AdminProtectedWrapper><ProviderDashboard /></AdminProtectedWrapper></>} />
         <Route path="/provider/providerApi" element={<ProviderApiFrame />} />

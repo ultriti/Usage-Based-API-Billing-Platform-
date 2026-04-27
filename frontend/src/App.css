@@ -19,11 +19,27 @@
 }
 
 .UserMainFrame {
-    height: 100vh;
+    min-height: 100%;
     width: 84%;
-    background-color: #fff;
-    margin-left: 16vw;
-    padding: 6vw 1vw 1vw 1vw ;
+    margin-left: 15.9vw;
+    padding: 6vw 1vw 1vw 1vw;
     display: flex;
+    align-items: center;
+    justify-content: center;
     flex-wrap: wrap;
+}
+
+.userSidebarFrame {
+    height: 90vh;
+    width: 16vw;
+    position: fixed;
+    top: 4vw;
+    left: 0;
+    background-color: #ffffff2d;
+    z-index: 899;
+}
+
+.userHomePageFrame {
+    position:relative;
+    background-color: #1c1c1c
 }
