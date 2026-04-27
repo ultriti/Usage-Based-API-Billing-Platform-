@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import ApiTemplateFrame from './ApiTemplateFrame'
 import axios from 'axios';
+import { useNavigate } from "react-router-dom";
+
 
 const UserHomePage = () => {
+  const navigate = useNavigate()
 
   const [allApis, getallApis] = useState([])
 
@@ -54,13 +57,30 @@ const UserHomePage = () => {
       <div className="UserMainFrame">
 
 
-        <div className="apiTemplateFrame h-[28vh] w-[30vw] bg-gray-600">
+        <div className="apiTemplateFrame h-[100%] w-[100%] flex gap-5 flex-wrap bg-gray-600">
 
           {
             allApis ? (
 
               allApis?.map((api, i) => (
-                <>
+                <div onClick={() => {
+                  navigate("/user/apiDetailFrame", {
+                    state: {
+                      api: {
+                        id : api?._id,
+                        name: api?.name,
+                        platformUrl: api?.platformUrl,
+                        description: api?.description,
+                        keyCode: api?.key,
+                        status : api?.status,
+                        usage: 2,
+                      },
+                    },
+                  })
+                }}
+                >
+
+
                   <ApiTemplateFrame
 
                     name={api?.name}
@@ -68,7 +88,7 @@ const UserHomePage = () => {
                     description={api?.description}
 
                   />
-                </>
+                </div>
 
               ))
             ) : (

@@ -10,7 +10,7 @@ const ApiTemplateFrame = ({name, link, description }) => {
     };
 
     return (
-        <div className="max-w-md mx-auto bg-gray-900 text-gray-100 rounded-lg shadow-md p-6">
+        <div className="h-[30vh] w-[26vw] bg-gray-900 text-gray-100 rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold mb-2">{name}</h2>
             <p className="text-sm text-gray-400 mb-4">{description}</p>
 

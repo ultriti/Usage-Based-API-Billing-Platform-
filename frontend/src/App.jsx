@@ -14,6 +14,8 @@ import AdminContext from './context/AdminContext'
 import AdminProtectedWrapper from './context/AdminProtectedWrapper'
 import UserHomePage from './pages/UserPages/UserHomePage'
 import UserLogin from './pages/AuthPages/UserAuth/UserLogin'
+import ApiDetailFrameTemplate from './pages/UserPages/ApiDetailFrameTemaplate'
+import ApiRequest from './pages/ApiRequest'
 
 const App = () => {
   return (
@@ -28,6 +30,8 @@ const App = () => {
 
 
         <Route path="/user/HomePage" element={<UserHomePage />} />
+        <Route path="/user/apiDetailFrame" element={<ApiDetailFrameTemplate />} />
+        <Route path="/user/apiDemoReq" element={<ApiRequest />} />
 
         {/* provider routes */}
         <Route path="/provider/Register" element={<ProviderRegister />} />

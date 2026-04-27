@@ -30,7 +30,7 @@ const writeClient = client.getWriteApi(org, bucket, 'ns');
 
 // code generation 
 function generateSecureCode(length) {
-    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:,.<>?';
+    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@!#$%^&*<>';
     let code = '';
 
     for (let i = 0; i < length; i++) {
@@ -84,7 +84,7 @@ module.exports.createApi = async (req, res) => {
         createdApi.apiKeys.push({
             consumerId: provId,
             key: apiKeyCode,
-            apiPassword: apiPasswordCode,
+            // apiPassword: apiPasswordCode,
             status: 'active',
         });
 
@@ -122,6 +122,7 @@ module.exports.setApiKey = async (req, res) => {
 
         const userDetail = await userModel.findById(consumerId);
         const api = await apiModel.findById(providerApiId);
+
         if (!api) {
             return res.status(400).json({ message: "API not found!", success: false });
         };
@@ -184,25 +185,22 @@ module.exports.setApiKey = async (req, res) => {
         //     apiKeyEntry.keyPassword = apiPasswordCode;
         // }
 
+        const credentailKey = {
+            key: apiKeyCode,
+            keyPassword: apiPasswordCode
+        }
+
 
         await api.save();
-
         await userDetail.save();
 
         return res.status(201).json({
-            message: "API purchased successfully",
-            success: true,
-            apiKey: apiKeyCode,
-            apiPassword: apiPasswordCode
+            message: "API purchased successfully", success: true, apiKey: apiKeyCode, apiPassword: apiPasswordCode, credentailKey: credentailKey
         });
 
     } catch (error) {
         console.error("error:", error);
-        return res.status(500).json({
-            message: "Internal server error",
-            error: error.message,
-            success: false
-        });
+        return res.status(500).json({ message: "Internal server error", error: error.message, success: false });
     }
 };
 
@@ -276,12 +274,14 @@ module.exports.requestApiRoute = async (req, res) => {
     // const { apiUrl } = req.body;
     const endpoint = req.query.endpoint;
     const consumerId = req.id;
+    const name = req.query.apiName;
 
     const apiKey = req.headers['api_provide_key'];
     const apiPassword = req.headers['api_provide_password'];
 
     console.log("isAuthenticate apiKey:", apiKey);
     console.log("isAuthenticate apiPassword:", apiPassword);
+    console.log("isAuthenticate name:", name);
 
 
     if (!apiKey || !apiPassword) {
@@ -295,16 +295,20 @@ module.exports.requestApiRoute = async (req, res) => {
 
 
     try {
-        const api = await apiModel.findOne({ "apiKeys.key": apiKey, "apiKeys.status": "active" });
+        const api = await apiModel.findOne({ "apiKeys.key": apiKey, "apiKeys.status": "active", "name": name});
         const userDetail = await userModel.findById(consumerId);
+
+
+        console.log("api :->\n",api,name)
 
 
         if (!userDetail) {
             return res.status(401).json({ message: "user not found!", success: false });
         }
         if (!api) {
-            return res.status(401).json({ message: "Invalid API key", success: false });
+            return res.status(400).json({ message: "Invalid API key", success: false });
         }
+
         const keyObj = api.apiKeys.find(k => k.key === apiKey && k.status === "active");
         if (!keyObj) {
             return res.status(401).json({ message: "API key not active" });
@@ -714,6 +718,53 @@ module.exports.getAllApis = async (req, res) => {
         const allApis = await apiModel.find();
 
         return res.status(200).json({ message: "api deleted !", success: true, allApi: allApis });
+
+    } catch (error) {
+        console.log("error :", error);
+        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
+    }
+}
+
+
+// get api
+module.exports.getApi = async (req, res) => {
+    const consumerId = req.id;
+    const apiId = req.params.apiId;
+    // const ApiKey = req.params.apiKey;
+
+    try {
+        const userDetail = await userModel.findById(consumerId);
+
+        if (!userDetail) {
+            return res.status(400).json({ message: "user not registired in !", success: false });
+        };
+
+        const api = await apiModel.findById(apiId);
+
+        const apiEntry = userDetail.api.find(api => api.apiId == apiId);
+
+        if (apiEntry) {
+            console.log("apiEntry \n", apiEntry);
+
+            const credentailKey = {
+                key: apiEntry.keyCode,
+                keyPassword: apiEntry.keyPassword
+            }
+
+            return res.status(200).json({ message: "api deleted !", success: true, api: api, userDetail: userDetail, credentailKey: credentailKey });
+
+        } else {
+            console.log("apiEntry \n", apiEntry);
+
+            // const credentailKey = {
+            //     key: apiEntry.keyCode,
+            //     keyPassword: apiEntry.keyPassword
+            // }
+
+            return res.status(200).json({ message: "api not deleted !", success: true, api: null, userDetail: userDetail, credentailKey: null });
+
+        }
+
 
     } catch (error) {
         console.log("error :", error);
