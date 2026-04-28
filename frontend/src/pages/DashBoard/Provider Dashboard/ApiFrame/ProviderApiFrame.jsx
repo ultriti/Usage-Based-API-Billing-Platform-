@@ -26,17 +26,30 @@ const ProviderApiFrame = () => {
 
 
     const fetchData = async () => {
+
+        const data_ = {
+            name: "yash"
+        }
         try {
-            const res = await axios.post("http://localhost:3000/api/apiGen/getProviderInfo", {}, { withCredentials: true });
-            const formatted = getGraphData(res.data);
-            setChartData(formatted);
+            // const data = await fetchProviderApis();
+            // console.log("providerApis", data)
+            // setproviderApis(data.providerApi);
+            // const res = await axios.post(`http://localhost:3000/api/apiGen/getProviderInfo?apiId=${}`, data_, { withCredentials: true });
+            // const formatted = getGraphData(res.data);
+            // setChartData(formatted);
 
             const data = await fetchProviderApis();
             console.log("providerApis", data);
             setproviderApis(data.providerApi);
 
         } catch (err) {
-            console.error("Error fetching graph data:", err);
+            if (err.response) {
+                console.error("Backend error:", err.response.data);
+                alert("Login failed: " + err.response.data.message);
+            } else {
+                console.error("Error logging in:", err);
+                alert("Something went wrong!");
+            }
         }
     };
 

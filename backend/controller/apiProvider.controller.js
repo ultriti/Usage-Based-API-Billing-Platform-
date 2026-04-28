@@ -10,20 +10,22 @@ const apiProviderModel = require("../model/api.model");
 const apiModel = require("../model/api.model");
 const { CLIENT_RENEG_WINDOW } = require("tls");
 
+const ms = require("ms")
+
 
 
 const { InfluxDB, Point } = require('@influxdata/influxdb-client')
 
 
-const url = process.env.INFLUXDB_URL;
-const token = process.env.INFLUXDB_TOKEN;
-const org = process.env.INFLUXDB_ORG;
-const bucket = process.env.INFLUXDB_BUCKET;
+// const url = process.env.INFLUXDB_URL;
+// const token = process.env.INFLUXDB_TOKEN;
+// const org = process.env.INFLUXDB_ORG;
+// const bucket = process.env.INFLUXDB_BUCKET;
 
-console.log("----------?\n\n\n\n", url)
+// console.log("----------?\n\n\n\n", url)
 
-const client = new InfluxDB({ url, token });
-const writeClient = client.getWriteApi(org, bucket, 'ns');
+// const client = new InfluxDB({ url, token });
+// const writeClient = client.getWriteApi(org, bucket, 'ns');
 
 
 
@@ -295,11 +297,11 @@ module.exports.requestApiRoute = async (req, res) => {
 
 
     try {
-        const api = await apiModel.findOne({ "apiKeys.key": apiKey, "apiKeys.status": "active", "name": name});
+        const api = await apiModel.findOne({ "apiKeys.key": apiKey, "apiKeys.status": "active", "name": name });
         const userDetail = await userModel.findById(consumerId);
 
 
-        console.log("api :->\n",api,name)
+        console.log("api :->\n", api, name)
 
 
         if (!userDetail) {
@@ -354,19 +356,19 @@ module.exports.requestApiRoute = async (req, res) => {
                     console.log("latency", latency);
 
                     //  InfluxDB put -------
-                    const point = new Point('api_usage')
-                        .tag('apiId', api._id.toString())
-                        .tag('endpoint', providerUrl)
-                        .intField('status_code', res.statusCode)
-                        .floatField('latency_ms', Number(latency))
-                        .timestamp(new Date(startTime))
+                    // const point = new Point('api_usage')
+                    //     .tag('apiId', api._id.toString())
+                    //     .tag('endpoint', providerUrl)
+                    //     .intField('status_code', res.statusCode)
+                    //     .floatField('latency_ms', Number(latency))
+                    //     .timestamp(new Date(startTime))
 
-                    writeClient.writePoint(point)
+                    // writeClient.writePoint(point)
 
-                    // flush asynchronously (don’t block request)
-                    writeClient.flush().catch(err => {
-                        console.error('Influx flush error', err)
-                    })
+                    // // flush asynchronously (don’t block request)
+                    // writeClient.flush().catch(err => {
+                    //     console.error('Influx flush error', err)
+                    // })
 
                 } catch (error) {
                     console.log("error :", error)
@@ -503,61 +505,113 @@ module.exports.requestApiRoute = async (req, res) => {
 // get provide api stats
 module.exports.getProviderStats = async (req, res) => {
 
-    const client = new InfluxDB({ url: 'http://localhost:8086', token: 'my-token' });
-    const queryApi = client.getQueryApi('MeterFlow');
-    const timeApi = req.query.time;
-    const apiId = req.query.apiId;
+    //     const client = new InfluxDB({ url: 'http://localhost:8086', token: 'my-token' });
+    //     const queryApi = client.getQueryApi('MeterFlow');
+    //     const timeApi = req.query.time;
+    //     const apiId = req.query.apiId;
 
 
-    console.log("timeApi", timeApi)
+    //     console.log("timeApi", timeApi)
 
-    const fluxQuery = `
-  from(bucket: "api_logs")
-    |> range(start: ${timeApi ? `-${timeApi}` : '-2h'})
-    |> filter(fn: (r) => r._measurement == "api_usage")
-    |> filter(fn: (r) => r.apiId == "${apiId}")  // <-- filter by ID
-`;
+    //     const fluxQuery = `
+    //   from(bucket: "api_logs")
+    //     |> range(start: ${timeApi ? `-${timeApi}` : '-2h'})
+    //     |> filter(fn: (r) => r._measurement == "api_usage")
+    //     |> filter(fn: (r) => r.apiId == "${apiId}")  // <-- filter by ID
+    // `;
 
     // let results = [];
     // let resultsTime = [];
     let resultsLatency = [];
     let resultsStatus = [];
 
-    const api = await apiModel.findById(apiId);
+    
 
 
 
-    queryApi.queryRows(fluxQuery, {
-        next(row, tableMeta) {
-            const o = tableMeta.toObject(row);
-            if (o._field === "latency_ms") {
+    try {
+        const { time, apiId } = req.query;
+
+        // Calculate time range
+        const startTime = time ? new Date(Date.now() - ms(time)) : new Date(Date.now() - 2 * 60 * 60 * 1000);
+
+        // Query the API document by apiId and filter usageLogs
+        const apiDoc = await apiModel.findById(apiId).lean();
+        const api = await apiModel.findById(apiId);
+
+        if (!apiDoc) {
+            return res.status(404).json({ message: 'API not found' });
+        }
+
+        // Filter usage logs by timestamp
+        const filteredLogs = apiDoc.usageLogs.filter(log => {
+            return log.timestamp.some(ts => new Date(ts) >= startTime);
+        });
+
+        // Separate latency and status results
+        // const resultsLatency = [];
+        // const resultsStatus = [];
+
+        filteredLogs.forEach(log => {
+            log.latency.forEach((lat, idx) => {
                 resultsLatency.push({
-                    time: o._time,
-                    latency: o._value
+                    time: log.timestamp[idx],
+                    latency: lat
                 });
-            } else if (o._field === "status_code") {
+            });
+
+            log.status.forEach((st, idx) => {
                 resultsStatus.push({
-                    time: o._time,
-                    status: o._value
+                    time: log.timestamp[idx],
+                    status: st
                 });
-            }
+            });
+        });
 
+        res.status(201).json({ resultsStatus: resultsLatency, resultsLatency: resultsStatus,"request": api?.billing?.totalRequests  });
 
-        },
-        error(err) {
-            console.error(err);
-            res.status(500).send({ error: err.message });
-        },
-        complete() {
-            console.log('Query finished');
-            console.log('resultsStatus, resultsLatency : ', resultsStatus, resultsLatency);
-            console.log('resultsStatus, resultsLatency : ', api?.billing?.totalRequests);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 
 
 
-            res.status(201).json({ resultsStatus, resultsLatency, "request": api?.billing?.totalRequests });
-        },
-    });
+
+
+
+
+    // queryApi.queryRows(fluxQuery, {
+    //     next(row, tableMeta) {
+    //         const o = tableMeta.toObject(row);
+    //         if (o._field === "latency_ms") {
+    //             resultsLatency.push({
+    //                 time: o._time,
+    //                 latency: o._value
+    //             });
+    //         } else if (o._field === "status_code") {
+    //             resultsStatus.push({
+    //                 time: o._time,
+    //                 status: o._value
+    //             });
+    //         }
+
+
+    //     },
+    //     error(err) {
+    //         console.error(err);
+    //         res.status(500).send({ error: err.message });
+    //     },
+    //     complete() {
+    //         console.log('Query finished');
+    //         console.log('resultsStatus, resultsLatency : ', resultsStatus, resultsLatency);
+    //         console.log('resultsStatus, resultsLatency : ', api?.billing?.totalRequests);
+
+
+
+    //         res.status(201).json({ resultsStatus, resultsLatency, "request": api?.billing?.totalRequests });
+    //     },
+    // });
 
 }
 

@@ -12,13 +12,13 @@ const ApiRequest = () => {
 
 
 
-    const url = "http://localhost:3000/api/apiGen/apiRequest?apiName=todo list api";
+    const url = "http://localhost:3000/api/apiGen/apiRequest?apiName=poekmon";
 
     try {
       const response = await axios.get(url, {
         headers: {
-          "api_provide_key": "gVV#FDSV5j1jQpZiYZPMdijoN",
-          "api_provide_password": "rvW*3P!>86AA"
+          "api_provide_key": "u$qYDAlScbcY9EJldH1VWD!*%",
+          "api_provide_password": "Pl<0VqQ4UP8S"
         },
         withCredentials: true
       });
