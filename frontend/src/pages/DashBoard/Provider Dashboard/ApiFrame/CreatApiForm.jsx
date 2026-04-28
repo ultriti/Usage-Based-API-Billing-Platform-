@@ -86,6 +86,46 @@ const CreateApiForm = ({toggleCreateApiFrameFun}) => {
           />
         </div>
 
+        {/* Row 2: Name (spans full width) */}
+        <div className="col-span-2 flex flex-col">
+          <label className="mb-1 text-sm font-medium">API Descption</label>
+          <input
+            type="text"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            className="px-3 py-2 rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="todo list app"
+            required
+          />
+        </div>
+
+        {/* Row 3: Category (dropdown) */}
+        <div className="col-span-2 flex flex-col">
+          <label className="mb-1 text-sm font-medium">Category</label>
+          <select
+            name="categories"
+            value={formData.categories}
+            onChange={handleChange}
+            className="px-3 py-2 rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            required
+          >
+            <option value="">Select a category</option>
+            <option value="development">Development</option>
+            <option value="character">Character</option>
+            <option value="design">Design</option>
+            <option value="testing">Testing</option>
+            <option value="documentation">Documentation</option>
+            <option value="analytics">Analytics</option>
+            <option value="security">Security</option>
+            <option value="billing">Billing</option>
+            <option value="support">Support</option>
+            <option value="marketing">Marketing</option>
+            <option value="operations">Operations</option>
+          </select>
+        </div>
+
+
         {/* Submit button full width */}
         <div className="col-span-2">
           <button

@@ -27,6 +27,7 @@ const UserRegister = () => {
 
       if (res.status === 201) {
         alert("Registration successful!");
+        navigate("/user/HomePage")
         console.log(res.data);
       } else {
         alert(res.data.message || "Registration failed");

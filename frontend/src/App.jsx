@@ -18,6 +18,7 @@ import ApiDetailFrameTemplate from './pages/UserPages/ApiDetailFrameTemaplate'
 import ApiRequest from './pages/ApiRequest'
 import UserContext from './context/UserContext'
 import UserProtectedWrapper from './context/UserProtectedWrapper'
+import CategoryFrame from './pages/UserPages/CategoryPages/CategoryFrame'
 
 const App = () => {
   return (
@@ -34,6 +35,7 @@ const App = () => {
         <Route path="/user/homePage" element={<><UserProtectedWrapper><UserHomePage /></UserProtectedWrapper></>} />
         <Route path="/user/apiDetailFrame" element={<ApiDetailFrameTemplate />} />
         <Route path="/user/apiDemoReq" element={<ApiRequest />} />
+        <Route path="/user/category/:category" element={<CategoryFrame />} />
 
         {/* provider routes */}
         <Route path="/provider/Register" element={<ProviderRegister />} />

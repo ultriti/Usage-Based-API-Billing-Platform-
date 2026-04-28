@@ -1,8 +1,8 @@
 const exporess = require("express");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const axios = require("axios")
-const bcrypt = require('bcryptjs');
+const axios = require("axios");
+const bcrypt = require("bcryptjs");
 
 const userModel = require("../model/user.model");
 const providerModel = require("../model/provider.model");
@@ -10,12 +10,9 @@ const apiProviderModel = require("../model/api.model");
 const apiModel = require("../model/api.model");
 const { CLIENT_RENEG_WINDOW } = require("tls");
 
-const ms = require("ms")
+const ms = require("ms");
 
-
-
-const { InfluxDB, Point } = require('@influxdata/influxdb-client')
-
+const { InfluxDB, Point } = require("@influxdata/influxdb-client");
 
 // const url = process.env.INFLUXDB_URL;
 // const token = process.env.INFLUXDB_TOKEN;
@@ -27,186 +24,200 @@ const { InfluxDB, Point } = require('@influxdata/influxdb-client')
 // const client = new InfluxDB({ url, token });
 // const writeClient = client.getWriteApi(org, bucket, 'ns');
 
-
-
-
-// code generation 
+// code generation
 function generateSecureCode(length) {
-    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@!#$%^&*<>';
-    let code = '';
+  const charset =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@!#$%^&*<>";
+  let code = "";
 
-    for (let i = 0; i < length; i++) {
-        const randomIndex = crypto.randomInt(0, charset.length);
-        code += charset[randomIndex];
-    }
+  for (let i = 0; i < length; i++) {
+    const randomIndex = crypto.randomInt(0, charset.length);
+    code += charset[randomIndex];
+  }
 
-    return code;
+  return code;
 }
 
-// create api 
+// create api
 module.exports.createApi = async (req, res) => {
+  const provId = req.id;
 
-    const provId = req.id;
+  const { baseUrl, name, categories,description } = req.body;
 
-    const { baseUrl, name } = req.body;
+  if (!baseUrl || !name) {
+    return res
+      .status(400)
+      .json({ message: "All fields are required", success: false });
+  }
 
-    if (!baseUrl || !name) {
-        return res.status(400).json({ message: "All fields are required", success: false });
+  try {
+    const providerDetail = await providerModel.findById(provId);
+    const apiDetail = await apiModel.findOne({ baseUrl: baseUrl });
+
+    if (apiDetail) {
+      return res
+        .status(400)
+        .json({
+          message: "api areldy exists with provide api",
+          success: false,
+        });
     }
 
-    try {
-        const providerDetail = await providerModel.findById(provId);
-        const apiDetail = await apiModel.findOne({ baseUrl: baseUrl });
-
-        if (apiDetail) {
-            return res.status(400).json({ message: "api areldy exists with provide api", success: false });
-        }
-
-        if (!providerDetail) {
-            return res.status(400).json({ message: "provider already exists", success: false });
-
-        }
-
-        const platformUrl = `${process.env.BACKEND_URI}`;
-
-        const createdApi = await apiModel.create({
-            providerId: provId,
-            name: name,
-            baseUrl: baseUrl,
-            apiKeys: [],
-            platformUrl: platformUrl + `?apiName=${name}`
-        });
-
-        // Generate codes
-        const apiKeyCode = generateSecureCode(25);
-        const apiPasswordCode = generateSecureCode(12);
-
-
-
-        createdApi.apiKeys.push({
-            consumerId: provId,
-            key: apiKeyCode,
-            // apiPassword: apiPasswordCode,
-            status: 'active',
-        });
-
-        await createdApi.save()
-
-        providerDetail.apiCreated.push({
-            apiId: createdApi._id,
-            purchased: true,
-        });
-
-        await providerDetail.save();
-
-
-        return res.status(201).json({ message: "api created successfullly", success: true, createdApi });
-
-
-    } catch (error) {
-
-        console.log("error :", error);
-        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
-
+    if (!providerDetail) {
+      return res
+        .status(400)
+        .json({ message: "provider already exists", success: false });
     }
 
-}
+    const platformUrl = `${process.env.BACKEND_URI}`;
 
+    const createdApi = await apiModel.create({
+      providerId: provId,
+      name: name,
+      baseUrl: baseUrl,
+      description : description,
+      categories: categories,
+      apiKeys: [],
+      platformUrl: platformUrl + `?apiName=${name}`,
+    });
 
+    // Generate codes
+    const apiKeyCode = generateSecureCode(25);
+    const apiPasswordCode = generateSecureCode(12);
 
-module.exports.setApiKey = async (req, res) => {
-    const consumerId = req.id; // from auth middleware
+    createdApi.apiKeys.push({
+      consumerId: provId,
+      key: apiKeyCode,
+      // apiPassword: apiPasswordCode,
+      status: "active",
+    });
 
-    try {
-        console.log("body:", req.body);
+    await createdApi.save();
 
-        const { providerApiId } = req.body;
+    providerDetail.apiCreated.push({
+      apiId: createdApi._id,
+      purchased: true,
+    });
 
-        const userDetail = await userModel.findById(consumerId);
-        const api = await apiModel.findById(providerApiId);
+    await providerDetail.save();
 
-        if (!api) {
-            return res.status(400).json({ message: "API not found!", success: false });
-        };
-
-        // Generate codes
-        const apiKeyCode = generateSecureCode(25);
-        const apiPasswordCode = generateSecureCode(12);
-
-        const hashedApiPasswordCode = await apiModel.prototype.hashKeys(apiPasswordCode);
-
-        console.log("api:--------------\n", api?._id);
-
-        // Assume providerApiId is the ObjectId or string you want to check
-        let existingApi = false;
-
-        if (userDetail?.api && Array.isArray(userDetail.api)) {
-            existingApi = userDetail.api.some(item =>
-                String(item.apiId) === String(providerApiId)
-            );
-        }
-
-        console.log("existingApi:", existingApi);
-        console.log("------------->", existingApi)
-
-        if (existingApi) {
-            return res.status(400).json({ message: "API already purchased!", success: false });
-        }
-
-
-        api.apiKeys.push({
-            consumerId: consumerId,
-            key: apiKeyCode,
-            // apiPassword: hashedApiPasswordCode,
-            status: 'active'
-        });
-
-
-
-
-        if (!userDetail) {
-            return res.status(400).json({ message: "User not found!", success: false });
-        }
-
-        // const apiKeyEntry = userDetail.apiKeys.find(item => item.apiId.equals(api._id));
-
-
-        userDetail.api.push({
-            apiId: api._id,
-            url: api.baseUrl,
-            purchased: false,
-            keyCode: apiKeyCode,
-            keyPassword: apiPasswordCode
-
-        });
-
-
-
-        // if (apiKeyEntry) {
-        //     apiKeyEntry.keyCode = apiKeyCode;
-        //     apiKeyEntry.keyPassword = apiPasswordCode;
-        // }
-
-        const credentailKey = {
-            key: apiKeyCode,
-            keyPassword: apiPasswordCode
-        }
-
-
-        await api.save();
-        await userDetail.save();
-
-        return res.status(201).json({
-            message: "API purchased successfully", success: true, apiKey: apiKeyCode, apiPassword: apiPasswordCode, credentailKey: credentailKey
-        });
-
-    } catch (error) {
-        console.error("error:", error);
-        return res.status(500).json({ message: "Internal server error", error: error.message, success: false });
-    }
+    return res
+      .status(201)
+      .json({
+        message: "api created successfullly",
+        success: true,
+        createdApi,
+      });
+  } catch (error) {
+    console.log("error :", error);
+    return res
+      .status(500)
+      .json({
+        message: "internal server error",
+        error: error.message,
+        success: false,
+      });
+  }
 };
 
+module.exports.setApiKey = async (req, res) => {
+  const consumerId = req.id; // from auth middleware
 
+  try {
+    console.log("body:", req.body);
+
+    const { providerApiId } = req.body;
+
+    const userDetail = await userModel.findById(consumerId);
+    const api = await apiModel.findById(providerApiId);
+
+    if (!api) {
+      return res
+        .status(400)
+        .json({ message: "API not found!", success: false });
+    }
+
+    // Generate codes
+    const apiKeyCode = generateSecureCode(25);
+    const apiPasswordCode = generateSecureCode(12);
+
+    const hashedApiPasswordCode =
+      await apiModel.prototype.hashKeys(apiPasswordCode);
+
+    console.log("api:--------------\n", api?._id);
+
+    // Assume providerApiId is the ObjectId or string you want to check
+    let existingApi = false;
+
+    if (userDetail?.api && Array.isArray(userDetail.api)) {
+      existingApi = userDetail.api.some(
+        (item) => String(item.apiId) === String(providerApiId),
+      );
+    }
+
+    console.log("existingApi:", existingApi);
+    console.log("------------->", existingApi);
+
+    if (existingApi) {
+      return res
+        .status(400)
+        .json({ message: "API already purchased!", success: false });
+    }
+
+    api.apiKeys.push({
+      consumerId: consumerId,
+      key: apiKeyCode,
+      // apiPassword: hashedApiPasswordCode,
+      status: "active",
+    });
+
+    if (!userDetail) {
+      return res
+        .status(400)
+        .json({ message: "User not found!", success: false });
+    }
+
+    // const apiKeyEntry = userDetail.apiKeys.find(item => item.apiId.equals(api._id));
+
+    userDetail.api.push({
+      apiId: api._id,
+      url: api.baseUrl,
+      purchased: false,
+      keyCode: apiKeyCode,
+      keyPassword: apiPasswordCode,
+    });
+
+    // if (apiKeyEntry) {
+    //     apiKeyEntry.keyCode = apiKeyCode;
+    //     apiKeyEntry.keyPassword = apiPasswordCode;
+    // }
+
+    const credentailKey = {
+      key: apiKeyCode,
+      keyPassword: apiPasswordCode,
+    };
+
+    await api.save();
+    await userDetail.save();
+
+    return res.status(201).json({
+      message: "API purchased successfully",
+      success: true,
+      apiKey: apiKeyCode,
+      apiPassword: apiPasswordCode,
+      credentailKey: credentailKey,
+    });
+  } catch (error) {
+    console.error("error:", error);
+    return res
+      .status(500)
+      .json({
+        message: "Internal server error",
+        error: error.message,
+        success: false,
+      });
+  }
+};
 
 // buy / get api
 // module.exports.setApiKey = async (req, res) => {
@@ -231,9 +242,8 @@ module.exports.setApiKey = async (req, res) => {
 //         const hashedApiKeyCode = apiModel.prototype.hashKeys(apiKeyCode);
 //         const hashedApiPasswordCode = apiModel.prototype.hashKeys(apiPasswordCode);
 
-
 //         api.apiKeys.push({
-//             consumerId: consumerId,  
+//             consumerId: consumerId,
 //             key: hashedApiKeyCode,
 //             apiPassword: hashedApiPasswordCode,
 //             status: 'active'
@@ -255,7 +265,6 @@ module.exports.setApiKey = async (req, res) => {
 
 //         await userDetail.save();
 
-
 //         return res.status(201).json({ message: "api brought successfully", success: true, apiKey: apiKeyCode,apiPassword: apiPasswordCode });
 
 //     } catch (error) {
@@ -269,559 +278,606 @@ module.exports.setApiKey = async (req, res) => {
 
 // requets the api
 module.exports.requestApiRoute = async (req, res) => {
+  const startTime = Date.now();
 
-    const startTime = Date.now();
+  // const { apiUrl } = req.body;
+  const endpoint = req.query.endpoint;
+  const consumerId = req.id;
+  const name = req.query.apiName;
 
+  const apiKey = req.headers["api_provide_key"];
+  const apiPassword = req.headers["api_provide_password"];
 
-    // const { apiUrl } = req.body;
-    const endpoint = req.query.endpoint;
-    const consumerId = req.id;
-    const name = req.query.apiName;
+  console.log("isAuthenticate apiKey:", apiKey);
+  console.log("isAuthenticate apiPassword:", apiPassword);
+  console.log("isAuthenticate name:", name);
 
-    const apiKey = req.headers['api_provide_key'];
-    const apiPassword = req.headers['api_provide_password'];
+  if (!apiKey || !apiPassword) {
+    return res
+      .status(401)
+      .json({
+        message: "please provide the authhontication keys! ",
+        success: false,
+        error: "API key and password required",
+      });
+  }
 
-    console.log("isAuthenticate apiKey:", apiKey);
-    console.log("isAuthenticate apiPassword:", apiPassword);
-    console.log("isAuthenticate name:", name);
+  // if (!apiUrl) {
+  //     return res.status(401).json({ message: "please fill all the creadentails! ", success: false, error: 'crendetial not provided!' });
+  // }
 
+  try {
+    const api = await apiModel.findOne({
+      "apiKeys.key": apiKey,
+      "apiKeys.status": "active",
+      name: name,
+    });
+    const userDetail = await userModel.findById(consumerId);
 
-    if (!apiKey || !apiPassword) {
-        return res.status(401).json({ message: "please provide the authhontication keys! ", success: false, error: 'API key and password required' });
+    console.log("api :->\n", api, name);
+
+    if (!userDetail) {
+      return res
+        .status(401)
+        .json({ message: "user not found!", success: false });
+    }
+    if (!api) {
+      return res
+        .status(400)
+        .json({ message: "Invalid API key", success: false });
     }
 
-    // if (!apiUrl) {
-    //     return res.status(401).json({ message: "please fill all the creadentails! ", success: false, error: 'crendetial not provided!' });
-    // }
+    const keyObj = api.apiKeys.find(
+      (k) => k.key === apiKey && k.status === "active",
+    );
+    if (!keyObj) {
+      return res.status(401).json({ message: "API key not active" });
+    }
 
+    const apiEntry = userDetail.api.find((api) => api.keyCode === apiKey);
+    if (!apiEntry) {
+      return res.status(400).json({ message: "API key not valid" });
+    }
 
+    if (apiEntry.keyPassword !== apiPassword) {
+      return res.status(401).json({ message: "Invalid API password" });
+    }
 
-    try {
-        const api = await apiModel.findOne({ "apiKeys.key": apiKey, "apiKeys.status": "active", "name": name });
-        const userDetail = await userModel.findById(consumerId);
+    const providerUrl = `${api.baseUrl}${endpoint ? endpoint : ""}`;
 
+    const providerApiResponse = await axios.get(providerUrl, {
+      params: req.query,
+    });
 
-        console.log("api :->\n", api, name)
+    // user usage per request ----------
+    const userApi = userDetail.api.find((k) => k.apiId.equals(api._id));
+    // api request per --------------
+    if (api) {
+      const latency = Date.now() - startTime;
 
+      const hasBaseUrl = api.usageLogs.some((log) =>
+        log.endpoint.includes(providerUrl),
+      );
 
-        if (!userDetail) {
-            return res.status(401).json({ message: "user not found!", success: false });
+      if (hasBaseUrl) {
+        const log = api.usageLogs.find((log) =>
+          log.endpoint.includes(providerUrl),
+        );
+
+        log.status.push(res.statusCode);
+        log.latency.push(Number(latency));
+        log.timestamp.push(new Date(startTime));
+
+        try {
+          console.log("latency", latency);
+
+          //  InfluxDB put -------
+          // const point = new Point('api_usage')
+          //     .tag('apiId', api._id.toString())
+          //     .tag('endpoint', providerUrl)
+          //     .intField('status_code', res.statusCode)
+          //     .floatField('latency_ms', Number(latency))
+          //     .timestamp(new Date(startTime))
+
+          // writeClient.writePoint(point)
+
+          // // flush asynchronously (don’t block request)
+          // writeClient.flush().catch(err => {
+          //     console.error('Influx flush error', err)
+          // })
+        } catch (error) {
+          console.log("error :", error);
+          return res
+            .status(500)
+            .json({
+              message: "internal server error (inflix) ",
+              error: error.message,
+              success: false,
+            });
         }
-        if (!api) {
-            return res.status(400).json({ message: "Invalid API key", success: false });
-        }
-
-        const keyObj = api.apiKeys.find(k => k.key === apiKey && k.status === "active");
-        if (!keyObj) {
-            return res.status(401).json({ message: "API key not active" });
-        };
-
-        const apiEntry = userDetail.api.find(api => api.keyCode === apiKey);
-        if (!apiEntry) {
-            return res.status(400).json({ message: "API key not valid" });
-        };
-
-
-        if (apiEntry.keyPassword !== apiPassword) {
-            return res.status(401).json({ message: "Invalid API password" });
-        }
-
-
-        const providerUrl = `${api.baseUrl}${endpoint ? endpoint : ""}`;
-
-        const providerApiResponse = await axios.get(providerUrl, {
-            params: req.query
+      } else {
+        api.usageLogs.push({
+          apiKey: apiKey,
+          endpoint: providerUrl,
+          status: [res.statusCode],
+          latency: [Number(latency)],
+          timestamp: [new Date(startTime)],
         });
+      }
 
+      await api.save();
 
-        // user usage per request ----------
-        const userApi = userDetail.api.find(k => k.apiId.equals(api._id));
-        // api request per -------------- 
-        if (api) {
+      // api billing ----------------------->
+      if (typeof userApi.usage !== "number") {
+        userApi.usage = 0;
+      }
+      userApi.usage += 1;
 
-            const latency = Date.now() - startTime;
-
-            const hasBaseUrl = api.usageLogs.some(log => log.endpoint.includes(providerUrl));
-
-            if (hasBaseUrl) {
-
-                const log = api.usageLogs.find(log => log.endpoint.includes(providerUrl));
-
-                log.status.push(res.statusCode);
-                log.latency.push(Number(latency));
-                log.timestamp.push(new Date(startTime));
-
-                try {
-
-                    console.log("latency", latency);
-
-                    //  InfluxDB put -------
-                    // const point = new Point('api_usage')
-                    //     .tag('apiId', api._id.toString())
-                    //     .tag('endpoint', providerUrl)
-                    //     .intField('status_code', res.statusCode)
-                    //     .floatField('latency_ms', Number(latency))
-                    //     .timestamp(new Date(startTime))
-
-                    // writeClient.writePoint(point)
-
-                    // // flush asynchronously (don’t block request)
-                    // writeClient.flush().catch(err => {
-                    //     console.error('Influx flush error', err)
-                    // })
-
-                } catch (error) {
-                    console.log("error :", error)
-                    return res.status(500).json({ message: "internal server error (inflix) ", error: error.message, success: false });
-
-                }
-
-            } else {
-
-                api.usageLogs.push({
-                    apiKey: apiKey,
-                    endpoint: providerUrl,
-                    status: [res.statusCode],
-                    latency: [Number(latency)],
-                    timestamp: [new Date(startTime)]
-                });
-            }
-
-            await api.save();
-
-
-
-            // api billing -----------------------> 
-            if (typeof userApi.usage !== 'number') {
-                userApi.usage = 0;
-            }
-            userApi.usage += 1;
-
-            if (userApi.usage > 500) {
-
-                if (userApi.purchased == true) {
-                    // userApi.apiBill += 0;
-                    // api.billing.amount += 0;
-                    api.billing.totalRequests += 1;
-                } else {
-
-                    console.log("userApi.usage % 100 === 0", userApi.usage % 100, 0)
-                    if (userApi.partialPayment == true) {
-
-                        // api.billing.amount += 1;
-                        api.billing.totalRequests += 1;
-                        userApi.apiBill += .2;
-
-
-                        if (userApi.usage % 100 === 99) {
-                            userApi.partialPayment = false;
-                        }
-
-                    } else {
-                        if (userApi.usage % 100 === 0) {
-                            return res.status(400).json({ messgae: "free limit has been crosed ! ", sucess: false })
-
-                        } else {
-
-                            if (userApi.partialPayment) {
-                                // api.billing.amount += 0
-                                api.billing.totalRequests += 1;
-                                userApi.apiBill += .2;
-
-                            }
-                        }
-                    }
-
-                }
-            } else {
-                // api.billing.totalRequests += 1;
-                // userApi.apiBill += 0.2;
-
-                if (userApi.partialPayment == true) {
-
-                    // api.billing.amount += 1;
-                    api.billing.totalRequests += 1;
-                    userApi.apiBill += 0.2;
-
-
-                    if (userApi.usage % 100 === 99) {
-                        userApi.partialPayment = false;
-                    }
-
-                } else {
-
-                    console.log("----------- else ", userApi.usage)
-
-                    if (userApi.usage % 100 === 0) {
-                        return res.status(400).json({ messgae: "free limit has been crosed ! ", sucess: false })
-
-                    } else {
-
-                        if (userApi.usage < 500) {
-                            api.billing.totalRequests += 1;
-                            userApi.apiBill = 20;
-
-                        } else {
-                            if (userApi.partialPayment) {
-                                // api.billing.amount += 0
-                                api.billing.totalRequests += 0;
-                                userApi.apiBill += 0.2;
-
-                            } else {
-                                api.billing.totalRequests += 1;
-                                userApi.apiBill += 0.2;
-                            }
-                        }
-
-
-                    }
-                }
-
-            }
-
-
-
-            await api.save();
-            await userDetail.save();
+      if (userApi.usage > 500) {
+        if (userApi.purchased == true) {
+          // userApi.apiBill += 0;
+          // api.billing.amount += 0;
+          api.billing.totalRequests += 1;
         } else {
-            console.log("API not linked to user yet");
+          console.log("userApi.usage % 100 === 0", userApi.usage % 100, 0);
+          if (userApi.partialPayment == true) {
+            // api.billing.amount += 1;
+            api.billing.totalRequests += 1;
+            userApi.apiBill += 0.2;
+
+            if (userApi.usage % 100 === 99) {
+              userApi.partialPayment = false;
+            }
+          } else {
+            if (userApi.usage % 100 === 0) {
+              return res
+                .status(400)
+                .json({
+                  messgae: "free limit has been crosed ! ",
+                  sucess: false,
+                });
+            } else {
+              if (userApi.partialPayment) {
+                // api.billing.amount += 0
+                api.billing.totalRequests += 1;
+                userApi.apiBill += 0.2;
+              }
+            }
+          }
         }
+      } else {
+        // api.billing.totalRequests += 1;
+        // userApi.apiBill += 0.2;
 
-        return res.status(201).json({ messgae: "got the response", data: providerApiResponse.data, success: true, status: providerApiResponse.status });
+        if (userApi.partialPayment == true) {
+          // api.billing.amount += 1;
+          api.billing.totalRequests += 1;
+          userApi.apiBill += 0.2;
 
-    } catch (error) {
+          if (userApi.usage % 100 === 99) {
+            userApi.partialPayment = false;
+          }
+        } else {
+          console.log("----------- else ", userApi.usage);
 
-        console.log("error :", error)
-        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
+          if (userApi.usage % 100 === 0) {
+            return res
+              .status(400)
+              .json({
+                messgae: "free limit has been crosed ! ",
+                sucess: false,
+              });
+          } else {
+            if (userApi.usage < 500) {
+              api.billing.totalRequests += 1;
+              userApi.apiBill = 20;
+            } else {
+              if (userApi.partialPayment) {
+                // api.billing.amount += 0
+                api.billing.totalRequests += 0;
+                userApi.apiBill += 0.2;
+              } else {
+                api.billing.totalRequests += 1;
+                userApi.apiBill += 0.2;
+              }
+            }
+          }
+        }
+      }
 
+      await api.save();
+      await userDetail.save();
+    } else {
+      console.log("API not linked to user yet");
     }
 
-
-
-
-}
-
+    return res
+      .status(201)
+      .json({
+        messgae: "got the response",
+        data: providerApiResponse.data,
+        success: true,
+        status: providerApiResponse.status,
+      });
+  } catch (error) {
+    console.log("error :", error);
+    return res
+      .status(500)
+      .json({
+        message: "internal server error",
+        error: error.message,
+        success: false,
+      });
+  }
+};
 
 // get provide api stats
 module.exports.getProviderStats = async (req, res) => {
+  //     const client = new InfluxDB({ url: 'http://localhost:8086', token: 'my-token' });
+  //     const queryApi = client.getQueryApi('MeterFlow');
+  //     const timeApi = req.query.time;
+  //     const apiId = req.query.apiId;
 
-    //     const client = new InfluxDB({ url: 'http://localhost:8086', token: 'my-token' });
-    //     const queryApi = client.getQueryApi('MeterFlow');
-    //     const timeApi = req.query.time;
-    //     const apiId = req.query.apiId;
+  //     console.log("timeApi", timeApi)
 
+  //     const fluxQuery = `
+  //   from(bucket: "api_logs")
+  //     |> range(start: ${timeApi ? `-${timeApi}` : '-2h'})
+  //     |> filter(fn: (r) => r._measurement == "api_usage")
+  //     |> filter(fn: (r) => r.apiId == "${apiId}")  // <-- filter by ID
+  // `;
 
-    //     console.log("timeApi", timeApi)
+  // let results = [];
+  // let resultsTime = [];
+  // let resultsLatency = [];
+  // let resultsStatus = [];
 
-    //     const fluxQuery = `
-    //   from(bucket: "api_logs")
-    //     |> range(start: ${timeApi ? `-${timeApi}` : '-2h'})
-    //     |> filter(fn: (r) => r._measurement == "api_usage")
-    //     |> filter(fn: (r) => r.apiId == "${apiId}")  // <-- filter by ID
-    // `;
+  try {
+   const { time, apiId } = req.query;
 
-    // let results = [];
-    // let resultsTime = [];
-    let resultsLatency = [];
-    let resultsStatus = [];
+// Calculate time range - ms() parses human-readable time like '2h' to milliseconds [web:11][web:20]
+const startTime = time
+  ? new Date(Date.now() - ms(time))
+  : new Date(Date.now() - 2 * 60 * 60 * 1000);
 
-    
+// Use lean() query once for read-only data to improve performance [web:8]
+const apiDoc = await apiModel.findById(apiId).lean();
 
-
-
-    try {
-        const { time, apiId } = req.query;
-
-        // Calculate time range
-        const startTime = time ? new Date(Date.now() - ms(time)) : new Date(Date.now() - 2 * 60 * 60 * 1000);
-
-        // Query the API document by apiId and filter usageLogs
-        const apiDoc = await apiModel.findById(apiId).lean();
-        const api = await apiModel.findById(apiId);
-
-        if (!apiDoc) {
-            return res.status(404).json({ message: 'API not found' });
-        }
-
-        // Filter usage logs by timestamp
-        const filteredLogs = apiDoc.usageLogs.filter(log => {
-            return log.timestamp.some(ts => new Date(ts) >= startTime);
-        });
-
-        // Separate latency and status results
-        // const resultsLatency = [];
-        // const resultsStatus = [];
-
-        filteredLogs.forEach(log => {
-            log.latency.forEach((lat, idx) => {
-                resultsLatency.push({
-                    time: log.timestamp[idx],
-                    latency: lat
-                });
-            });
-
-            log.status.forEach((st, idx) => {
-                resultsStatus.push({
-                    time: log.timestamp[idx],
-                    status: st
-                });
-            });
-        });
-
-        res.status(201).json({ resultsStatus: resultsLatency, resultsLatency: resultsStatus,"request": api?.billing?.totalRequests  });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
-    }
-
-
-
-
-
-
-
-    // queryApi.queryRows(fluxQuery, {
-    //     next(row, tableMeta) {
-    //         const o = tableMeta.toObject(row);
-    //         if (o._field === "latency_ms") {
-    //             resultsLatency.push({
-    //                 time: o._time,
-    //                 latency: o._value
-    //             });
-    //         } else if (o._field === "status_code") {
-    //             resultsStatus.push({
-    //                 time: o._time,
-    //                 status: o._value
-    //             });
-    //         }
-
-
-    //     },
-    //     error(err) {
-    //         console.error(err);
-    //         res.status(500).send({ error: err.message });
-    //     },
-    //     complete() {
-    //         console.log('Query finished');
-    //         console.log('resultsStatus, resultsLatency : ', resultsStatus, resultsLatency);
-    //         console.log('resultsStatus, resultsLatency : ', api?.billing?.totalRequests);
-
-
-
-    //         res.status(201).json({ resultsStatus, resultsLatency, "request": api?.billing?.totalRequests });
-    //     },
-    // });
-
+if (!apiDoc) {
+  return res.status(404).json({ message: "API not found" });
 }
 
+// Filter usage logs where at least one timestamp >= startTime [web:3]
+// const filteredLogs = apiDoc.usageLogs.filter((log) => {
+//   return log.timestamp.some((ts) => new Date(ts) >= startTime);
+// });
+
+const filteredLogs = apiDoc.usageLogs;
+
+console.log("filteredLogs---\n", filteredLogs);
+
+// Separate latency and status results
+const resultsLatency = [];
+const resultsStatus = [];
+
+filteredLogs.forEach((log) => {
+  log.latency.forEach((lat, idx) => {
+    resultsLatency.push({
+      time: log.timestamp[idx],
+      latency: lat,
+    });
+  });
+
+  log.status.forEach((st, idx) => {
+    resultsStatus.push({
+      time: log.timestamp[idx],
+      status: st,
+    });
+  });
+});
+
+// Fixed: Swapped keys were incorrect - resultsStatus should contain status data [web:16]
+res.status(200).json({  // Use 200 for successful data retrieval, not 201 [web:5]
+  resultsLatency,
+  resultsStatus,
+  request: apiDoc?.billing?.totalRequests,  // Use apiDoc (lean) since no mutations needed
+});
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+
+  // queryApi.queryRows(fluxQuery, {
+  //     next(row, tableMeta) {
+  //         const o = tableMeta.toObject(row);
+  //         if (o._field === "latency_ms") {
+  //             resultsLatency.push({
+  //                 time: o._time,
+  //                 latency: o._value
+  //             });
+  //         } else if (o._field === "status_code") {
+  //             resultsStatus.push({
+  //                 time: o._time,
+  //                 status: o._value
+  //             });
+  //         }
+
+  //     },
+  //     error(err) {
+  //         console.error(err);
+  //         res.status(500).send({ error: err.message });
+  //     },
+  //     complete() {
+  //         console.log('Query finished');
+  //         console.log('resultsStatus, resultsLatency : ', resultsStatus, resultsLatency);
+  //         console.log('resultsStatus, resultsLatency : ', api?.billing?.totalRequests);
+
+  //         res.status(201).json({ resultsStatus, resultsLatency, "request": api?.billing?.totalRequests });
+  //     },
+  // });
+};
 
 // pay api proider
 module.exports.apiPartialPayment = async (req, res) => {
+  const consumerId = req.id;
 
-    const consumerId = req.id;
+  const { apiId } = req.body;
 
-    const { apiId } = req.body;
+  if (!consumerId || !apiId) {
+    return res
+      .status(401)
+      .json({
+        message: "Api or user not found ! ",
+        success: false,
+        error: "error fetching he user detail",
+      });
+  }
 
+  try {
+    const api = await apiModel.findById(apiId);
+    const userDetail = await userModel.findById(consumerId);
+    const userApi = userDetail.api.find((k) => k.apiId.equals(api._id));
 
-    if (!consumerId || !apiId) {
-        return res.status(401).json({ message: "Api or user not found ! ", success: false, error: 'error fetching he user detail' });
+    if (userApi.partialPayment) {
+      return res
+        .status(400)
+        .json({ message: "payment alredy done ( 20)", success: false });
     }
 
-    try {
-
-
-        const api = await apiModel.findById(apiId);
-        const userDetail = await userModel.findById(consumerId);
-        const userApi = userDetail.api.find(k => k.apiId.equals(api._id));
-
-        if (userApi.partialPayment) {
-            return res.status(400).json({ message: "payment alredy done ( 20)", success: false })
-        }
-
-
-
-
-        if (userApi.usage % 100 === 99) {
-
-            api.billing.amount += userApi.apiBill;
-            userApi.partialPayment = true;
-
-
-        }
-
-        userApi.apiBill = 0;
-
-        await api.save()
-        await userDetail.save()
-
-
-
-
-
-        return res.status(201).json({ message: "payment done sucessfully", success: true })
-
-
-    } catch (error) {
-
-        console.log("error :", error)
-        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
-
+    if (userApi.usage % 100 === 99) {
+      api.billing.amount += userApi.apiBill;
+      userApi.partialPayment = true;
     }
 
+    userApi.apiBill = 0;
 
+    await api.save();
+    await userDetail.save();
 
+    return res
+      .status(201)
+      .json({ message: "payment done sucessfully", success: true });
+  } catch (error) {
+    console.log("error :", error);
+    return res
+      .status(500)
+      .json({
+        message: "internal server error",
+        error: error.message,
+        success: false,
+      });
+  }
+};
 
-
-}
-
-
-// active / deactive toggle 
+// active / deactive toggle
 module.exports.toggleStatus = async (req, res) => {
+  const apiId = req.params.apiId;
+  const { status } = req.body;
+  const providerId = req.id;
 
-    const apiId = req.params.apiId;
-    const { status } = req.body;
-    const providerId = req.id;
+  try {
+    const api = await apiModel.findById(apiId);
 
-    try {
+    console.log("api.providerId !== providerId", api.providerId, providerId);
 
-        const api = await apiModel.findById(apiId);
-
-        console.log("api.providerId !== providerId", api.providerId, providerId)
-
-        if (api.providerId != providerId) {
-            return res.status(201).json({ message: "you are not the provider of this api!", success: false })
-        }
-
-        console.log("-------->", status)
-
-        if (status == "active") {
-            api.status = "revoked";
-        } else {
-            api.status = "active";
-        }
-
-        await api.save();
-
-        return res.status(201).json({ message: "api status updated!", success: true, status: api.status })
-
-
-    } catch (error) {
-
-        console.log("error :", error)
-        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
-
+    if (api.providerId != providerId) {
+      return res
+        .status(201)
+        .json({
+          message: "you are not the provider of this api!",
+          success: false,
+        });
     }
 
-}
+    console.log("-------->", status);
 
+    if (status == "active") {
+      api.status = "revoked";
+    } else {
+      api.status = "active";
+    }
+
+    await api.save();
+
+    return res
+      .status(201)
+      .json({
+        message: "api status updated!",
+        success: true,
+        status: api.status,
+      });
+  } catch (error) {
+    console.log("error :", error);
+    return res
+      .status(500)
+      .json({
+        message: "internal server error",
+        error: error.message,
+        success: false,
+      });
+  }
+};
 
 // delete api
 module.exports.deleteApi = async (req, res) => {
+  const providerId = req.id;
+  const apiId = req.params.apiId;
 
-    const providerId = req.id;
-    const apiId = req.params.apiId;
+  console.log("---------->\n-------------->", providerId);
 
-    console.log("---------->\n-------------->", providerId);
+  try {
+    const providerDetail = await providerModel.findById(providerId);
+    const api = await apiModel.findById(apiId);
 
-    try {
+    console.log(providerDetail);
 
-        const providerDetail = await providerModel.findById(providerId);
-        const api = await apiModel.findById(apiId);
-
-        console.log(providerDetail);
-
-        if (!api) {
-            return res.status(400).json({ message: "api not found !", sucess: false });
-        };
-        if (!providerDetail) {
-            return res.status(400).json({ message: "provider not found !", sucess: false })
-        };
-
-        if (providerId != api.providerId) {
-            return res.status(400).json({ message: "you are not owner of this api !", sucess: false })
-        };
-
-        await apiModel.findByIdAndDelete(api._id);
-
-        providerDetail.apiCreated.includes(api._id);
-
-        await providerDetail.save();
-
-        return res.status(400).json({ message: "api deleted !", success: true });
-
-    } catch (error) {
-        console.log("error :", error);
-        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
+    if (!api) {
+      return res
+        .status(400)
+        .json({ message: "api not found !", sucess: false });
     }
-}
+    if (!providerDetail) {
+      return res
+        .status(400)
+        .json({ message: "provider not found !", sucess: false });
+    }
 
+    if (providerId != api.providerId) {
+      return res
+        .status(400)
+        .json({ message: "you are not owner of this api !", sucess: false });
+    }
+
+    await apiModel.findByIdAndDelete(api._id);
+
+    providerDetail.apiCreated.includes(api._id);
+
+    await providerDetail.save();
+
+    return res.status(400).json({ message: "api deleted !", success: true });
+  } catch (error) {
+    console.log("error :", error);
+    return res
+      .status(500)
+      .json({
+        message: "internal server error",
+        error: error.message,
+        success: false,
+      });
+  }
+};
 
 // get all api
 module.exports.getAllApis = async (req, res) => {
+  const consumerId = req.id;
 
-    const consumerId = req.id;
+  const { category } = req.query;
 
-    try {
-        const userDetail = await userModel.findById(consumerId);
+  try {
+    if (category) {
+      const userDetail = await userModel.findById(consumerId);
 
-        if (!userDetail) {
-            return res.status(400).json({ message: "user not registired in !", success: false });
-        };
+      if (!userDetail) {
+        return res
+          .status(400)
+          .json({ message: "user not registired in !", success: false });
+      }
 
-        const allApis = await apiModel.find();
+      const allApis = await apiModel.find({ categories: category });
 
-        return res.status(200).json({ message: "api deleted !", success: true, allApi: allApis });
-
-    } catch (error) {
-        console.log("error :", error);
-        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
+      return res
+        .status(200)
+        .json({ message: "api deleted !", success: true, allApi: allApis });
     }
-}
+    const userDetail = await userModel.findById(consumerId);
 
+    if (!userDetail) {
+      return res
+        .status(400)
+        .json({ message: "user not registired in !", success: false });
+    }
+
+    const allApis = await apiModel.find();
+
+    return res
+      .status(200)
+      .json({ message: "api deleted !", success: true, allApi: allApis });
+  } catch (error) {
+    console.log("error :", error);
+    return res
+      .status(500)
+      .json({
+        message: "internal server error",
+        error: error.message,
+        success: false,
+      });
+  }
+};
 
 // get api
 module.exports.getApi = async (req, res) => {
-    const consumerId = req.id;
-    const apiId = req.params.apiId;
-    // const ApiKey = req.params.apiKey;
+  const consumerId = req.id;
+  const apiId = req.params.apiId;
+  // const ApiKey = req.params.apiKey;
 
-    try {
-        const userDetail = await userModel.findById(consumerId);
+  try {
+    const userDetail = await userModel.findById(consumerId);
 
-        if (!userDetail) {
-            return res.status(400).json({ message: "user not registired in !", success: false });
-        };
-
-        const api = await apiModel.findById(apiId);
-
-        const apiEntry = userDetail.api.find(api => api.apiId == apiId);
-
-        if (apiEntry) {
-            console.log("apiEntry \n", apiEntry);
-
-            const credentailKey = {
-                key: apiEntry.keyCode,
-                keyPassword: apiEntry.keyPassword
-            }
-
-            return res.status(200).json({ message: "api deleted !", success: true, api: api, userDetail: userDetail, credentailKey: credentailKey });
-
-        } else {
-            console.log("apiEntry \n", apiEntry);
-
-            // const credentailKey = {
-            //     key: apiEntry.keyCode,
-            //     keyPassword: apiEntry.keyPassword
-            // }
-
-            return res.status(200).json({ message: "api not deleted !", success: true, api: null, userDetail: userDetail, credentailKey: null });
-
-        }
-
-
-    } catch (error) {
-        console.log("error :", error);
-        return res.status(500).json({ message: "internal server error", error: error.message, success: false });
+    if (!userDetail) {
+      return res
+        .status(400)
+        .json({ message: "user not registired in !", success: false });
     }
-}
+
+    const api = await apiModel.findById(apiId);
+
+    const apiEntry = userDetail.api.find((api) => api.apiId == apiId);
+
+    if (apiEntry) {
+      console.log("apiEntry \n", apiEntry);
+
+      const credentailKey = {
+        key: apiEntry.keyCode,
+        keyPassword: apiEntry.keyPassword,
+      };
+
+      return res
+        .status(200)
+        .json({
+          message: "api deleted !",
+          success: true,
+          api: api,
+          apiEntry:apiEntry,
+          userDetail: userDetail,
+          credentailKey: credentailKey,
+        });
+    } else {
+      console.log("apiEntry \n", apiEntry);
+
+      // const credentailKey = {
+      //     key: apiEntry.keyCode,
+      //     keyPassword: apiEntry.keyPassword
+      // }
+
+      return res
+        .status(200)
+        .json({
+          message: "api not deleted !",
+          success: true,
+          api: null,
+          apiEntry:apiEntry,
+          userDetail: userDetail,
+          credentailKey: null,
+        });
+    }
+  } catch (error) {
+    console.log("error :", error);
+    return res
+      .status(500)
+      .json({
+        message: "internal server error",
+        error: error.message,
+        success: false,
+      });
+  }
+};

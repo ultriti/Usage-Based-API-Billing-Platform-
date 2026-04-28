@@ -51,7 +51,7 @@ const ProviderDashboard = () => {
         try {
             const res = await axios.post(`http://localhost:3000/api/apiGen/getProviderInfo?apiId=${apiId}&time=${SelectTime}`, {}, { withCredentials: true });
             const formatted = getGraphData(res.data);
-            console.log("--------->", res.data.request)
+            console.log("--------->", res.data)
             // console.log("---------> datasets",formatted.data.datasets.data)
             setChartData(formatted);
 

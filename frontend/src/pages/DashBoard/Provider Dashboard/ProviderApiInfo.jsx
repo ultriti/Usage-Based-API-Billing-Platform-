@@ -47,14 +47,14 @@ const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, platform
     setproviderApis(data.providerApi);
   }
 
-  const deleteProviderApiAxios = async () => {
+  // const deleteProviderApiAxios = async () => {
 
-    try {
+  //   try {
 
-    } catch (error) {
-      console.log(error.message);
-    }
-  }
+  //   } catch (error) {
+  //     console.log(error.message);
+  //   }
+  // }
 
 
   // use effects 

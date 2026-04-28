@@ -29,6 +29,15 @@
     flex-wrap: wrap;
 }
 
+.ApiCategoryMainFrame{
+   min-height: 100%;
+    width: 84%;
+    margin-left: 15.9vw;
+    padding: 6vw 1vw 1vw 1vw;
+    display: flex;
+    flex-wrap: wrap;
+}
+
 .userSidebarFrame {
     height: 90vh;
     width: 16vw;

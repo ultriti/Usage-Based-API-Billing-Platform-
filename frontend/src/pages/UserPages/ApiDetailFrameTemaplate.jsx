@@ -2,24 +2,33 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import UserNavbar from '../../components/UserNavbar';
+import UserNavbar from "../../components/UserNavbar";
 
 const ApiDetailFrameTemplate = () => {
   const location = useLocation();
   const { api } = location?.state || {};
-  const [ApiCredentails, setApiCredentails] = useState(null)
+  const [ApiCredentails, setApiCredentails] = useState(null);
   const [userDetailApi, setUserDetailApi] = useState(null);
+  const [apiPurchase, setapiPurchase] = useState(false);
 
   const getApiDetail = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/apiGen/getApi/${api?.id}`, { withCredentials: true });
+      const res = await axios.get(
+        `http://localhost:3000/api/apiGen/getApi/${api?.id}`,
+        { withCredentials: true },
+      );
 
       if (res.status === 200) {
         setUserDetailApi(res.data?.userDetail);
 
-        console.log("----> res.data?.credentailKey < -------------- \n", res.data?.credentailKey)
-        setApiCredentails(res.data?.credentailKey);
+        if (res.data.apiEntry.usage > 498) {
+          const isPurchnased =
+            res.data.apiEntry.usage % 100 === 99 &&
+            res.data.apiEntry.partialPayment == false;
+          setapiPurchase(isPurchnased);
+        }
 
+        setApiCredentails(res.data?.credentailKey);
       } else {
         alert(res.data?.message || "Unexpected response");
       }
@@ -33,27 +42,26 @@ const ApiDetailFrameTemplate = () => {
   };
 
   const getApicredentails = async () => {
-
     try {
-
       const apiData = {
-        providerApiId: api?.id
+        providerApiId: api?.id,
+      };
 
-      }
-
-      const getApiCredentailsAxios = await axios.post(`http://localhost:3000/api/apiGen/setApi/${api?.id}`, apiData, { withCredentials: true }
+      const getApiCredentailsAxios = await axios.post(
+        `http://localhost:3000/api/apiGen/setApi/${api?.id}`,
+        apiData,
+        { withCredentials: true },
       );
 
-
-
       if (getApiCredentailsAxios.status === 200) {
-        console.log("----> res.data?.credentailKey < -------------- \n", getApiCredentailsAxios.data?.credentailKey)
+        console.log(
+          "----> res.data?.credentailKey < -------------- \n",
+          getApiCredentailsAxios.data?.credentailKey,
+        );
         setApiCredentails(getApiCredentailsAxios?.data?.credentailKey);
-
       } else {
         alert(getApiCredentailsAxios.data?.message || "Unexpected response");
       }
-
     } catch (error) {
       if (error.response) {
         alert(error.response.data.message || "Request failed");
@@ -61,8 +69,7 @@ const ApiDetailFrameTemplate = () => {
         alert(error.message);
       }
     }
-
-  }
+  };
 
   useEffect(() => {
     getApiDetail();
@@ -73,7 +80,6 @@ const ApiDetailFrameTemplate = () => {
     navigator.clipboard.writeText(text);
     alert(`Copied: ${text}`);
   };
-
 
   const CodeBlock = ({ language, code }) => {
     const [copied, setCopied] = useState(false);
@@ -101,7 +107,6 @@ const ApiDetailFrameTemplate = () => {
       </div>
     );
   };
-
 
   // -----------
   const pythonCode = `
@@ -140,8 +145,6 @@ const ApiDetailFrameTemplate = () => {
     
     `;
 
-
-
   const reactCode = `
 
    const url = "http://localhost:3000/api/apiGen/apiRequest?apiName=${api.name}";
@@ -164,33 +167,74 @@ const ApiDetailFrameTemplate = () => {
 `;
 
   return (
-
     <div className="h-[100vh] w-full bg-gray-900 ">
-
       <div className="userNavbarFrame">
-        <UserNavbar/>
+        <UserNavbar />
       </div>
-
 
       {/* user main frame */}
       <div className="h-full w-full pt-[10vw]">
+        {apiPurchase ? (
+          <>
+            <div className="h-[100vh] w-full bg-gray-900 flex items-center justify-center top-0 right-0 fixed z-500">
+              <div className="min-h-[50vh] w-[50%] grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full">
+                {/* Left Card: Daily Plan */}
+                <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center">
+                  <h2 className="text-xl font-semibold text-white mb-2">
+                    Daily API Plan
+                  </h2>
+                  <p className="text-gray-400 mb-4">Buy credits for requests</p>
+                  <div className="text-4xl font-bold text-green-400 mb-2">
+                    ₹20
+                  </div>
+                  <p className="text-gray-300 mb-6">
+                    Per recharge • 500 requests/day
+                  </p>
+                  <button className="w-full py-2 px-4 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium">
+                    Buy Now
+                  </button>
+                </div>
+
+                {/* Right Card: Yearly Plan */}
+                <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center">
+                  <h2 className="text-xl font-semibold text-white mb-2">
+                    Yearly API Plan
+                  </h2>
+                  <p className="text-gray-400 mb-4">
+                    Unlimited access for one year
+                  </p>
+                  <div className="text-4xl font-bold text-green-400 mb-2">
+                    ₹15,000
+                  </div>
+                  <p className="text-gray-300 mb-6">Flat annual subscription</p>
+                  <button className="w-full py-2 px-4 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium">
+                    Subscribe
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <></>
+        )}
 
         <div className="h-[5vh] w-full flex flex-row items-center justify-center">
-
-          {
-            console.log("api",api)
-          }
-          {
-            api.status == "active" ? (
-              <>
-               <span className="h-[1vw] w-[1vw] bg-green-600 rounded-[50%] "></span><p className="ml-5 text-[1.2vw] font-[600] text-gray-400">active</p>
-               </>
-            ):(
-              <>
-               <span className="h-[1vw] w-[1vw] bg-red-600 rounded-[50%] "></span><p className="ml-5 text-[1.2vw] font-[600] text-gray-400">revoked</p>
-               </>
-            )
-          } 
+          {console.log("isPurchnased -- isPurchnased", apiPurchase)}
+          {api.status == "active" ? (
+            <>
+              <span className="h-[1vw] w-[1vw] bg-green-600 rounded-[50%] "></span>
+              <p className="ml-5 text-[1.2vw] font-[600] text-gray-400">
+                active
+              </p>
+            </>
+          ) : (
+            <>
+              <span className="h-[1vw] w-[1vw] bg-red-600 rounded-[50%] "></span>
+              <p className="ml-5 text-[1.2vw] font-[600] text-gray-400">
+                revoked
+              </p>
+            </>
+          )}
         </div>
 
         <div className="ApiTitleNameFrame h-[15vh] w-full  flex items-center justify-center overflow-hidden">
@@ -198,63 +242,57 @@ const ApiDetailFrameTemplate = () => {
         </div>
 
         <div className="ApiDescNameFrame h-[10vh] w-full  flex items-center justify-center overflow-hidden">
-          <p className="text-[2vw] font-[500] text-gray-500">{api?.name}</p>
+          <p className="text-[2vw] font-[500] text-gray-500">
+            {api?.description}
+          </p>
         </div>
-
 
         <div className="ApiButtonFrame h-[30vh] gap-2 w-full flex  flex-row items-center justify-center overflow-hidden">
+          {console.log("ApiCredentails", ApiCredentails)}
+          {!ApiCredentails ? (
+            <>
+              <button
+                onClick={() => {
+                  getApicredentails();
+                }}
+                className="h-[4vw] w-[28vw] px-5 bg-blue-600 mr-15 hover:bg-blue-700 rounded text-[1.5vw] text-white font-medium cursor-pointer"
+              >
+                get api key (per 500 free credits)
+              </button>
+            </>
+          ) : (
+            <>
+              <input
+                type="text"
+                value={ApiCredentails?.key || "not found"}
+                disabled
+                className="px-3 py-2 w-[20%] rounded bg-gray-800 border border-gray-700 cursor-not-allowed text-gray-300"
+              />
+              <button
+                onClick={() => handleCopy(ApiCredentails?.key || "not found")}
+                className="px-4 py-2 bg-blue-600 mr-15 hover:bg-blue-700 rounded text-white font-medium cursor-pointer"
+              >
+                Copy
+              </button>
 
-          {
-            console.log("ApiCredentails", ApiCredentails)
-          }
-          {
-            !ApiCredentails ? (
-              <>
-                <button onClick={() => { getApicredentails() }} className="h-[4vw] w-[28vw] px-5 bg-blue-600 mr-15 hover:bg-blue-700 rounded text-[1.5vw] text-white font-medium cursor-pointer">
-                  get api key (per 500 free credits)
-                </button>
-              </>
-            ) : (
-              <>
-
-                <input
-                  type="text"
-                  value={ApiCredentails?.key || "not found"}
-                  disabled
-                  className="px-3 py-2 w-[20%] rounded bg-gray-800 border border-gray-700 cursor-not-allowed text-gray-300"
-                />
-                <button
-                  onClick={() =>
-                    handleCopy(ApiCredentails?.key || "not found")
-                  }
-                  className="px-4 py-2 bg-blue-600 mr-15 hover:bg-blue-700 rounded text-white font-medium cursor-pointer"
-                >
-                  Copy
-                </button>
-
-
-                {/*  */}
-                <input
-                  type="text"
-                  value={ApiCredentails?.keyPassword || "not found"}
-                  disabled
-                  className="px-3 py-2 w-[20%] rounded bg-gray-800 border border-gray-700 cursor-not-allowed text-gray-300"
-                />
-                <button
-                  onClick={() =>
-                    handleCopy(ApiCredentails?.keyPassword || "not found")
-                  }
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium cursor-pointer"
-                >
-                  Copy
-                </button>
-              </>
-            )
-          }
-
-
+              {/*  */}
+              <input
+                type="text"
+                value={ApiCredentails?.keyPassword || "not found"}
+                disabled
+                className="px-3 py-2 w-[20%] rounded bg-gray-800 border border-gray-700 cursor-not-allowed text-gray-300"
+              />
+              <button
+                onClick={() =>
+                  handleCopy(ApiCredentails?.keyPassword || "not found")
+                }
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium cursor-pointer"
+              >
+                Copy
+              </button>
+            </>
+          )}
         </div>
-
 
         <div className="apiIntergrationFrame h-[100vh] bg-gray-900 w-full pt-5 flex items-center flex-col">
           <p className="text-[2vw] text-gray-300 font-[700]">API Integration</p>
@@ -266,17 +304,8 @@ const ApiDetailFrameTemplate = () => {
             <CodeBlock language="react js" code={reactCode} />
           </div>
         </div>
-
-
-
-
-
-
       </div>
-
-    </div >
-
-
+    </div>
 
     //     <div className="min-h-screen bg-gradient-to-b from-purple-700 to-blue-900 flex items-center justify-center">
     //       <div className="h-[100vh] w-[100vw] bg-gray-900 text-gray-100 rounded-lg shadow-lg p-8 space-y-6">
@@ -345,13 +374,6 @@ const ApiDetailFrameTemplate = () => {
     //         </div>
     //       </div>
     //     </div>
-
-
-
-
-
-
-
   );
 };
 

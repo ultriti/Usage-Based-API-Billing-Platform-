@@ -10,9 +10,9 @@ const ApiTemplateFrame = ({name, link, description }) => {
     };
 
     return (
-        <div className="h-[30vh] w-[26vw] bg-gray-900 text-gray-100 rounded-lg shadow-md p-6">
+        <div className="h-[20vh] w-[26vw] bg-gray-900 text-gray-100 rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold mb-2">{name}</h2>
-            <p className="text-sm text-gray-400 mb-4">{description}</p>
+            
 
             <div className="flex items-center space-x-2">
                 <input
@@ -28,6 +28,8 @@ const ApiTemplateFrame = ({name, link, description }) => {
                     Copy
                 </button>
             </div>
+
+            <p className="text-[1vw] text-gray-400 mt-4">{description}</p>
         </div>
     )
 }

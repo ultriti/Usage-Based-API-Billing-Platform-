@@ -1,133 +1,145 @@
-const mongoose = require('mongoose');
-const bcrypt = require("bcryptjs")
-
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const apiSchema = new mongoose.Schema({
   providerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Provider',
-    required: true
+    ref: "Provider",
+    required: true,
+  },
+  description: {
+    type: String,
+    default : ""
   },
   name: {
     type: String,
-    required: true
+    required: true,
   },
   baseUrl: {
     type: String,
-    required: true
+    required: true,
   },
   platformUrl: {
     type: String,
     required: true,
-    default: "http://localhost:3000/"
+    default: "http://localhost:3000/",
   },
   status: {
     type: String,
-    enum: ['active', 'revoked'],
-    default: 'active'
+    enum: ["active", "revoked"],
+    default: "active",
   },
 
-  // API Keys 
-  apiKeys: [{
-    consumerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+  // API Keys
+  apiKeys: [
+    {
+      consumerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      key: {
+        type: String,
+        required: true,
+        unique: true,
+      },
+      status: {
+        type: String,
+        enum: ["active", "revoked"],
+        default: "active",
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
     },
-    key: {
-      type: String,
-      required: true,
-      unique: true
-    },
-    status: {
-      type: String,
-      enum: ['active', 'revoked'],
-      default: 'active'
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
+  ],
 
-  // Usage Logs 
-  usageLogs: [{
-    apiKey: {
-      type: String
-    },
-    endpoint: {
-      type: String
-    },
-    timestamp: [{
-      type: Date,
-      default: Date.now
-    }],
-    categories: {
-      type: String,
-      enum: [
-        'development',
-        'character',
-        'design',
-        'testing',
-        'documentation',
-        'analytics',
-        'security',
-        'billing',
-        'support',
-        'marketing',
-        'operations'
+  // Usage Logs
+  usageLogs: [
+    {
+      apiKey: {
+        type: String,
+      },
+      endpoint: {
+        type: String,
+      },
+      timestamp: [
+        {
+          type: Date,
+          default: Date.now,
+        },
       ],
-      default: 'development'
+      status: [
+        {
+          type: Number,
+          default: 0,
+        },
+      ],
+      latency: [
+        {
+          type: Number,
+          default: 0,
+        },
+      ],
     },
-    status: [{
-      type: Number,
-      default: 0
-    }]
-    ,
-    latency: [{
-      type: Number,
-      default: 0
-    }]
-  }],
+  ],
 
-  // Billing info 
+  categories: {
+    type: String,
+    enum: [
+      "development",
+      "character",
+      "design",
+      "testing",
+      "documentation",
+      "analytics",
+      "security",
+      "billing",
+      "support",
+      "marketing",
+      "operations",
+    ],
+    default: "development",
+  },
+
+  // Billing info
   billing: {
     totalRequests: {
       type: Number,
-      default: 0
+      default: 0,
     },
     amount: {
       type: Number,
-      default: 0
+      default: 0,
     },
     status: {
       type: String,
-      enum: ['pending', 'paid'],
-      default: 'pending'
+      enum: ["pending", "paid"],
+      default: "pending",
     },
     invoiceDate: {
       type: Date,
-      default: Date.now
+      default: Date.now,
     },
     consumerDetail: [
       {
         customerId: mongoose.Schema.Types.ObjectId,
         ammountPaid: {
           type: Number,
-          default: 0
+          default: 0,
         },
         paidAt: { type: Date, default: Date.now },
         status: {
           type: String,
-          enum: ['pending', 'paid'],
-          default: 'pending'
+          enum: ["pending", "paid"],
+          default: "pending",
         },
-      }
-    ]
+      },
+    ],
   },
 
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
 });
-
 
 // key hasging
 apiSchema.methods.hashKeys = async function (keyId) {
@@ -138,5 +150,4 @@ apiSchema.methods.compareKeys = async function (keys, consumerKeys) {
   return await bcrypt.compare(String(keys), String(consumerKeys));
 };
 
-
-module.exports = mongoose.model('API', apiSchema);
+module.exports = mongoose.model("API", apiSchema);
