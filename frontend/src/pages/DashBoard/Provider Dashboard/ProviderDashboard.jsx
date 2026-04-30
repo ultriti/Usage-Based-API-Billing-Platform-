@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import "./ProviderDashboard.css";
-import NavbarFrame from '../../../components/NavbarFrame';
+import NavbarFrame from '../../../components/providerComponents/NavbarFrame';
 import ProviderSidebarFrame from '../../../components/providerComponents/ProviderSidebarFrame';
 import axios from "axios";
 

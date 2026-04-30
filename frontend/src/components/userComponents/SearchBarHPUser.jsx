@@ -13,14 +13,14 @@ const SearchBarHPUser = () => {
     <div className="ApiSearchBarFrame h-[20vh] w-[90%] flex items-center justify-center">
       <form
         onSubmit={handleSearch}
-        className="flex w-[60%] max-w-xl items-center bg-gray-300 rounded-lg shadow-md overflow-hidden"
+        className="flex w-[60%] h-[6vh] items-center bg-gray-200 border border-black px-5 rounded-lg shadow-md overflow-hidden"
       >
         <input
           type="text"
           placeholder="Search APIs..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-grow w-[90%] px-4 py-2 text-gray-700 focus:outline-none"
+          className="flex-grow w-[90%] px-4 py-2 text-gray-900 focus:outline-none"
         />
         <button
           type="submit"

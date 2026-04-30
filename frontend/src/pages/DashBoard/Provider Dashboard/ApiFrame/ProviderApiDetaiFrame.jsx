@@ -40,7 +40,7 @@ const ProviderApiDetaiFrame = ({ api }) => {
 
 
     const apiStatusUpdate = async (apiId, status) => {
-        console.log("status:::", status)
+        // console.log("status:::", status)
 
         try {
             const toggleStatus = await axios.put(`http://localhost:3000/api/apiGen/updateApiStatus/${apiId}`, { status }, { withCredentials: true });

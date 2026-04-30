@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import "./providerComponents/ProviderSidebarFrame.css";
+import "../providerComponents/ProviderSidebarFrame.css";
 
 const UserSidebar = () => {
   return (
@@ -13,10 +13,10 @@ const UserSidebar = () => {
           <NavLink
             to="/user/HomePage"
             className={({ isActive }) =>
-              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-900 ${
+              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-800 ${
                 isActive
                   ? "bg-blue-900 text-white"
-                  : "bg-gray-800 text-gray-100"
+                  : "text-gray-100"
               }`
             }
           >
@@ -25,10 +25,10 @@ const UserSidebar = () => {
           <NavLink
             to="/user/category/trail"
             className={({ isActive }) =>
-              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-900 ${
+              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-800 ${
                 isActive
                   ? "bg-blue-900 text-white"
-                  : "bg-gray-800 text-gray-100"
+                  : "text-gray-100"
               }`
             }
           >
@@ -38,10 +38,10 @@ const UserSidebar = () => {
           <NavLink
             to="/user/category/development"
             className={({ isActive }) =>
-              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-900 ${
+              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-800 ${
                 isActive
                   ? "bg-blue-900 text-white"
-                  : "bg-gray-800 text-gray-100"
+                  : "text-gray-100"
               }`
             }
           >
@@ -51,10 +51,10 @@ const UserSidebar = () => {
           <NavLink
             to="/user/category/character"
             className={({ isActive }) =>
-              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-900 ${
+              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-800 ${
                 isActive
                   ? "bg-blue-900 text-white"
-                  : "bg-gray-800 text-gray-100"
+                  : "text-gray-100"
               }`
             }
           >
@@ -65,10 +65,10 @@ const UserSidebar = () => {
           <NavLink
             to="/user/category/documentation"
             className={({ isActive }) =>
-              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-900 ${
+              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-800 ${
                 isActive
                   ? "bg-blue-900 text-white"
-                  : "bg-gray-800 text-gray-100"
+                  : "text-gray-100"
               }`
             }
           >
@@ -78,10 +78,10 @@ const UserSidebar = () => {
           <NavLink
             to="/user/category/news"
             className={({ isActive }) =>
-              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-900 ${
+              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-800 ${
                 isActive
                   ? "bg-blue-900 text-white"
-                  : "bg-gray-800 text-gray-100"
+                  : "text-gray-100"
               }`
             }
           >

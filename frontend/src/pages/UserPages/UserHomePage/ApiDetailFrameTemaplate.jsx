@@ -2,7 +2,10 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import UserNavbar from "../../components/UserNavbar";
+import UserNavbar from "../../../components/userComponents/UserNavbar";
+import UserFooter from "../../../components/userComponents/UserFooter";
+import PageDecoration from "../../../components/providerComponents/PageDecoration";
+import UserPayment_razorpay from "../../../components/payment/UserPayment_razorpay";
 
 const ApiDetailFrameTemplate = () => {
   const location = useLocation();
@@ -23,8 +26,8 @@ const ApiDetailFrameTemplate = () => {
 
         if (res.data.apiEntry.usage > 498) {
           const isPurchnased =
-            res.data.apiEntry.usage % 100 === 99 &&
-            res.data.apiEntry.partialPayment == false;
+            res.data?.apiEntry?.usage % 100 === 99 &&
+            res.data?.apiEntry?.partialPayment == false;
           setapiPurchase(isPurchnased);
         }
 
@@ -36,7 +39,8 @@ const ApiDetailFrameTemplate = () => {
       if (error.response) {
         alert(error.response.data.message || "Request failed");
       } else {
-        alert(error.message);
+        console.log("error:", error.message);
+        // alert(error.message);
       }
     }
   };
@@ -71,9 +75,39 @@ const ApiDetailFrameTemplate = () => {
     }
   };
 
+  const subcribeToApi = async () => {
+    try {
+      const apiData = {
+        apiId: api?.id,
+      };
+
+      alert(`${userDetailApi?._id} -- ${api?.id} -- ${apiData.providerApiId}`);
+      const subscribeToApiAxios = await axios.post(
+        `http://localhost:3000/api/apiGen/partialPayApi/${userDetailApi?._id}`,
+        apiData,
+        { withCredentials: true },
+      );
+
+      if (subscribeToApiAxios.status === 200) {
+        alert(subscribeToApiAxios.data?.message || "Subscription successful");
+        // getApiDetail();
+      } else {
+        alert(subscribeToApiAxios.data?.message || "Unexpected response");
+      }
+
+
+    } catch (error) {
+      if (error.response) {
+        alert(error.response.data.message || "Subscription failed");
+      } else {
+        alert(error.message);
+      }
+    }
+  };
+
   useEffect(() => {
     getApiDetail();
-  }, []);
+  }, [apiPurchase]);
 
   // Copy function
   const handleCopy = (text) => {
@@ -167,16 +201,19 @@ const ApiDetailFrameTemplate = () => {
 `;
 
   return (
-    <div className="h-[100vh] w-full bg-gray-900 ">
+    <div className="m-h-[100vh] w-full bg_dark_Theme_70">
       <div className="userNavbarFrame">
         <UserNavbar />
       </div>
 
+      <PageDecoration />
+
       {/* user main frame */}
       <div className="h-full w-full pt-[10vw]">
+        {/* purachse plan */}
         {apiPurchase ? (
           <>
-            <div className="h-[100vh] w-full bg-gray-900 flex items-center justify-center top-0 right-0 fixed z-500">
+            <div className="h-[100vh] w-full bg_dark_Theme_70 flex items-center justify-center top-0 right-0 fixed z-500">
               <div className="min-h-[50vh] w-[50%] grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full">
                 {/* Left Card: Daily Plan */}
                 <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center">
@@ -190,9 +227,14 @@ const ApiDetailFrameTemplate = () => {
                   <p className="text-gray-300 mb-6">
                     Per recharge • 500 requests/day
                   </p>
-                  <button className="w-full py-2 px-4 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium">
-                    Buy Now
-                  </button>
+                  <div className="w-full  text-white rounded-md font-medium">
+                    <UserPayment_razorpay amount={20} />
+                  </div>
+                  <div className="w-full  text-white rounded-md font-medium">
+                    <button className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer" onClick={()=>{subcribeToApi()}}>
+                      demo pay
+                    </button>
+                  </div>
                 </div>
 
                 {/* Right Card: Yearly Plan */}
@@ -206,10 +248,12 @@ const ApiDetailFrameTemplate = () => {
                   <div className="text-4xl font-bold text-green-400 mb-2">
                     ₹15,000
                   </div>
+
                   <p className="text-gray-300 mb-6">Flat annual subscription</p>
-                  <button className="w-full py-2 px-4 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium">
-                    Subscribe
-                  </button>
+
+                  <div className="w-full text-white rounded-md font-medium">
+                    <UserPayment_razorpay amount={15000} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -262,39 +306,56 @@ const ApiDetailFrameTemplate = () => {
             </>
           ) : (
             <>
-              <input
-                type="text"
-                value={ApiCredentails?.key || "not found"}
-                disabled
-                className="px-3 py-2 w-[20%] rounded bg-gray-800 border border-gray-700 cursor-not-allowed text-gray-300"
-              />
-              <button
-                onClick={() => handleCopy(ApiCredentails?.key || "not found")}
-                className="px-4 py-2 bg-blue-600 mr-15 hover:bg-blue-700 rounded text-white font-medium cursor-pointer"
-              >
-                Copy
-              </button>
+              <div className="h-[20vh] w-[30%] flex item-center justify-center flex-col gap-5">
+                <p className="text-[1.2vw] text-gray-400 ml-3">apiKey Code</p>
+
+                <div className="inputFrameU h-[5vh] w-full flex flex-row item-center justify-center gap-5">
+                  <input
+                    type="password"
+                    name="apiKeyCode"
+                    value={ApiCredentails?.key || "not found"}
+                    disabled
+                    className="px-3 py-2 w-[70%] rounded bg-gray-800 border border-gray-700 cursor-not-allowed text-gray-300"
+                  />
+                  <button
+                    onClick={() =>
+                      handleCopy(ApiCredentails?.key || "not found")
+                    }
+                    className="px-4 py-2 bg-blue-600 mr-15 hover:bg-blue-700 rounded text-white font-medium cursor-pointer"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
 
               {/*  */}
-              <input
-                type="text"
-                value={ApiCredentails?.keyPassword || "not found"}
-                disabled
-                className="px-3 py-2 w-[20%] rounded bg-gray-800 border border-gray-700 cursor-not-allowed text-gray-300"
-              />
-              <button
-                onClick={() =>
-                  handleCopy(ApiCredentails?.keyPassword || "not found")
-                }
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium cursor-pointer"
-              >
-                Copy
-              </button>
+              <div className="h-[20vh] w-[30%] flex item-center justify-center flex-col gap-5">
+                <p className="text-[1.2vw] text-gray-400 ml-12">
+                  apiKey password
+                </p>
+
+                <div className="inputFrameU h-[5vh] w-full flex flex-row item-center justify-center gap-5">
+                  <input
+                    type="password"
+                    value={ApiCredentails?.keyPassword || "not found"}
+                    disabled
+                    className="px-3 py-2 w-[70%] rounded bg-gray-800 border border-gray-700 cursor-not-allowed text-gray-300"
+                  />
+                  <button
+                    onClick={() =>
+                      handleCopy(ApiCredentails?.keyPassword || "not found")
+                    }
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium cursor-pointer"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
             </>
           )}
         </div>
 
-        <div className="apiIntergrationFrame h-[100vh] bg-gray-900 w-full pt-5 flex items-center flex-col">
+        <div className="apiIntergrationFrame h-[100vh] bg_dark_Theme_70 w-full pt-5 flex items-center flex-col">
           <p className="text-[2vw] text-gray-300 font-[700]">API Integration</p>
 
           <div className="integrationProgram mt-5 h-[80vh] w-[90%] bg-gray-700 rounded-lg p-6 overflow-y-auto">
@@ -304,6 +365,11 @@ const ApiDetailFrameTemplate = () => {
             <CodeBlock language="react js" code={reactCode} />
           </div>
         </div>
+      </div>
+
+      {/* user footer frame */}
+      <div className="FooterFrame">
+        <UserFooter />
       </div>
     </div>
 

@@ -20,7 +20,8 @@ const UserRegister = () => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        `http://localhost:3000/api/user/userRegister`,
+        // `http://localhost:3000/api/user/userRegister`,
+        `https://usage-based-api-billing-platform.onrender.com/api/user/userRegister`,
         formData,
         { withCredentials: true }
       );

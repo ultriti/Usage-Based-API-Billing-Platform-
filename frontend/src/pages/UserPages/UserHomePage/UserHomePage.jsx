@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import ApiTemplateFrame from "./ApiTemplateFrame_HP";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import SearchBarHPUser from "../../../components/userComponents/SearchBarHPUser";
 import UserNavbar from "../../../components/userComponents/UserNavbar";
 import UserSidebar from "../../../components/userComponents/UserSidebar";
-import axios from "axios";
-import ApiTemplateFrame from "../UserHomePage/ApiTemplateFrame_HP";
+import UserFooter from "../../../components/userComponents/UserFooter";
 import PageDecoration from "../../../components/providerComponents/PageDecoration";
 
-const CategoryFrame = () => {
+const UserHomePage = () => {
   const navigate = useNavigate();
-  const { category } = useParams();
+
   const [allApis, getallApis] = useState([]);
 
-  const getAllApis = async () => {
+  const getAllApis = async (req, res) => {
     try {
       const getAllApisAxios = await axios.get(
-        `http://localhost:3000/api/apiGen/getAllApi?category=${category}`,
+        `http://localhost:3000/api/apiGen/getAllApi`,
         { withCredentials: true },
       );
 
@@ -40,10 +42,11 @@ const CategoryFrame = () => {
 
   useEffect(() => {
     getAllApis();
-  }, [category]);
+  }, []);
 
   return (
-    <div className="w-full h-[100vh] bg_dark_Theme_70">
+    <div className="userHomePageFrame w-[99.2vw] bg_dark_Theme_70">
+      <PageDecoration/>
       <div className="userNavbarFrame">
         <UserNavbar />
       </div>
@@ -52,12 +55,29 @@ const CategoryFrame = () => {
         <UserSidebar />
       </div>
 
-      <PageDecoration />
+      <div className="UserMainFrame bg_dark_Theme_70">
+        <div className="UserHomePageFrameCont h-[50vh] w-[100%]  flex flex-col items-center justify-center px-15 gap-4">
+          <p className="text-[3vw] font-[700] text-gray-200">
+            MeterFlow – An API Dashboard{" "}
+          </p>
+          <p className="text-[1.3vw] font-[500] text-gray-300">
+            Welcome to your personal API dashboard. Here you can view your
+            active API keys, track request usage in real time, monitor billing,
+            and manage your subscription plan. Stay on top of your API activity
+            with clear analytics and secure access.
+          </p>
+        </div>
 
-      {/* main frame */}
-      <div className="ApiCategoryMainFrame bg_dark_Theme_70">
+        <p className="text-[2vw] font-[700] text-gray-300 self-center">
+          All Api's
+        </p>
+
+        <div className="ApiSearchBarFrame h-[20vh] w-[100%]  flex flex-row items-center justify-center">
+          <SearchBarHPUser />
+        </div>
+
         <div className="apiTemplateFrame h-[100%] w-[100%] py-5 flex gap-5 flex-wrap">
-          {allApis.length > 0 ? (
+          {allApis ? (
             allApis?.map((api, i) => (
               <div
                 onClick={() => {
@@ -84,14 +104,16 @@ const CategoryFrame = () => {
               </div>
             ))
           ) : (
-            <div className="h-[10vh] rounded-[10px] capitalize w-full bg-gray-700 text-[1.5vw] text-gray-300 font-[700] flex items-center justify-center">
-              <p>no api found for this category</p>
-            </div>
+            <></>
           )}
         </div>
+      </div>
+
+      <div className="userFooterFrame">
+        <UserFooter />
       </div>
     </div>
   );
 };
 
-export default CategoryFrame;
+export default UserHomePage;

@@ -21,7 +21,7 @@
 .UserMainFrame {
     min-height: 100%;
     width: 84%;
-    margin-left: 15.9vw;
+    margin-left: 16.1vw;
     padding: 6vw 1vw 1vw 1vw;
     display: flex;
     align-items: center;
@@ -39,7 +39,7 @@
 }
 
 .userSidebarFrame {
-    height: 90vh;
+    height: 100%;
     width: 16vw;
     position: fixed;
     top: 4vw;
@@ -48,7 +48,30 @@
     z-index: 899;
 }
 
+
+.userFooterFrame{
+    height: 100%;
+    width: 84%;
+    margin-left: 16vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.FooterFrame{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .userHomePageFrame {
     position:relative;
     background-color: #1c1c1c
+}
+
+
+.bg_dark_Theme_70{
+    background-color: #0b0d10;
 }
