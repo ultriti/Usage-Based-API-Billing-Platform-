@@ -27,16 +27,13 @@ const ProviderApiFrame = () => {
       name: "yash",
     };
     try {
-      // const data = await fetchProviderApis();
-      // console.log("providerApis", data)
-      // setproviderApis(data.providerApi);
-      // const res = await axios.post(`import.meta.env.BACKEND_URL_RD/api/apiGen/getProviderInfo?apiId=${}`, data_, { withCredentials: true });
-      // const formatted = getGraphData(res.data);
-      // setChartData(formatted);
+
 
       const data = await fetchProviderApis();
       console.log("providerApis", data);
       setproviderApis(data.providerApi);
+
+
     } catch (err) {
       if (err.response) {
         console.error("Backend error:", err.response.data);
@@ -50,7 +47,7 @@ const ProviderApiFrame = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [5000]);
 
   const apiStatusUpdate = async (apiId, status) => {
     console.log("status:::", status);

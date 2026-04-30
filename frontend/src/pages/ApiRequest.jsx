@@ -6,7 +6,7 @@ const ApiRequest = () => {
 
   const demo = async () => {
     const url =
-      "import.meta.env.BACKEND_URL_RD/api/apiGen/apiRequest?apiName=poekmon";
+      `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/apiRequest?apiName=poekmon`;
 
     try {
       const response = await axios.get(url, {
