@@ -1,173 +1,168 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from "react";
 
-import "./providerApiFrame.css"
-import axios from 'axios'
-import { fetchProviderApis } from '../GetProviderApis';
+import "./providerApiFrame.css";
+import axios from "axios";
+import { fetchProviderApis } from "../GetProviderApis";
 
 const ProviderApiDetaiFrame = ({ api }) => {
-    const [providerApis, setproviderApis] = useState([])
-    const [status_, setstatus_] = useState(api?.status)
+  const [providerApis, setproviderApis] = useState([]);
+  const [status_, setstatus_] = useState(api?.status);
 
+  // const handleSubmit = async (e) => {
+  //     e.preventDefault();
+  //     try {
+  //         const res = await axios.post("import.meta.env.BACKEND_URL_RD/api/apiGen/createApi", formData, { withCredentials: true });
 
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault();
-    //     try {
-    //         const res = await axios.post("http://localhost:3000/api/apiGen/createApi", formData, { withCredentials: true });
+  //         console.log("API Created:", res.data);
+  //         alert("API created successfully!");
 
-    //         console.log("API Created:", res.data);
-    //         alert("API created successfully!");
+  //     } catch (err) {
+  //         console.error(err);
+  //         alert("Error creating API");
+  //     }
+  // }
 
-    //     } catch (err) {
-    //         console.error(err);
-    //         alert("Error creating API");
-    //     }
-    // }
+  // funtions
 
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-    // funtions 
+  const handleCopy = (url) => {
+    navigator.clipboard.writeText(url).then(() => {
+      console.log("Copied:", url);
+      alert("Copied to clipboard!");
+    });
+  };
 
+  const apiStatusUpdate = async (apiId, status) => {
+    // console.log("status:::", status)
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+    try {
+      const toggleStatus = await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/updateApiStatus/${apiId}`,
+        { status },
+        { withCredentials: true },
+      );
 
-    const handleCopy = (url) => {
-        navigator.clipboard.writeText(url).then(() => {
-            console.log("Copied:", url);
-            alert("Copied to clipboard!");
-        });
-    };
-
-
-    const apiStatusUpdate = async (apiId, status) => {
-        // console.log("status:::", status)
-
-        try {
-            const toggleStatus = await axios.put(`http://localhost:3000/api/apiGen/updateApiStatus/${apiId}`, { status }, { withCredentials: true });
-
-            if (toggleStatus.status == 201) {
-                console.log("toggleStatus.data.message", toggleStatus.data.message)
-                console.log(toggleStatus.data.status == "active" ? true : false)
-                setstatus_(toggleStatus.data.status)
-            } else {
-                alert(`${toggleStatus.data.message}`)
-
-            }
-        } catch (error) {
-            console.log(error.message);
-
-        }
-
+      if (toggleStatus.status == 201) {
+        console.log("toggleStatus.data.message", toggleStatus.data.message);
+        console.log(toggleStatus.data.status == "active" ? true : false);
+        setstatus_(toggleStatus.data.status);
+      } else {
+        alert(`${toggleStatus.data.message}`);
+      }
+    } catch (error) {
+      console.log(error.message);
     }
+  };
 
-    return (
-        <>
-            <div className="apiListedFrame h-[60vh] mb-5 w-full bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+  return (
+    <>
+      <div className="apiListedFrame h-[60vh] mb-5 w-full bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+        {/* Top Frame */}
+        <div className="apiTitleInfo h-[8vh] w-full bg-gray-700 flex flex-row items-center px-6 justify-between">
+          {/* API Name */}
+          <p className="text-white font-semibold text-xl truncate">
+            {api.name}
+          </p>
 
-                {/* Top Frame */}
-                <div className="apiTitleInfo h-[8vh] w-full bg-gray-700 flex flex-row items-center px-6 justify-between">
-                    {/* API Name */}
-                    <p className="text-white font-semibold text-xl truncate">{api.name}</p>
+          {/* Active / Inactive Toggle */}
 
-                    {/* Active / Inactive Toggle */}
+          <label className="inline-flex items-center cursor-pointer ml-4">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={api.active == "active" ? true : false}
+              onClick={() => apiStatusUpdate(api._id, status_)}
+            />
 
-                    <label className="inline-flex items-center cursor-pointer ml-4">
-                        <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            checked={(api.active == "active" ? true : false)}
-                            onClick={() => apiStatusUpdate(api._id, status_)}
-                        />
+            {
+              // toggleActive ? (
+              (status_ == "active" ? true : false) ? (
+                <>
+                  <div className="w-11 h-6 bg-green-500 flex items-center rounded-full peer peer-checked:bg-green-500 relative transition">
+                    <div className="absolute  right-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
+                  </div>
+                  <span
+                    className={`ml-3 text-sm font-medium ${status_ == "active" ? "text-green-400" : "text-red-400"}`}
+                  >
+                    {status_ == "active" ? "Active" : "Inactive"}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-gray-500 relative transition">
+                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
+                  </div>
+                  <span
+                    className={`ml-3 text-sm font-medium ${status_ == "active" ? "text-green-400" : "text-red-400"}`}
+                  >
+                    {status_ == "active" ? "active" : "Inactive"}
+                  </span>
+                </>
+              )
+            }
+          </label>
+        </div>
 
-                        {
-                            // toggleActive ? (
-                            (status_ == "active" ? true : false) ? (
-                                <>
-                                    <div className="w-11 h-6 bg-green-500 flex items-center rounded-full peer peer-checked:bg-green-500 relative transition">
-                                        <div className="absolute  right-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
-                                    </div>
-                                    <span className={`ml-3 text-sm font-medium ${status_ == "active" ? "text-green-400" : "text-red-400"}`}>
-                                        {status_ == "active" ? "Active" : "Inactive"}
-                                    </span>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-gray-500 relative transition">
-                                        <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
-                                    </div>
-                                    <span className={`ml-3 text-sm font-medium ${status_ == "active" ? "text-green-400" : "text-red-400"}`}>
-                                        {status_ == "active" ? "active" : "Inactive"}
-                                    </span>
-                                </>
-                            )
-                        }
+        {/* Middle Frame */}
+        <div className="h-[70%] w-full bg-gray-800 flex flex-row p-4">
+          {/* Left Section */}
+          <div className="apiDetailFrameLeft h-full w-[70%] flex flex-col gap-4">
+            {/* Description */}
+            <div className="min-h-[4vh] w-[95%] bg-gray-700 text-sm text-gray-300 font-medium p-2 rounded-md line-clamp-2">
+              {api.description}
+            </div>
 
-                    </label>
+            {/* API Key Copy */}
+            <div className="h-[12vh] w-[90%] bg-gray-700 flex items-center justify-center rounded-lg">
+              <div
+                className="w-[90%] flex rounded-lg shadow-md cursor-pointer"
+                onClick={() => handleCopy(api.platformUrl)}
+              >
+                <input
+                  type="text"
+                  value={api.platformUrl}
+                  readOnly
+                  className="flex-grow px-3 py-2 bg-gray-800 text-gray-400 truncate rounded-l-md focus:outline-none cursor-pointer"
+                />
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-green-600 text-white font-semibold rounded-r-md hover:bg-green-700 transition"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
 
-                </div>
+          {/* Right Section */}
+          <div className="apiInteractionDetailRight h-full w-[30%] flex flex-col gap-3 items-center justify-center">
+            <div className="h-[8vh] w-[19vw] bg-gray-700 rounded-2xl flex items-center justify-between px-5 text-lg font-semibold text-gray-200">
+              <p>$ {api.billing.amount}</p>
+            </div>
 
-                {/* Middle Frame */}
-                <div className="h-[70%] w-full bg-gray-800 flex flex-row p-4">
+            <div className="h-[8vh] w-[19vw] bg-gray-700 rounded-2xl flex items-center px-5 text-lg font-semibold text-gray-200">
+              <p>{api.billing.totalRequests}</p>
+              <span className="ml-2 text-sm text-gray-400">requests</span>
+            </div>
 
-                    {/* Left Section */}
-                    <div className="apiDetailFrameLeft h-full w-[70%] flex flex-col gap-4">
+            <div className="h-[8vh] w-[19vw] bg-gray-700 rounded-2xl flex items-center px-5 text-lg font-semibold text-gray-200">
+              <p>{new Date(api.createdAt).toISOString().split("T")[0]}</p>
+            </div>
+          </div>
+        </div>
 
-                        {/* Description */}
-                        <div className="min-h-[4vh] w-[95%] bg-gray-700 text-sm text-gray-300 font-medium p-2 rounded-md line-clamp-2">
-                            {api.description}
-                        </div>
+        {/* lower frame */}
+        <div className="h-[7vh] w-full  flex items-center justify-end px-15">
+          <button className="h-[3vw] w-[12vw] bg-red-700 rounded-2xl text-[1.5vw] font-[600] text-gray-300 cursor-pointer hover:bg-red-800">
+            <p>delete</p>
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
 
-                        {/* API Key Copy */}
-                        <div className="h-[12vh] w-[90%] bg-gray-700 flex items-center justify-center rounded-lg">
-                            <div
-                                className="w-[90%] flex rounded-lg shadow-md cursor-pointer"
-                                onClick={() => handleCopy(api.platformUrl)}
-                            >
-                                <input
-                                    type="text"
-                                    value={api.platformUrl}
-                                    readOnly
-                                    className="flex-grow px-3 py-2 bg-gray-800 text-gray-400 truncate rounded-l-md focus:outline-none cursor-pointer"
-                                />
-                                <button
-                                    type="button"
-                                    className="px-4 py-2 bg-green-600 text-white font-semibold rounded-r-md hover:bg-green-700 transition"
-                                >
-                                    Copy
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right Section */}
-                    <div className="apiInteractionDetailRight h-full w-[30%] flex flex-col gap-3 items-center justify-center">
-
-                        <div className="h-[8vh] w-[19vw] bg-gray-700 rounded-2xl flex items-center justify-between px-5 text-lg font-semibold text-gray-200">
-                            <p>$ {api.billing.amount}</p>
-                        </div>
-
-                        <div className="h-[8vh] w-[19vw] bg-gray-700 rounded-2xl flex items-center px-5 text-lg font-semibold text-gray-200">
-                            <p>{api.billing.totalRequests}</p>
-                            <span className="ml-2 text-sm text-gray-400">requests</span>
-                        </div>
-
-                        <div className="h-[8vh] w-[19vw] bg-gray-700 rounded-2xl flex items-center px-5 text-lg font-semibold text-gray-200">
-                          <p>{new Date(api.createdAt).toISOString().split("T")[0]}</p>
-
-                        </div>
-                    </div>
-                </div>
-
-                {/* lower frame */}
-                <div className='h-[7vh] w-full  flex items-center justify-end px-15'>
-                        <button className='h-[3vw] w-[12vw] bg-red-700 rounded-2xl text-[1.5vw] font-[600] text-gray-300 cursor-pointer hover:bg-red-800'>
-                            <p>delete</p>
-                        </button>
-                </div>
-
-
-            </div></>
-    )
-}
-
-export default ProviderApiDetaiFrame
+export default ProviderApiDetaiFrame;

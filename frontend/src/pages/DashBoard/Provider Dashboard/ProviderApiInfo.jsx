@@ -2,36 +2,45 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 
-import copyCodePng from "../../../../public/icon/copyCode.webp"
-import apiPng from "../../../../public/icon/10329422.png"
-import { fetchProviderApis } from './GetProviderApis';
+import copyCodePng from "../../../../public/icon/copyCode.webp";
+import apiPng from "../../../../public/icon/10329422.png";
+import { fetchProviderApis } from "./GetProviderApis";
 
-
-const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, platformUrl, revenue, fetchData }) => {
-  const [status_, setstatus_] = useState(active)
-  const [providerApis, setproviderApis] = useState([])
-
+const ProviderApiInfo = ({
+  logo,
+  name,
+  requests,
+  id,
+  active,
+  chartData,
+  platformUrl,
+  revenue,
+  fetchData,
+}) => {
+  const [status_, setstatus_] = useState(active);
+  const [providerApis, setproviderApis] = useState([]);
 
   const apiStatusUpdate = async (apiId, status) => {
-    console.log("status:::", status)
+    console.log("status:::", status);
 
     try {
-      const toggleStatus = await axios.put(`http://localhost:3000/api/apiGen/updateApiStatus/${id}`, { status }, { withCredentials: true });
+      const toggleStatus = await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/updateApiStatus/${id}`,
+        { status },
+        { withCredentials: true },
+      );
 
       if (toggleStatus.status == 201) {
-        console.log("toggleStatus.data.message", toggleStatus.data.message)
-        console.log(toggleStatus.data.status == "active" ? true : false)
-        setstatus_(toggleStatus.data.status)
+        console.log("toggleStatus.data.message", toggleStatus.data.message);
+        console.log(toggleStatus.data.status == "active" ? true : false);
+        setstatus_(toggleStatus.data.status);
       } else {
-        alert(`${toggleStatus.data.message}`)
-
+        alert(`${toggleStatus.data.message}`);
       }
     } catch (error) {
       console.log(error.message);
-
     }
-
-  }
+  };
 
   const handleCopy = (url) => {
     navigator.clipboard.writeText(url).then(() => {
@@ -40,12 +49,11 @@ const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, platform
     });
   };
 
-
   const getProviderApiFuntion = async () => {
     const data = await fetchProviderApis();
-    console.log("providerApis", data)
+    console.log("providerApis", data);
     setproviderApis(data.providerApi);
-  }
+  };
 
   // const deleteProviderApiAxios = async () => {
 
@@ -56,30 +64,35 @@ const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, platform
   //   }
   // }
 
-
-  // use effects 
+  // use effects
   useEffect(() => {
-    getProviderApiFuntion()
+    getProviderApiFuntion();
   }, []);
 
-
   return (
-    <div className="apisListInfo h-[12vh] w-full bg-gray-600 rounded-2xl flex items-center px-6 shadow-md" onClick={() => { fetchData(id) }}>
-
+    <div
+      className="apisListInfo h-[12vh] w-full bg-gray-600 rounded-2xl flex items-center px-6 shadow-md"
+      onClick={() => {
+        fetchData(id);
+      }}
+    >
       {/* Logo + Name */}
       <div className="flex flex-row w-[30vw] h-full items-center space-x-4 overflow-hidden">
-        <img src={apiPng} alt={name} className="w-12 h-12 rounded-full bg-gray-200 p-1" />
+        <img
+          src={apiPng}
+          alt={name}
+          className="w-12 h-12 rounded-full bg-gray-200 p-1"
+        />
         <p className="text-white font-semibold text-[1.5vw]">{name}</p>
       </div>
 
       {/* Requests */}
 
       <div className="RequestFrame w-[15vw] h-full flex flex-row items-center justify-center overflow-hidden">
-
-        <p className="text-gray-200 text-[1.2vw] font-[600] pl-4 pr-2">{requests.toLocaleString()} requests</p>
-
+        <p className="text-gray-200 text-[1.2vw] font-[600] pl-4 pr-2">
+          {requests.toLocaleString()} requests
+        </p>
       </div>
-
 
       {/* Mini Graph */}
       <div className="w-32 h-12 w-[20vw] flex flex-row items-center justify-center ">
@@ -95,7 +108,14 @@ const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, platform
       </div>
 
       <div className="apiUrlCopyFrame h-[5vw] w-[5vw] py-5 px-5 ">
-        <img onClick={() => { handleCopy(platformUrl) }} className="h-full w-full px-1 rounded-2xl bg-gray-200 cursor-pointer" src={copyCodePng} alt="" />
+        <img
+          onClick={() => {
+            handleCopy(platformUrl);
+          }}
+          className="h-full w-full px-1 rounded-2xl bg-gray-200 cursor-pointer"
+          src={copyCodePng}
+          alt=""
+        />
       </div>
 
       {/* Toggle */}
@@ -103,7 +123,7 @@ const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, platform
         <input
           type="checkbox"
           className="sr-only peer"
-          checked={(active == "active" ? true : false)}
+          checked={active == "active" ? true : false}
           onClick={() => apiStatusUpdate(id, status_)}
         />
 
@@ -123,10 +143,7 @@ const ProviderApiInfo = ({ logo, name, requests, id, active, chartData, platform
             </>
           )
         }
-
       </label>
-
-
     </div>
   );
 };

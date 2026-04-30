@@ -22,7 +22,7 @@
 //     e.preventDefault();
 //     try {
 //       const res = await axios.post(
-//         "http://localhost:3000/api/provider/providerRegister",
+//         "import.meta.env.BACKEND_URL_RD/api/provider/providerRegister",
 //         formData,
 //         { withCredentials: true }
 //       );
@@ -128,9 +128,6 @@
 
 // export default ProviderRegister;
 
-
-
-
 // ProviderRegister.jsx
 import React, { useState } from "react";
 import axios from "axios";
@@ -154,10 +151,13 @@ const ProviderRegister = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log("import.meta.env",import.meta.env)
+      console.log("import.meta.env.VITE_BACKEND_URL_RD",import.meta.env.VITE_BACKEND_URL_RD)
+      // alert(`${import.meta.env}`);
       const res = await axios.post(
-        "http://localhost:3000/api/provider/providerRegister",
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/provider/providerRegister`,
         formData,
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       if (res.status === 201) {
@@ -181,7 +181,9 @@ const ProviderRegister = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-700 to-blue-900">
       <div className="bg-gray-900 text-gray-100 rounded-lg shadow-lg w-full max-w-md p-8">
-        <h1 className="text-3xl font-bold text-center mb-6">Provider Register</h1>
+        <h1 className="text-3xl font-bold text-center mb-6">
+          Provider Register
+        </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Username</label>

@@ -27,7 +27,7 @@
 //     e.preventDefault();
 //     try {
 //       const res = await axios.post(
-//         "http://localhost:3000/api/provider/providerLogin",
+//         "import.meta.env.BACKEND_URL_RD/api/provider/providerLogin",
 //         formData,
 //         { withCredentials: true }
 //       );
@@ -109,7 +109,6 @@
 //           <img src="https://thf.bing.com/th/id/OIP.z_LRhuaZZLcekDExDPuDfgHaEK?w=310&h=180&c=7&r=0&o=7&cb=thfc1&dpr=1.5&pid=1.7&rm=3" alt="" className="h-[100%] w-[100%] object-cover relative" />
 //           <div className="leftCont h-[100%] w-[90%] flex-1 flex flex-col justify-end absolute p-10">
 
-
 //             <h3 className="text-xl font-semibold mb-1 text-white mt-5">Check Your Project Progress</h3>
 //             <p className="text-gray-100 mb-6 ">
 //               Lorem ipsum dolor sit amet tristique ullamcorper sed pellentesque
@@ -125,9 +124,6 @@
 // };
 
 // export default ProviderLogin;
-
-
-
 
 // ProviderLogin.jsx
 import React, { useContext, useState } from "react";
@@ -152,9 +148,9 @@ const ProviderLogin = () => {
 
     try {
       const res = await axios.post(
-        `http://localhost:3000/api/provider/providerLogin`,
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/provider/providerLogin`,
         data,
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       if (res.status === 200) {
@@ -181,7 +177,9 @@ const ProviderLogin = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-700 to-blue-900">
       <div className="bg-gray-900 text-gray-100 rounded-lg shadow-lg w-full max-w-md p-8">
-        <h1 className="text-3xl font-bold text-center mb-6">MeterFlow Provider</h1>
+        <h1 className="text-3xl font-bold text-center mb-6">
+          MeterFlow Provider
+        </h1>
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Email</label>

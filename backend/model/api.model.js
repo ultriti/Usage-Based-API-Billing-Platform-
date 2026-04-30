@@ -9,7 +9,7 @@ const apiSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    default : ""
+    default: "",
   },
   name: {
     type: String,
@@ -22,7 +22,7 @@ const apiSchema = new mongoose.Schema({
   platformUrl: {
     type: String,
     required: true,
-    default: "http://localhost:3000/",
+    default: "import.meta.env.BACKEND_URL_RD/",
   },
   status: {
     type: String,

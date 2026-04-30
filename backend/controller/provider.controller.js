@@ -164,8 +164,8 @@ module.exports.providerLogin = async (req, res) => {
 
         res.cookie("apiProviderToken", token, {
             httpOnly: true,
-            sameSite: "lax",   // or "strict"
-            secure: false,     // only true in production HTTPS
+            sameSite: "none",   // or "strict"
+            secure: true,     // only true in production HTTPS
             expires: new Date(Date.now() + 3600000 * 24 * 30)
         });
 

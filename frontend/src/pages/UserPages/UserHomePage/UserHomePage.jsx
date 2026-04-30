@@ -16,7 +16,7 @@ const UserHomePage = () => {
   const getAllApis = async (req, res) => {
     try {
       const getAllApisAxios = await axios.get(
-        `http://localhost:3000/api/apiGen/getAllApi`,
+        `import.meta.env.BACKEND_URL_RD/api/apiGen/getAllApi`,
         { withCredentials: true },
       );
 
@@ -46,7 +46,7 @@ const UserHomePage = () => {
 
   return (
     <div className="userHomePageFrame w-[99.2vw] bg_dark_Theme_70">
-      <PageDecoration/>
+      <PageDecoration />
       <div className="userNavbarFrame">
         <UserNavbar />
       </div>

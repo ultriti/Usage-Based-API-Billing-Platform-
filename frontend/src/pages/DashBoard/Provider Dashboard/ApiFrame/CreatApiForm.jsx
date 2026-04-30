@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
-import "./providerApiFrame.css"
+import "./providerApiFrame.css";
 
-const CreateApiForm = ({toggleCreateApiFrameFun}) => {
-
+const CreateApiForm = ({ toggleCreateApiFrameFun }) => {
   const [formData, setFormData] = useState({
     providerId: "",
     baseUrl: "",
@@ -18,12 +17,13 @@ const CreateApiForm = ({toggleCreateApiFrameFun}) => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        "http://localhost:3000/api/apiGen/createApi",
-        formData,{withCredentials:true}
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/createApi`,
+        formData,
+        { withCredentials: true },
       );
       console.log("API Created:", res.data);
       alert("API created successfully!");
-      toggleCreateApiFrameFun(false)
+      toggleCreateApiFrameFun(false);
     } catch (err) {
       console.error(err);
       alert("Error creating API");
@@ -33,9 +33,14 @@ const CreateApiForm = ({toggleCreateApiFrameFun}) => {
   return (
     <div className="createApiFrame flex flex-col items-center h-[70%] w-[50%] bg-gray-800  rounded-lg shadow-lg overflow-hidden">
       <div className="exitFrame h-[7vh] w-full bg-gray-600 flex justify-end justify-center items-center">
-          <button className="h-[2vw] w-[2vw] bg-red-600 mr-5 flex items-center justify-center rounded-[5px] cursor-pointer" onClick={()=>{toggleCreateApiFrameFun(false)}}>
-              x
-          </button>
+        <button
+          className="h-[2vw] w-[2vw] bg-red-600 mr-5 flex items-center justify-center rounded-[5px] cursor-pointer"
+          onClick={() => {
+            toggleCreateApiFrameFun(false);
+          }}
+        >
+          x
+        </button>
       </div>
       <form
         onSubmit={handleSubmit}
@@ -47,7 +52,7 @@ const CreateApiForm = ({toggleCreateApiFrameFun}) => {
 
         {/* Row 1: Provider ID + Base URL */}
         {/* <div className="flex flex-col"> */}
-          {/* <label className="mb-1 text-sm font-medium">Provider ID</label>
+        {/* <label className="mb-1 text-sm font-medium">Provider ID</label>
           <input
             type="text"
             name="providerId"
@@ -124,7 +129,6 @@ const CreateApiForm = ({toggleCreateApiFrameFun}) => {
             <option value="operations">Operations</option>
           </select>
         </div>
-
 
         {/* Submit button full width */}
         <div className="col-span-2">

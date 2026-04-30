@@ -20,15 +20,15 @@ const UserRegister = () => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        // `http://localhost:3000/api/user/userRegister`,
+        // `import.meta.env.BACKEND_URL_RD/api/user/userRegister`,
         `https://usage-based-api-billing-platform.onrender.com/api/user/userRegister`,
         formData,
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       if (res.status === 201) {
         alert("Registration successful!");
-        navigate("/user/HomePage")
+        navigate("/user/HomePage");
         console.log(res.data);
       } else {
         alert(res.data.message || "Registration failed");
@@ -89,8 +89,14 @@ const UserRegister = () => {
           </div>
 
           <div className="routeRegisterFrame h-[5vh] w-full flex items-center justify-end">
-            <p className="mt-1 text-blue-500 text-sm cursor-pointer" onClick={() => { navigate("/user/login") }}>Forgot your password ?</p>
-
+            <p
+              className="mt-1 text-blue-500 text-sm cursor-pointer"
+              onClick={() => {
+                navigate("/user/login");
+              }}
+            >
+              Forgot your password ?
+            </p>
           </div>
 
           {/* <div>
@@ -116,8 +122,14 @@ const UserRegister = () => {
         </form>
 
         <div className="routeRegisterFrame h-[10vh] w-full flex items-center justify-center">
-          <p className="mt-1 text-gray-300 text-sm cursor-pointer" onClick={() => { navigate("/user/login") }}>Alredy have an account ? sign in</p>
-
+          <p
+            className="mt-1 text-gray-300 text-sm cursor-pointer"
+            onClick={() => {
+              navigate("/user/login");
+            }}
+          >
+            Alredy have an account ? sign in
+          </p>
         </div>
       </div>
     </div>

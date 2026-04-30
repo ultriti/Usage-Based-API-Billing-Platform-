@@ -30,7 +30,7 @@ const ProviderApiFrame = () => {
       // const data = await fetchProviderApis();
       // console.log("providerApis", data)
       // setproviderApis(data.providerApi);
-      // const res = await axios.post(`http://localhost:3000/api/apiGen/getProviderInfo?apiId=${}`, data_, { withCredentials: true });
+      // const res = await axios.post(`import.meta.env.BACKEND_URL_RD/api/apiGen/getProviderInfo?apiId=${}`, data_, { withCredentials: true });
       // const formatted = getGraphData(res.data);
       // setChartData(formatted);
 
@@ -57,7 +57,7 @@ const ProviderApiFrame = () => {
 
     try {
       const toggleStatus = await axios.put(
-        `http://localhost:3000/api/apiGen/updateApiStatus/${id}`,
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/updateApiStatus/${id}`,
         { status },
         { withCredentials: true },
       );

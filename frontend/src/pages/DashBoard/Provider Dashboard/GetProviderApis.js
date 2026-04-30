@@ -4,8 +4,8 @@ import axios from "axios";
 export const fetchProviderApis = async () => {
   try {
     const response = await axios.get(
-      "http://localhost:3000/api/provider/getProviderApi",
-      { withCredentials: true } // include cookies if needed
+      `${import.meta.env.VITE_BACKEND_URL_RD}/api/provider/getProviderApi`,{},
+      { withCredentials: true }, // include cookies if needed
     );
     return response.data; // return the JSON payload
   } catch (error) {

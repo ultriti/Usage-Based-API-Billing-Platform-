@@ -17,7 +17,7 @@ const ApiDetailFrameTemplate = () => {
   const getApiDetail = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:3000/api/apiGen/getApi/${api?.id}`,
+        `import.meta.env.BACKEND_URL_RD/api/apiGen/getApi/${api?.id}`,
         { withCredentials: true },
       );
 
@@ -52,7 +52,7 @@ const ApiDetailFrameTemplate = () => {
       };
 
       const getApiCredentailsAxios = await axios.post(
-        `http://localhost:3000/api/apiGen/setApi/${api?.id}`,
+        `import.meta.env.BACKEND_URL_RD/api/apiGen/setApi/${api?.id}`,
         apiData,
         { withCredentials: true },
       );
@@ -83,7 +83,7 @@ const ApiDetailFrameTemplate = () => {
 
       alert(`${userDetailApi?._id} -- ${api?.id} -- ${apiData.providerApiId}`);
       const subscribeToApiAxios = await axios.post(
-        `http://localhost:3000/api/apiGen/partialPayApi/${userDetailApi?._id}`,
+        `import.meta.env.BACKEND_URL_RD/api/apiGen/partialPayApi/${userDetailApi?._id}`,
         apiData,
         { withCredentials: true },
       );
@@ -94,8 +94,6 @@ const ApiDetailFrameTemplate = () => {
       } else {
         alert(subscribeToApiAxios.data?.message || "Unexpected response");
       }
-
-
     } catch (error) {
       if (error.response) {
         alert(error.response.data.message || "Subscription failed");
@@ -146,7 +144,7 @@ const ApiDetailFrameTemplate = () => {
   const pythonCode = `
         import requests
 
-        url = "http://localhost:3000/api/apiGen/apiRequest?apiName=${api?.name}"
+        url = "import.meta.env.BACKEND_URL_RD/api/apiGen/apiRequest?apiName=${api?.name}"
         params = {
             "name": "${api?.name}"
         }
@@ -160,10 +158,10 @@ const ApiDetailFrameTemplate = () => {
         
         `;
 
-  const curlCode = `curl -X GET "http://localhost:3000/api/apiGen/apiRequest?apiName=${api?.name}" \\-H "api_provide_key: YOUR_API_KEY"`;
+  const curlCode = `curl -X GET "import.meta.env.BACKEND_URL_RD/api/apiGen/apiRequest?apiName=${api?.name}" \\-H "api_provide_key: YOUR_API_KEY"`;
 
   const expressCode = `
-   const url = "http://localhost:3000/api/apiGen/apiRequest?apiName=${api?.name}";
+   const url = "import.meta.env.BACKEND_URL_RD/api/apiGen/apiRequest?apiName=${api?.name}";
 
     const params = {
       name: "${api?.name}"
@@ -181,7 +179,7 @@ const ApiDetailFrameTemplate = () => {
 
   const reactCode = `
 
-   const url = "http://localhost:3000/api/apiGen/apiRequest?apiName=${api.name}";
+   const url = "import.meta.env.BACKEND_URL_RD/api/apiGen/apiRequest?apiName=${api.name}";
 
     try {
       const response = await axios.get(url, {
@@ -231,7 +229,12 @@ const ApiDetailFrameTemplate = () => {
                     <UserPayment_razorpay amount={20} />
                   </div>
                   <div className="w-full  text-white rounded-md font-medium">
-                    <button className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer" onClick={()=>{subcribeToApi()}}>
+                    <button
+                      className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
+                      onClick={() => {
+                        subcribeToApi();
+                      }}
+                    >
                       demo pay
                     </button>
                   </div>

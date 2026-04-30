@@ -1,61 +1,33 @@
-import axios from 'axios';
-import React, { useEffect, useState } from 'react'
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 
 const ApiRequest = () => {
-
-  const [data, setdata] = useState(null)
+  const [data, setdata] = useState(null);
 
   const demo = async () => {
-
-
-
-
-
-
-    const url = "http://localhost:3000/api/apiGen/apiRequest?apiName=poekmon";
+    const url =
+      "import.meta.env.BACKEND_URL_RD/api/apiGen/apiRequest?apiName=poekmon";
 
     try {
       const response = await axios.get(url, {
         headers: {
-          "api_provide_key": "u$qYDAlScbcY9EJldH1VWD!*%",
-          "api_provide_password": "Pl<0VqQ4UP8S"
+          api_provide_key: "u$qYDAlScbcY9EJldH1VWD!*%",
+          api_provide_password: "Pl<0VqQ4UP8S",
         },
-        withCredentials: true
+        withCredentials: true,
       });
 
       console.log(response.data);
     } catch (error) {
       console.error("Error:", error);
     }
-  }
-
-
-
-
-
-
+  };
 
   useEffect(() => {
-    demo()
-  }, [])
+    demo();
+  }, []);
 
+  return <div>{data ? <>{data.data.count}</> : <></>}</div>;
+};
 
-  return (
-    <div>
-      {
-        data ? (
-          <>
-            {
-              data.data.count
-            }
-          </>
-        ) : (
-          <></>
-        )
-      }
-
-    </div>
-  )
-}
-
-export default ApiRequest
+export default ApiRequest;
