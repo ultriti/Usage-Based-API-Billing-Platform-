@@ -81,9 +81,9 @@ const ApiDetailFrameTemplate = () => {
         apiId: api?.id,
       };
 
-      alert(`${userDetailApi?._id} -- ${api?.id} -- ${apiData.providerApiId}`);
+      alert(`${userDetailApi?._id} -- ${api?.id} -- ${apiData.apiId}`);
       const subscribeToApiAxios = await axios.post(
-        `import.meta.env.BACKEND_URL_RD/api/apiGen/partialPayApi/${userDetailApi?._id}`,
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/partialPayApi/${userDetailApi?._id}`,
         apiData,
         { withCredentials: true },
       );
