@@ -1,0 +1,36 @@
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+@keyframes slideX {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(20px); }
+}
+
+@keyframes slideY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes slowSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Utility classes */
+.fadeInOut {
+  animation: fadeInOut 8s ease-in-out infinite;
+}
+
+.slideX {
+  animation: slideX 6s ease-in-out infinite;
+}
+
+.slideY {
+  animation: slideY 10s ease-in-out infinite;
+}
+
+.slowSpin {
+  animation: slowSpin 20s linear infinite;
+}
