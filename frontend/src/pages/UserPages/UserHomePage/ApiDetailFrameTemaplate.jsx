@@ -17,7 +17,7 @@ const ApiDetailFrameTemplate = () => {
   const getApiDetail = async () => {
     try {
       const res = await axios.get(
-        `import.meta.env.BACKEND_URL_RD/api/apiGen/getApi/${api?.id}`,
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/getApi/${api?.id}`,
         { withCredentials: true },
       );
 
@@ -52,7 +52,7 @@ const ApiDetailFrameTemplate = () => {
       };
 
       const getApiCredentailsAxios = await axios.post(
-        `import.meta.env.BACKEND_URL_RD/api/apiGen/setApi/${api?.id}`,
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/setApi/${api?.id}`,
         apiData,
         { withCredentials: true },
       );

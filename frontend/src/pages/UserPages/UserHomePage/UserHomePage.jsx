@@ -16,7 +16,7 @@ const UserHomePage = () => {
   const getAllApis = async (req, res) => {
     try {
       const getAllApisAxios = await axios.get(
-        `import.meta.env.BACKEND_URL_RD/api/apiGen/getAllApi`,
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/getAllApi`,
         { withCredentials: true },
       );
 

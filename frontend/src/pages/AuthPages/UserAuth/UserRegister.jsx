@@ -21,7 +21,7 @@ const UserRegister = () => {
     try {
       const res = await axios.post(
         // `import.meta.env.BACKEND_URL_RD/api/user/userRegister`,
-        `https://usage-based-api-billing-platform.onrender.com/api/user/userRegister`,
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/user/userRegister`,
         formData,
         { withCredentials: true },
       );

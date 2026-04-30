@@ -14,7 +14,7 @@ const CategoryFrame = () => {
   const getAllApis = async () => {
     try {
       const getAllApisAxios = await axios.get(
-        `import.meta.env.BACKEND_URL_RD/api/apiGen/getAllApi?category=${category}`,
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/getAllApi?category=${category}`,
         { withCredentials: true },
       );
 

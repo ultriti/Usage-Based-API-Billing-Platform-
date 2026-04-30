@@ -26,7 +26,7 @@ const UserLogin = () => {
 
     try {
       const res = await axios.post(
-        `${import.meta.env.BACKEND_URL_RD}/api/user/userLogin`,
+        `${import.meta.env.VITE_BACKEND_URL_RD}/api/user/userLogin`,
         data,
         { withCredentials: true },
       );
