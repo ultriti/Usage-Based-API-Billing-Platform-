@@ -129,12 +129,20 @@
 // export default ProviderRegister;
 
 // ProviderRegister.jsx
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+import { UserDataContext } from "../../../context/UserContext";
+import { AdminDataContext } from "../../../context/AdminContext";
+
 const ProviderRegister = () => {
   const navigate = useNavigate();
+
+    const { setUserDeatils, removeUserDetail } = useContext(UserDataContext);
+    const { setAdminDeatils, removeAdminDetail } = useContext(AdminDataContext);
+
+
 
   const [formData, setFormData] = useState({
     username: "",
@@ -154,6 +162,7 @@ const ProviderRegister = () => {
       console.log("import.meta.env",import.meta.env)
       console.log("import.meta.env.VITE_BACKEND_URL_RD",import.meta.env.VITE_BACKEND_URL_RD)
       // alert(`${import.meta.env}`);
+
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL_RD}/api/provider/providerRegister`,
         formData,
@@ -163,6 +172,9 @@ const ProviderRegister = () => {
       if (res.status === 201) {
         alert("Provider registered successfully!");
         console.log("Response:", res.data);
+        removeUserDetail();
+        removeAdminDetail();
+        setAdminDeatils(res.data.Provider);
         navigate("/provider/dashboard");
       } else {
         alert("Error: " + res.data.message);

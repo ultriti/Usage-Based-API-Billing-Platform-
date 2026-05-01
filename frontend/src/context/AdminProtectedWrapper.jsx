@@ -11,7 +11,7 @@ const AdminProtectedWrapper = ({ children }) => {
     useEffect(() => {
 
 
-
+        console.log("AdminProtectedWrapper -> adminDetail", adminDetail);
 
         if (
             // token && 

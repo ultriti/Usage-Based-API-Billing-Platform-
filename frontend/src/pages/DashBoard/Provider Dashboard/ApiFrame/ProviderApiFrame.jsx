@@ -97,6 +97,8 @@ const ProviderApiFrame = () => {
       </div>
 
       <div className="providerMainFrame_PAF bg-gray-900">
+
+        
         <div className="apiListFrame h-[10vh] w-full bg-gray-700 flex flex flex-row items-center justify-between px-[1vw]">
           <p className="text-gray-100 text-[2vw] font-[600] capitalize">
             your api's list

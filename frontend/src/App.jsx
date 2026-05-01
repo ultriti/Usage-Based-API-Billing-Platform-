@@ -20,12 +20,15 @@ import UserContext from "./context/UserContext";
 import UserProtectedWrapper from "./context/UserProtectedWrapper";
 import CategoryFrame from "./pages/UserPages/CategoryPages/CategoryFrame";
 import DemoPayment from "./components/payment/DemoPayment";
+import PageNotFound from "./pages/CommonPages/PageNotFound";
+import BillingProviderFrame from "./pages/DashBoard/Provider Dashboard/BillingFrame/BillingProviderFrame";
 
 const App = () => {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="*" element={<PageNotFound />} />
 
         {/* user routes */}
         <Route path="/user/Register" element={<UserRegister />} />
@@ -62,7 +65,16 @@ const App = () => {
         <Route path="/user/category/:category" element={<CategoryFrame />} />
 
         {/* provider routes */}
-        <Route path="/provider/Register" element={<ProviderRegister />} />
+        <Route
+          path="/provider/Register"
+          element={
+            <AdminContext>
+              <UserContext>
+                <ProviderRegister />
+              </UserContext>{" "}
+            </AdminContext>
+          }
+        />
         <Route
           path="/provider/Login"
           element={
@@ -86,15 +98,13 @@ const App = () => {
             </>
           }
         />
+        <Route path="/provider/billing" element={<BillingProviderFrame />} />
         <Route path="/provider/providerApi" element={<ProviderApiFrame />} />
 
         <Route path="/provider/Graph" element={<PieChartExample />} />
 
-          {/* payment */}
+        {/* payment */}
         <Route path="/user/ultriti/payment" element={<DemoPayment />} />
-
-
-
       </Routes>
     </Router>
   );

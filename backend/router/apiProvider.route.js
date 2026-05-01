@@ -14,11 +14,12 @@ router.delete("/deleteApi/:apiId", isProviderAuthenticate, deleteApi);
 
 // user/consumer
 router.get("/getAllApi", isAunthenticate, getAllApis);
+
+
 router.get("/getApi/:apiId", isAunthenticate, getApi);
 router.get("/apiRequest", isAunthenticate, requestApiRoute);
 router.post("/setApi/:consumerId", isAunthenticate, setApiKey);
 router.post("/partialPayApi/:consumerId", isAunthenticate, apiPartialPayment);
-
 
 
 

@@ -42,7 +42,7 @@ function generateSecureCode(length) {
 module.exports.createApi = async (req, res) => {
   const provId = req.id;
 
-  const { baseUrl, name, categories,description } = req.body;
+  const { baseUrl, name, categories, description } = req.body;
 
   if (!baseUrl || !name) {
     return res
@@ -55,12 +55,10 @@ module.exports.createApi = async (req, res) => {
     const apiDetail = await apiModel.findOne({ baseUrl: baseUrl });
 
     if (apiDetail) {
-      return res
-        .status(400)
-        .json({
-          message: "api areldy exists with provide api",
-          success: false,
-        });
+      return res.status(400).json({
+        message: "api areldy exists with provide api",
+        success: false,
+      });
     }
 
     if (!providerDetail) {
@@ -75,7 +73,7 @@ module.exports.createApi = async (req, res) => {
       providerId: provId,
       name: name,
       baseUrl: baseUrl,
-      description : description,
+      description: description,
       categories: categories,
       apiKeys: [],
       platformUrl: platformUrl + `?apiName=${name}`,
@@ -101,22 +99,18 @@ module.exports.createApi = async (req, res) => {
 
     await providerDetail.save();
 
-    return res
-      .status(201)
-      .json({
-        message: "api created successfullly",
-        success: true,
-        createdApi,
-      });
+    return res.status(201).json({
+      message: "api created successfullly",
+      success: true,
+      createdApi,
+    });
   } catch (error) {
     console.log("error :", error);
-    return res
-      .status(500)
-      .json({
-        message: "internal server error",
-        error: error.message,
-        success: false,
-      });
+    return res.status(500).json({
+      message: "internal server error",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -209,13 +203,11 @@ module.exports.setApiKey = async (req, res) => {
     });
   } catch (error) {
     console.error("error:", error);
-    return res
-      .status(500)
-      .json({
-        message: "Internal server error",
-        error: error.message,
-        success: false,
-      });
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -293,13 +285,11 @@ module.exports.requestApiRoute = async (req, res) => {
   console.log("isAuthenticate name:", name);
 
   if (!apiKey || !apiPassword) {
-    return res
-      .status(401)
-      .json({
-        message: "please provide the authhontication keys! ",
-        success: false,
-        error: "API key and password required",
-      });
+    return res.status(401).json({
+      message: "please provide the authhontication keys! ",
+      success: false,
+      error: "API key and password required",
+    });
   }
 
   // if (!apiUrl) {
@@ -387,13 +377,11 @@ module.exports.requestApiRoute = async (req, res) => {
           // })
         } catch (error) {
           console.log("error :", error);
-          return res
-            .status(500)
-            .json({
-              message: "internal server error (inflix) ",
-              error: error.message,
-              success: false,
-            });
+          return res.status(500).json({
+            message: "internal server error (inflix) ",
+            error: error.message,
+            success: false,
+          });
         }
       } else {
         api.usageLogs.push({
@@ -407,107 +395,179 @@ module.exports.requestApiRoute = async (req, res) => {
 
       await api.save();
 
-      // api billing ----------------------->
-      if (typeof userApi.usage !== "number") {
-        userApi.usage = 0;
-      }
-      userApi.usage += 1;
+      console.log("userApi :->\n", userApi);
 
-      if (userApi.usage > 500) {
-        if (userApi.purchased == true) {
-          // userApi.apiBill += 0;
-          // api.billing.amount += 0;
-          api.billing.totalRequests += 1;
-        } else {
-          console.log("userApi.usage % 100 === 0", userApi.usage % 100, 0);
-          if (userApi.partialPayment == true) {
-            // api.billing.amount += 1;
-            api.billing.totalRequests += 1;
-            userApi.apiBill += 0.2;
+      if (userApi.Subscription.maxRequests == userApi.Subscription.requests) {
+        console.log(
+          "userApi.Subscription.maxRequests\n",
+          userApi.Subscription.maxRequests,
+        );
+        userApi.Subscription.subscriptionPurchased = false;
+        userApi.partialPayment = false;
 
-            if (userApi.usage % 100 === 99) {
-              userApi.partialPayment = false;
+        // console.log(
+        //   "userApi.Subscription.subscriptionPurchased\n\n\n",
+        //   userApi.Subscription.subscriptionPurchased,
+        //   userApi.partialPayment,
+        // );
+
+        await userApi.save();
+        await userDetail.save();
+
+        return res.status(400).json({
+          messgae: "free limit has been crosed ! --",
+          sucess: false,
+        });
+      } else {
+
+        // ------------------ PARTIAL PAYMANET ----------------------->
+        if (userApi.Subscription.type == "partialpayment") {
+          // api billing ----------------------->
+          if (typeof userApi.usage !== "number") {
+            userApi.usage = 0;
+          }
+          userApi.usage += 1;
+
+          if (userApi.usage > 500) {
+            if (userApi.purchased == true) {
+              api.billing.totalRequests += 1;
+            } else {
+              if (userApi.partialPayment == true) {
+                // api.billing.amount += 1;
+                api.billing.totalRequests += 1;
+                userApi.apiBill += 0.2;
+                userApi.Subscription.requests += 1;
+
+                if (userApi.usage % 100 === 99) {
+                  userApi.partialPayment = false;
+                }
+              } else {
+                if (userApi.usage % 100 === 0) {
+                  return res.status(400).json({
+                    messgae: "free limit has been crosed ! ",
+                    sucess: false,
+                  });
+                } else {
+                  if (userApi.partialPayment) {
+                    // api.billing.amount += 0
+                    api.billing.totalRequests += 1;
+                    userApi.apiBill += 0.2;
+
+                    userApi.Subscription.requests += 1;
+                  }
+                }
+              }
             }
           } else {
-            if (userApi.usage % 100 === 0) {
-              return res
-                .status(400)
-                .json({
+            // api.billing.totalRequests += 1;
+            // userApi.apiBill += 0.2;
+
+            if (userApi.partialPayment == true) {
+              // api.billing.amount += 1;
+              api.billing.totalRequests += 1;
+              userApi.apiBill += 0.2;
+
+              userApi.Subscription.requests += 1;
+
+              if (userApi.usage % 100 === 99) {
+                userApi.partialPayment = false;
+              }
+            } else {
+              console.log("----------- else ", userApi.usage);
+
+              if (userApi.usage % 100 === 0) {
+                return res.status(400).json({
                   messgae: "free limit has been crosed ! ",
                   sucess: false,
                 });
-            } else {
-              if (userApi.partialPayment) {
-                // api.billing.amount += 0
-                api.billing.totalRequests += 1;
-                userApi.apiBill += 0.2;
+              } else {
+                if (userApi.usage < 500) {
+                  api.billing.totalRequests += 1;
+                  userApi.apiBill = 1;
+
+                  userApi.Subscription.requests += 1;
+                } else {
+                  if (userApi.partialPayment) {
+                    // api.billing.amount += 0
+                    api.billing.totalRequests += 0;
+                    userApi.apiBill += 0.2;
+
+                    userApi.Subscription.requests += 0;
+                  } else {
+                    api.billing.totalRequests += 1;
+                    userApi.apiBill += 0.2;
+
+                    userApi.Subscription.requests += 1;
+                  }
+                }
               }
             }
           }
         }
-      } else {
-        // api.billing.totalRequests += 1;
-        // userApi.apiBill += 0.2;
 
-        if (userApi.partialPayment == true) {
-          // api.billing.amount += 1;
-          api.billing.totalRequests += 1;
-          userApi.apiBill += 0.2;
-
-          if (userApi.usage % 100 === 99) {
-            userApi.partialPayment = false;
-          }
-        } else {
-          console.log("----------- else ", userApi.usage);
-
-          if (userApi.usage % 100 === 0) {
-            return res
-              .status(400)
-              .json({
-                messgae: "free limit has been crosed ! ",
-                sucess: false,
-              });
+        // monthly subscription ----------------------->
+        else if (userApi.Subscription.type == "monthlypayment") {
+          console.log(
+            "---------------------\n\n\n\n\n monthly subscrion : \n",
+            userApi.usage,
+            userApi.Subscription.maxRequests,
+          );
+          if (userApi.usage <= userApi.Subscription.maxRequests) {
+            userApi.usage += 1;
+            api.billing.totalRequests += 1;
+            userApi.Subscription.requests += 1;
           } else {
-            if (userApi.usage < 500) {
-              api.billing.totalRequests += 1;
-              userApi.apiBill = 20;
-            } else {
-              if (userApi.partialPayment) {
-                // api.billing.amount += 0
-                api.billing.totalRequests += 0;
-                userApi.apiBill += 0.2;
-              } else {
-                api.billing.totalRequests += 1;
-                userApi.apiBill += 0.2;
-              }
-            }
+            userApi.Subscription.subscriptionPurchased = false;
+            userApi.partialPayment = false;
+            await userApi.save();
+            return res.status(400).json({
+              messgae: "monthly subscription limit has been crosed ! ",
+              sucess: false,
+            });
           }
+        }
+
+        // yealry subscrion ----------------------->
+        if (userApi.Subscription.type == "annualpayment") {
+          if (userApi.usage <= userApi.Subscription.maxRequests) {
+            userApi.usage += 1;
+            api.billing.totalRequests += 1;
+            userApi.Subscription.requests += 1;
+          } else {
+            userApi.Subscription.subscriptionPurchased = false;
+            userApi.partialPayment = false;
+            await userApi.save();
+            return res.status(400).json({
+              messgae: "annual subscription limit has been crosed ! ",
+              sucess: false,
+            });
+          }
+
+          await api.save();
+          await userDetail.save();
         }
       }
-
-      await api.save();
-      await userDetail.save();
     } else {
       console.log("API not linked to user yet");
     }
 
-    return res
-      .status(201)
-      .json({
-        messgae: "got the response",
-        data: providerApiResponse.data,
-        success: true,
-        status: providerApiResponse.status,
-      });
+    await userApi.save();
+    await api.save();
+    await userDetail.save();
+
+    return res.status(201).json({
+      messgae: "got the response",
+      data: providerApiResponse.data,
+      success: true,
+      status: providerApiResponse.status,
+    });
   } catch (error) {
     console.log("error :", error);
-    return res
-      .status(500)
-      .json({
-        message: "internal server error",
-        error: error.message,
-        success: false,
-      });
+    return res.status(500).json({
+      message: "internal server error",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -533,55 +593,56 @@ module.exports.getProviderStats = async (req, res) => {
   // let resultsStatus = [];
 
   try {
-   const { time, apiId } = req.query;
+    const { time, apiId } = req.query;
 
-// Calculate time range - ms() parses human-readable time like '2h' to milliseconds [web:11][web:20]
-const startTime = time
-  ? new Date(Date.now() - ms(time))
-  : new Date(Date.now() - 2 * 60 * 60 * 1000);
+    // Calculate time range - ms() parses human-readable time like '2h' to milliseconds [web:11][web:20]
+    const startTime = time
+      ? new Date(Date.now() - ms(time))
+      : new Date(Date.now() - 2 * 60 * 60 * 1000);
 
-// Use lean() query once for read-only data to improve performance [web:8]
-const apiDoc = await apiModel.findById(apiId).lean();
+    // Use lean() query once for read-only data to improve performance [web:8]
+    const apiDoc = await apiModel.findById(apiId).lean();
 
-if (!apiDoc) {
-  return res.status(404).json({ message: "API not found" });
-}
+    if (!apiDoc) {
+      return res.status(404).json({ message: "API not found" });
+    }
 
-// Filter usage logs where at least one timestamp >= startTime [web:3]
-// const filteredLogs = apiDoc.usageLogs.filter((log) => {
-//   return log.timestamp.some((ts) => new Date(ts) >= startTime);
-// });
+    // Filter usage logs where at least one timestamp >= startTime [web:3]
+    // const filteredLogs = apiDoc.usageLogs.filter((log) => {
+    //   return log.timestamp.some((ts) => new Date(ts) >= startTime);
+    // });
 
-const filteredLogs = apiDoc.usageLogs;
+    const filteredLogs = apiDoc.usageLogs;
 
-console.log("filteredLogs---\n", filteredLogs);
+    console.log("filteredLogs---\n", filteredLogs);
 
-// Separate latency and status results
-const resultsLatency = [];
-const resultsStatus = [];
+    // Separate latency and status results
+    const resultsLatency = [];
+    const resultsStatus = [];
 
-filteredLogs.forEach((log) => {
-  log.latency.forEach((lat, idx) => {
-    resultsLatency.push({
-      time: log.timestamp[idx],
-      latency: lat,
+    filteredLogs.forEach((log) => {
+      log.latency.forEach((lat, idx) => {
+        resultsLatency.push({
+          time: log.timestamp[idx],
+          latency: lat,
+        });
+      });
+
+      log.status.forEach((st, idx) => {
+        resultsStatus.push({
+          time: log.timestamp[idx],
+          status: st,
+        });
+      });
     });
-  });
 
-  log.status.forEach((st, idx) => {
-    resultsStatus.push({
-      time: log.timestamp[idx],
-      status: st,
+    // Fixed: Swapped keys were incorrect - resultsStatus should contain status data [web:16]
+    res.status(200).json({
+      // Use 200 for successful data retrieval, not 201 [web:5]
+      resultsLatency,
+      resultsStatus,
+      request: apiDoc?.billing?.totalRequests, // Use apiDoc (lean) since no mutations needed
     });
-  });
-});
-
-// Fixed: Swapped keys were incorrect - resultsStatus should contain status data [web:16]
-res.status(200).json({  // Use 200 for successful data retrieval, not 201 [web:5]
-  resultsLatency,
-  resultsStatus,
-  request: apiDoc?.billing?.totalRequests,  // Use apiDoc (lean) since no mutations needed
-});
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -621,16 +682,14 @@ res.status(200).json({  // Use 200 for successful data retrieval, not 201 [web:5
 module.exports.apiPartialPayment = async (req, res) => {
   const consumerId = req.id;
 
-  const { apiId } = req.body;
+  const { apiId, amount, type } = req.body;
 
   if (!consumerId || !apiId) {
-    return res
-      .status(401)
-      .json({
-        message: "Api or user not found ! ",
-        success: false,
-        error: "error fetching he user detail",
-      });
+    return res.status(401).json({
+      message: "Api or user not found ! ",
+      success: false,
+      error: "error fetching he user detail",
+    });
   }
 
   try {
@@ -644,28 +703,76 @@ module.exports.apiPartialPayment = async (req, res) => {
         .json({ message: "payment alredy done ( 20)", success: false });
     }
 
-    if (userApi.usage % 100 === 99) {
-      api.billing.amount += userApi.apiBill;
+    console.log("type :->\n\n", type);
+    console.log("amount :->\n\n", amount);
+
+    if (type == "partialpayment") {
+      console.log("--- partial paymanet : \n");
+      // if (userApi.usage % 100 === 99) {
+        api.billing.amount += amount;
+        userApi.Subscription.subscriptionPurchased = true;
+        userApi.Subscription.type = type;
+        userApi.Subscription.maxRequests = 500;
+        userApi.partialPayment = true;
+      // }
+    } else if (type == "monthlypayment") {
+      // if ((userApi.Subscription.requests == userApi.Subscription.requests.maxRequests) &&
+      //   (userApi.Subscription.requests == userApi.usage) ) {
+
+      // }
+
+      api.billing.amount += amount;
+      userApi.Subscription.subscriptionPurchased = true;
+      userApi.Subscription.ammount += amount;
+      userApi.Subscription.type = type;
+      userApi.Subscription.maxRequests = 25000;
       userApi.partialPayment = true;
+      userApi.usage = true;
+    } else if (type == "annualpayment") {
+
+      // if (
+      //   userApi.Subscription.requests == userApi.Subscription.requests.maxRequests &&
+      //   userApi.Subscription.requests == userApi.usage
+      // ) {
+        api.billing.amount += amount;
+        userApi.Subscription.subscriptionPurchased = true;
+        userApi.Subscription.ammount += amount;
+        userApi.Subscription.type = type;
+        userApi.Subscription.maxRequests = 500000;
+        userApi.partialPayment = true;
+      // }
     }
 
     userApi.apiBill = 0;
+    userApi.usage = 0;
+    userApi.Subscription.requests = 0;
+
+   api.billing.consumerDetail.push({
+      customerId : consumerId,
+      ammountPaid : amount,
+      paidAt: new Date(),
+      status: "paid",
+    });
 
     await api.save();
     await userDetail.save();
+    await userApi.save();
+
+
+ 
+
+
 
     return res
       .status(201)
       .json({ message: "payment done sucessfully", success: true });
   } catch (error) {
     console.log("error :", error);
-    return res
-      .status(500)
-      .json({
-        message: "internal server error",
-        error: error.message,
-        success: false,
-      });
+    return res.status(500).json({
+      message: "internal server error",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -681,12 +788,10 @@ module.exports.toggleStatus = async (req, res) => {
     console.log("api.providerId !== providerId", api.providerId, providerId);
 
     if (api.providerId != providerId) {
-      return res
-        .status(201)
-        .json({
-          message: "you are not the provider of this api!",
-          success: false,
-        });
+      return res.status(201).json({
+        message: "you are not the provider of this api!",
+        success: false,
+      });
     }
 
     console.log("-------->", status);
@@ -699,22 +804,18 @@ module.exports.toggleStatus = async (req, res) => {
 
     await api.save();
 
-    return res
-      .status(201)
-      .json({
-        message: "api status updated!",
-        success: true,
-        status: api.status,
-      });
+    return res.status(201).json({
+      message: "api status updated!",
+      success: true,
+      status: api.status,
+    });
   } catch (error) {
     console.log("error :", error);
-    return res
-      .status(500)
-      .json({
-        message: "internal server error",
-        error: error.message,
-        success: false,
-      });
+    return res.status(500).json({
+      message: "internal server error",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -757,13 +858,11 @@ module.exports.deleteApi = async (req, res) => {
     return res.status(400).json({ message: "api deleted !", success: true });
   } catch (error) {
     console.log("error :", error);
-    return res
-      .status(500)
-      .json({
-        message: "internal server error",
-        error: error.message,
-        success: false,
-      });
+    return res.status(500).json({
+      message: "internal server error",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -804,13 +903,11 @@ module.exports.getAllApis = async (req, res) => {
       .json({ message: "api deleted !", success: true, allApi: allApis });
   } catch (error) {
     console.log("error :", error);
-    return res
-      .status(500)
-      .json({
-        message: "internal server error",
-        error: error.message,
-        success: false,
-      });
+    return res.status(500).json({
+      message: "internal server error",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -841,16 +938,14 @@ module.exports.getApi = async (req, res) => {
         keyPassword: apiEntry.keyPassword,
       };
 
-      return res
-        .status(200)
-        .json({
-          message: "api deleted !",
-          success: true,
-          api: api,
-          apiEntry:apiEntry,
-          userDetail: userDetail,
-          credentailKey: credentailKey,
-        });
+      return res.status(200).json({
+        message: "api deleted !",
+        success: true,
+        api: api,
+        apiEntry: apiEntry,
+        userDetail: userDetail,
+        credentailKey: credentailKey,
+      });
     } else {
       console.log("apiEntry \n", apiEntry);
 
@@ -859,25 +954,21 @@ module.exports.getApi = async (req, res) => {
       //     keyPassword: apiEntry.keyPassword
       // }
 
-      return res
-        .status(200)
-        .json({
-          message: "api not deleted !",
-          success: true,
-          api: null,
-          apiEntry:apiEntry,
-          userDetail: userDetail,
-          credentailKey: null,
-        });
+      return res.status(200).json({
+        message: "api not deleted !",
+        success: true,
+        api: null,
+        apiEntry: apiEntry,
+        userDetail: userDetail,
+        credentailKey: null,
+      });
     }
   } catch (error) {
     console.log("error :", error);
-    return res
-      .status(500)
-      .json({
-        message: "internal server error",
-        error: error.message,
-        success: false,
-      });
+    return res.status(500).json({
+      message: "internal server error",
+      error: error.message,
+      success: false,
+    });
   }
 };

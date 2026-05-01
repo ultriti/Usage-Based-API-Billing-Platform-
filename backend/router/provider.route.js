@@ -12,10 +12,9 @@ router.get("/providerLogout", providerLogout);
 
 
 router.get("/getProviderApi", isProviderAuthenticate, getProviderApi);
+router.get("/getApiBilling", isProviderAuthenticate, getProviderApi);
 
 router.delete("/providerDelete", isProviderAuthenticate, deleteProvider);
-
-
 
 // provider route
 router.get("/providerDetail", isProviderAuthenticate, getProviderDetail);

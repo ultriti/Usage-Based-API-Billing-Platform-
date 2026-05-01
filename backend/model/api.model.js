@@ -108,6 +108,10 @@ const apiSchema = new mongoose.Schema({
       type: Number,
       default: 0,
     },
+    totalAmount: {
+      type: Number,
+      default: 0,
+    },
     amount: {
       type: Number,
       default: 0,

@@ -10,9 +10,11 @@ const UserProtectedWrapper = ({ children }) => {
 
     useEffect(() => {
 
+        console.log('UserProtectedWrapper useEffect called',userDetail);
+
         if (
             // token && 
-            userDetail?.role === 'user'
+            userDetail?.role === 'user' || userDetail
         ) {
             
             // alert(adminDetail.role)

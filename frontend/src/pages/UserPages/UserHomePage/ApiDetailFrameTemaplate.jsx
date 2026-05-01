@@ -24,11 +24,23 @@ const ApiDetailFrameTemplate = () => {
       if (res.status === 200) {
         setUserDetailApi(res.data?.userDetail);
 
-        if (res.data.apiEntry.usage > 498) {
+        console.log(
+          "res.data.apiEntry.usage ",
+          res.data.apiEntry.Subscription.requests,
+          res.data.apiEntry.Subscription.maxRequests,
+        );
+
+        const isPurchnased_ = res.data.apiEntry.Subscription.requests == res.data.apiEntry.Subscription.maxRequests;
+
+          console.log(( res.data?.apiEntry?.usage % 100 === 99),( res.data?.apiEntry?.Subscription?.subscriptionPurchased == false),(res.data?.apiEntry?.partialPayment == false));     
+
+
+        if (res.data.apiEntry.usage > 498 || isPurchnased_) {
           const isPurchnased =
-            res.data?.apiEntry?.usage % 100 === 99 &&
-            res.data?.apiEntry?.partialPayment == false;
-          setapiPurchase(isPurchnased);
+           ( res.data?.apiEntry?.usage % 100 === 99) ||
+           ( res.data?.apiEntry?.Subscription?.subscriptionPurchased == false ||
+            res.data?.apiEntry?.partialPayment == false);
+            setapiPurchase(isPurchnased);
         }
 
         setApiCredentails(res.data?.credentailKey);
@@ -75,10 +87,12 @@ const ApiDetailFrameTemplate = () => {
     }
   };
 
-  const subcribeToApi = async () => {
+  const subcribeToApi = async (amount, type) => {
     try {
       const apiData = {
         apiId: api?.id,
+        amount: amount,
+        type: type,
       };
 
       alert(`${userDetailApi?._id} -- ${api?.id} -- ${apiData.apiId}`);
@@ -105,7 +119,7 @@ const ApiDetailFrameTemplate = () => {
 
   useEffect(() => {
     getApiDetail();
-  }, [apiPurchase]);
+  }, []);
 
   // Copy function
   const handleCopy = (text) => {
@@ -212,50 +226,106 @@ const ApiDetailFrameTemplate = () => {
         {apiPurchase ? (
           <>
             <div className="h-[100vh] w-full bg_dark_Theme_70 flex items-center justify-center top-0 right-0 fixed z-500">
-              <div className="min-h-[50vh] w-[50%] grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full">
-                {/* Left Card: Daily Plan */}
-                <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center">
-                  <h2 className="text-xl font-semibold text-white mb-2">
-                    Daily API Plan
-                  </h2>
-                  <p className="text-gray-400 mb-4">Buy credits for requests</p>
-                  <div className="text-4xl font-bold text-green-400 mb-2">
-                    ₹20
-                  </div>
-                  <p className="text-gray-300 mb-6">
-                    Per recharge • 500 requests/day
-                  </p>
-                  <div className="w-full  text-white rounded-md font-medium">
-                    <UserPayment_razorpay amount={20} />
-                  </div>
-                  <div className="w-full  text-white rounded-md font-medium">
-                    <button
-                      className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
-                      onClick={() => {
-                        subcribeToApi();
-                      }}
-                    >
-                      demo pay
-                    </button>
-                  </div>
+              <div className="h-[60vh] w-[80%] bg-gray-600 rounded-[1vw] overflow-hidden">
+                <div className="exitFrame h-[5vh] w-full flex items-center justify-end pr-5 bg-gray-900">
+                  <button
+                    onClick={() => {
+                      setapiPurchase(false);
+                    }}
+                    className="px-4 py-1 bg-red-600 hover:bg-red-700 rounded text-white font-medium cursor-pointer"
+                  >
+                    X
+                  </button>
                 </div>
 
-                {/* Right Card: Yearly Plan */}
-                <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center">
-                  <h2 className="text-xl font-semibold text-white mb-2">
-                    Yearly API Plan
-                  </h2>
-                  <p className="text-gray-400 mb-4">
-                    Unlimited access for one year
-                  </p>
-                  <div className="text-4xl font-bold text-green-400 mb-2">
-                    ₹15,000
+                <div className="grid mt-[2vw] grid-cols-1 md:grid-cols-3 gap-6 px-[4vw] py-[5vw] bg-gray-600">
+                  {/* Left Card: Daily Plan */}
+                  <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center">
+                    <h2 className="text-xl font-semibold text-white mb-2">
+                      Daily API Plan
+                    </h2>
+                    <p className="text-gray-400 mb-4">
+                      Buy credits for requests
+                    </p>
+                    <div className="text-4xl font-bold text-green-400 mb-2">
+                      ₹20
+                    </div>
+                    <p className="text-gray-300 mb-6">
+                      Per recharge • 500 requests
+                    </p>
+                    <div className="w-full  text-white rounded-md font-medium">
+                      <UserPayment_razorpay amount={20} />
+                    </div>
+                    <div className="w-full  text-white rounded-md font-medium">
+                      <button
+                        className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
+                        onClick={() => {
+                          subcribeToApi(20, "partialpayment");
+                        }}
+                      >
+                        demo pay
+                      </button>
+                    </div>
                   </div>
 
-                  <p className="text-gray-300 mb-6">Flat annual subscription</p>
+                  {/* montly plan */}
+                  <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center">
+                    <h2 className="text-xl font-semibold text-white mb-2">
+                      Monthly API Plan
+                    </h2>
+                    <p className="text-gray-400 mb-4">
+                      Buy credits for requests
+                    </p>
+                    <div className="text-4xl font-bold text-green-400 mb-2">
+                      ₹499
+                    </div>
+                    <p className="text-gray-300 mb-6">
+                      Per recharge • 25,000 requests
+                    </p>
+                    <div className="w-full  text-white rounded-md font-medium">
+                      <UserPayment_razorpay amount={499} />
+                    </div>
+                    <div className="w-full  text-white rounded-md font-medium">
+                      <button
+                        className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
+                        onClick={() => {
+                          subcribeToApi(499, "monthlypayment");
+                        }}
+                      >
+                        demo pay
+                      </button>
+                    </div>
+                  </div>
 
-                  <div className="w-full text-white rounded-md font-medium">
-                    <UserPayment_razorpay amount={15000} />
+                  {/* Right Card: Yearly Plan */}
+                  <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center">
+                    <h2 className="text-xl font-semibold text-white mb-2">
+                      Yearly API Plan
+                    </h2>
+                    <p className="text-gray-400 mb-4 flex-wrap text-center">
+                      Unlimited access for one year, limit (5,00,000 requests)
+                    </p>
+                    <div className="text-4xl font-bold text-green-400 mb-2">
+                      ₹15,000
+                    </div>
+
+                    <p className="text-gray-300 mb-6">
+                      Flat annual subscription
+                    </p>
+
+                    <div className="w-full text-white rounded-md font-medium">
+                      <UserPayment_razorpay amount={15000} />
+                    </div>
+                    <div className="w-full  text-white rounded-md font-medium">
+                      <button
+                        className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
+                        onClick={() => {
+                          subcribeToApi(15000, "annualpayment");
+                        }}
+                      >
+                        demo pay
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
