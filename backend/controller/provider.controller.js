@@ -15,7 +15,6 @@ const codegenerate = async (req, res) => {
   }
 
   const code = generateVerificationCode();
-  console.log("Verification code:", code);
 
   const providerDetail = await providerModel.findById(req.id);
 
@@ -33,7 +32,6 @@ module.exports.codeGen = async (req, res) => {
 
 // provider registeration
 module.exports.providerRegister = async (req, res) => {
-  console.log("req.body->", req.body);
   const { email, password, role, username } = req.body;
 
   if (!email || !password) {
@@ -54,7 +52,6 @@ module.exports.providerRegister = async (req, res) => {
     const hashedPassword = await providerModel.prototype.hashPassword(password);
     const userDetail = await userModel.findOne({ email });
 
-    console.log("------------>", userDetail);
 
     if (userDetail?.email === email) {
       if (!userDetail.isVerified.email) {
@@ -142,14 +139,11 @@ module.exports.providerRegister = async (req, res) => {
 module.exports.providerLogin = async (req, res) => {
   const { email, password } = req.body;
 
-  console.log("body", req.body);
-
   try {
     const providerDetail = await providerModel
       .findOne({ email: email })
       .select("+password");
 
-    console.log("---------->providerDetail", providerDetail);
 
     if (!providerDetail) {
       return res.status(400).json({
@@ -164,7 +158,6 @@ module.exports.providerLogin = async (req, res) => {
       providerDetail.password,
     );
 
-    console.log("isMatch", isMatch);
 
     if (!isMatch) {
       return res
@@ -213,7 +206,6 @@ module.exports.getProviderDetail = async (req, res) => {
   try {
     const providerDetail = await providerModel.findById(id);
 
-    console.log("providerDetail :", providerDetail);
 
     if (!providerDetail) {
       return res
@@ -366,7 +358,6 @@ module.exports.getProviderApi = async (req, res) => {
       .select("username email")
       .limit(limit);
 
-    console.log("apiBilling\n\n",providerApi);
 
     // Merge user + billing info
     const billingData = apiBilling.slice(0, limit).map((billing) => {
@@ -380,7 +371,6 @@ module.exports.getProviderApi = async (req, res) => {
       };
     });
 
-    console.log("billingData : ", billingData);
 
     return res.status(200).json({
       message: "provider api fetch!",
@@ -404,7 +394,6 @@ module.exports.getProviderApiBilling = async (req, res) => {
     const providerDetails = await providerModel.findById(providerId);
     const providerApi = await apiModel.find({ providerId });
 
-    console.log("providerDetails", providerApi);
 
     if (!providerDetails) {
       return res
@@ -417,7 +406,6 @@ module.exports.getProviderApiBilling = async (req, res) => {
         .json({ message: "error fetching the api's!", success: false });
     }
 
-    console.log("apis : ", providerApi);
 
     return res
       .status(200)

@@ -191,11 +191,6 @@ userSchema.methods.hashPassword = async function (password) {
 };
 
 userSchema.methods.comparePassword = async function (password, userpassword) {
-  console.log(
-    "String(password), String(userpassword)",
-    String(password),
-    String(userpassword),
-  );
   return await bcrypt.compare(String(password), String(userpassword));
 };
 

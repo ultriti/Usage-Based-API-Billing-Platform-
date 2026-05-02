@@ -9,12 +9,12 @@ const HomePage = () => {
     <div className="min-h-screen bg_dark_Theme_70 flex flex-col items-center justify-center text-white">
 
       <PageDecoration/>
-      {/* Title */}
+      {/* ----------------- Title ------------------ */}
       <h1 className="text-4xl md:text-5xl font-bold text-center mb-4">
         MeterFlow - Usage-Based API Billing
       </h1>
 
-      {/* Description */}
+      {/* ---------------- Description ---------------- */}
       <p className="text-lg text-gray-200 text-center max-w-2xl mb-8">
         Build, manage, and monetize APIs with real-time usage tracking and
         billing. Choose your role to get started with MeterFlow.

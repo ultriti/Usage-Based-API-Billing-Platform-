@@ -137,17 +137,13 @@ const ProviderDashboard = () => {
   //
   const timeArray = ["1h", "5h", "12h", "24h", "7d", "30d"];
 
-  // use effects
   useEffect(() => {
-    // fetching api here ---
     getProviderApiFuntion();
-    // const interval = setInterval(fetchData, 5000);
-    // return () => clearInterval(interval);
   }, [10000]);
 
   return (
     <div className="mainFrameDashboard">
-      {/* nabbar frame */}
+      {/* navbar frame */}
       <div className="navbarFrame">
         <NavbarFrame />
       </div>
@@ -161,56 +157,63 @@ const ProviderDashboard = () => {
 
       <div className="providerMainFrame">
         {/* Chart Section */}
-        <div className="providerChartFrame flex flex-row p-4">
-          <div
-            id="graphChart"
-            className="bg-gray-900 w-[70%] h-[70vh] text-white flex flex-col items-center p-4 rounded-lg shadow-lg"
-          >
-            <div className="h-[7vh] w-full  flex flex-row items-center justify-center gap-5">
-              <h2 className="text-xl font-semibold mb-4 ">
-                API Latency & Status Graph
-              </h2>
+        {chartData ? (
+          <>
+            <div className="providerChartFrame flex flex-row p-4">
+              <div
+                id="graphChart"
+                className="bg-gray-900 w-[70%] h-[70vh] text-white flex flex-col items-center p-4 rounded-lg shadow-lg"
+              >
+                <div className="h-[7vh] w-full  flex flex-row items-center justify-center gap-5">
+                  <h2 className="text-xl font-semibold mb-4 ">
+                    API Latency & Status Graph
+                  </h2>
 
-              <div className="w-30">
-                <select
-                  value={SelectTime}
-                  onChange={(e) => setSelectTime(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {timeArray.map((time) => (
-                    <option
-                      key={time}
-                      value={time}
-                      className="bg-gray-800 text-gray-100"
+                  <div className="w-30">
+                    <select
+                      value={SelectTime}
+                      onChange={(e) => setSelectTime(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      {time}
-                    </option>
-                  ))}
-                </select>
+                      {timeArray.map((time) => (
+                        <option
+                          key={time}
+                          value={time}
+                          className="bg-gray-800 text-gray-100"
+                        >
+                          {time}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {chartData ? (
+                  <Line data={chartData.data} options={chartData.options} />
+                ) : (
+                  <p>Loading...</p>
+                )}
+              </div>
+
+              <div className="allChartsLeft h-[70vh] px-5 w-[30%] flex flex-col justify-between">
+                <div className=" w-[100%] h-[32vh] bg-gray-900 text-white flex flex-col items-center p-4 rounded-lg shadow-lg">
+                  {pieChart ? (
+                    <Pie data={pieChart} options={options} />
+                  ) : (
+                    <p>Loading...</p>
+                  )}
+                </div>
+                {/* <div className=" w-[100%] h-[32vh] text-white bg-gray-100 flex flex-col items-center p-4 rounded-lg shadow-lg">
+                    <h2 className="text-xl font-semibold mb-4">API Status Distribution</h2>
+                    <Pie data={data} options={options} />
+                </div> */}
+                
               </div>
             </div>
-
-            {chartData ? (
-              <Line data={chartData.data} options={chartData.options} />
-            ) : (
-              <p>Loading...</p>
-            )}
-          </div>
-
-          <div className="allChartsLeft h-[70vh] px-5 w-[30%] flex flex-col justify-between">
-            <div className=" w-[100%] h-[32vh] bg-gray-900 text-white flex flex-col items-center p-4 rounded-lg shadow-lg">
-              {pieChart ? (
-                <Pie data={pieChart} options={options} />
-              ) : (
-                <p>Loading...</p>
-              )}
-            </div>
-            {/* <div className=" w-[100%] h-[32vh] text-white bg-gray-100 flex flex-col items-center p-4 rounded-lg shadow-lg">
-                            <h2 className="text-xl font-semibold mb-4">API Status Distribution</h2>
-                            <Pie data={data} options={options} />
-                        </div> */}
-          </div>
-        </div>
+          </>
+        ) : (
+          <></>
+        )}
 
         {/* API List Section */}
         <div className="providerListApiFrame mt-6">

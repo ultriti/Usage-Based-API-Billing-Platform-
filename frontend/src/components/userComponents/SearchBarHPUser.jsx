@@ -5,7 +5,6 @@ const SearchBarHPUser = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log("Searching for:", query);
     // Hook this into your API call or filter logic
   };
 

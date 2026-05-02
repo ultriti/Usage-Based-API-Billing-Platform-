@@ -5,9 +5,9 @@ const cookie_parser = require('cookie-parser');
 // consumer middleware
 module.exports.isAunthenticate = async (req, res, next) => {
 
-    console.log("req.cookies.apiProviderToken ",req.cookies.apiProviderToken )
+    // console.log("req.cookies.apiProviderToken ",req.cookies.apiProviderToken )
     const token = req.cookies.apiProviderToken || req.headers["apiProviderToken"];
-    console.log('--->', token);
+    // console.log('--->', token);
 
 
     try {
@@ -35,7 +35,7 @@ module.exports.isProviderAuthenticate = async (req, res, next) => {
     
     const token = req.cookies.apiProviderToken || req.headers["apiProviderToken"];
     console.log('---> prpvider', token);
-    console.log('---> prpvider -> ', req.headers["apiProviderToken"] );
+    // console.log('---> prpvider -> ', req.headers["apiProviderToken"] );
 
 
     try {
@@ -53,7 +53,7 @@ module.exports.isProviderAuthenticate = async (req, res, next) => {
                 return res.status(404).json({ message: 'you are not autherized ! -' })
             }
 
-            console.log('token -> ', decoded);
+            // console.log('token -> ', decoded);
 
             req.id = decoded.userId;
             req.email = decoded.email;
@@ -71,7 +71,7 @@ module.exports.isAdminAuthenticate = async (req, res, next) => {
     
     const token = req.cookies.apiProviderToken || req.headers["apiProviderToken"];
     console.log('---> prpvider', token);
-    console.log('---> prpvider -> ', req.headers["apiProviderToken"] );
+    // console.log('---> prpvider -> ', req.headers["apiProviderToken"] );
 
 
     try {
@@ -89,7 +89,7 @@ module.exports.isAdminAuthenticate = async (req, res, next) => {
                 return res.status(404).json({ message: 'you are not autherized ! -' })
             }
 
-            console.log('token -> ', decoded);
+            // console.log('token -> ', decoded);
 
             req.id = decoded.userId;
             req.email = decoded.email;

@@ -118,7 +118,7 @@ module.exports.setApiKey = async (req, res) => {
   const consumerId = req.id; // from auth middleware
 
   try {
-    console.log("body:", req.body);
+    // console.log("body:", req.body);
 
     const { providerApiId } = req.body;
 
@@ -138,8 +138,6 @@ module.exports.setApiKey = async (req, res) => {
     const hashedApiPasswordCode =
       await apiModel.prototype.hashKeys(apiPasswordCode);
 
-    console.log("api:--------------\n", api?._id);
-
     // Assume providerApiId is the ObjectId or string you want to check
     let existingApi = false;
 
@@ -148,9 +146,6 @@ module.exports.setApiKey = async (req, res) => {
         (item) => String(item.apiId) === String(providerApiId),
       );
     }
-
-    console.log("existingApi:", existingApi);
-    console.log("------------->", existingApi);
 
     if (existingApi) {
       return res
@@ -180,12 +175,6 @@ module.exports.setApiKey = async (req, res) => {
       keyCode: apiKeyCode,
       keyPassword: apiPasswordCode,
     });
-
-    // if (apiKeyEntry) {
-    //     apiKeyEntry.keyCode = apiKeyCode;
-    //     apiKeyEntry.keyPassword = apiPasswordCode;
-    // }
-
     const credentailKey = {
       key: apiKeyCode,
       keyPassword: apiPasswordCode,
@@ -280,9 +269,9 @@ module.exports.requestApiRoute = async (req, res) => {
   const apiKey = req.headers["api_provide_key"];
   const apiPassword = req.headers["api_provide_password"];
 
-  console.log("isAuthenticate apiKey:", apiKey);
-  console.log("isAuthenticate apiPassword:", apiPassword);
-  console.log("isAuthenticate name:", name);
+  // console.log("isAuthenticate apiKey:", apiKey);
+  // console.log("isAuthenticate apiPassword:", apiPassword);
+  // console.log("isAuthenticate name:", name);
 
   if (!apiKey || !apiPassword) {
     return res.status(401).json({
@@ -303,8 +292,6 @@ module.exports.requestApiRoute = async (req, res) => {
       name: name,
     });
     const userDetail = await userModel.findById(consumerId);
-
-    console.log("api :->\n", api, name);
 
     if (!userDetail) {
       return res
@@ -359,8 +346,6 @@ module.exports.requestApiRoute = async (req, res) => {
         log.timestamp.push(new Date(startTime));
 
         try {
-          console.log("latency", latency);
-
           //  InfluxDB put -------
           // const point = new Point('api_usage')
           //     .tag('apiId', api._id.toString())
@@ -368,9 +353,7 @@ module.exports.requestApiRoute = async (req, res) => {
           //     .intField('status_code', res.statusCode)
           //     .floatField('latency_ms', Number(latency))
           //     .timestamp(new Date(startTime))
-
           // writeClient.writePoint(point)
-
           // // flush asynchronously (don’t block request)
           // writeClient.flush().catch(err => {
           //     console.error('Influx flush error', err)
@@ -419,7 +402,6 @@ module.exports.requestApiRoute = async (req, res) => {
           sucess: false,
         });
       } else {
-
         // ------------------ PARTIAL PAYMANET ----------------------->
         if (userApi.Subscription.type == "partialpayment") {
           // api billing ----------------------->
@@ -473,8 +455,6 @@ module.exports.requestApiRoute = async (req, res) => {
                 userApi.partialPayment = false;
               }
             } else {
-              console.log("----------- else ", userApi.usage);
-
               if (userApi.usage % 100 === 0) {
                 return res.status(400).json({
                   messgae: "free limit has been crosed ! ",
@@ -507,11 +487,11 @@ module.exports.requestApiRoute = async (req, res) => {
 
         // monthly subscription ----------------------->
         else if (userApi.Subscription.type == "monthlypayment") {
-          console.log(
-            "---------------------\n\n\n\n\n monthly subscrion : \n",
-            userApi.usage,
-            userApi.Subscription.maxRequests,
-          );
+          // console.log(
+          //   "---------------------\n\n\n\n\n monthly subscrion : \n",
+          //   userApi.usage,
+          //   userApi.Subscription.maxRequests,
+          // );
           if (userApi.usage <= userApi.Subscription.maxRequests) {
             userApi.usage += 1;
             api.billing.totalRequests += 1;
@@ -703,24 +683,16 @@ module.exports.apiPartialPayment = async (req, res) => {
         .json({ message: "payment alredy done ( 20)", success: false });
     }
 
-    console.log("type :->\n\n", type);
-    console.log("amount :->\n\n", amount);
-
+    // --------------- patial payment -----------
     if (type == "partialpayment") {
-      console.log("--- partial paymanet : \n");
-      // if (userApi.usage % 100 === 99) {
-        api.billing.amount += amount;
-        userApi.Subscription.subscriptionPurchased = true;
-        userApi.Subscription.type = type;
-        userApi.Subscription.maxRequests = 500;
-        userApi.partialPayment = true;
-      // }
-    } else if (type == "monthlypayment") {
-      // if ((userApi.Subscription.requests == userApi.Subscription.requests.maxRequests) &&
-      //   (userApi.Subscription.requests == userApi.usage) ) {
-
-      // }
-
+      api.billing.amount += amount;
+      userApi.Subscription.subscriptionPurchased = true;
+      userApi.Subscription.type = type;
+      userApi.Subscription.maxRequests = 500;
+      userApi.partialPayment = true;
+    }
+    // ----------- monthly payment --------------
+     else if (type == "monthlypayment") {
       api.billing.amount += amount;
       userApi.Subscription.subscriptionPurchased = true;
       userApi.Subscription.ammount += amount;
@@ -728,28 +700,24 @@ module.exports.apiPartialPayment = async (req, res) => {
       userApi.Subscription.maxRequests = 25000;
       userApi.partialPayment = true;
       userApi.usage = true;
-    } else if (type == "annualpayment") {
-
-      // if (
-      //   userApi.Subscription.requests == userApi.Subscription.requests.maxRequests &&
-      //   userApi.Subscription.requests == userApi.usage
-      // ) {
-        api.billing.amount += amount;
-        userApi.Subscription.subscriptionPurchased = true;
-        userApi.Subscription.ammount += amount;
-        userApi.Subscription.type = type;
-        userApi.Subscription.maxRequests = 500000;
-        userApi.partialPayment = true;
-      // }
+    } 
+    // -------------- annul payment --------------------------
+    else if (type == "annualpayment") {
+      api.billing.amount += amount;
+      userApi.Subscription.subscriptionPurchased = true;
+      userApi.Subscription.ammount += amount;
+      userApi.Subscription.type = type;
+      userApi.Subscription.maxRequests = 500000;
+      userApi.partialPayment = true;
     }
 
     userApi.apiBill = 0;
     userApi.usage = 0;
     userApi.Subscription.requests = 0;
 
-   api.billing.consumerDetail.push({
-      customerId : consumerId,
-      ammountPaid : amount,
+    api.billing.consumerDetail.push({
+      customerId: consumerId,
+      ammountPaid: amount,
       paidAt: new Date(),
       status: "paid",
     });
@@ -757,11 +725,6 @@ module.exports.apiPartialPayment = async (req, res) => {
     await api.save();
     await userDetail.save();
     await userApi.save();
-
-
- 
-
-
 
     return res
       .status(201)
@@ -785,16 +748,12 @@ module.exports.toggleStatus = async (req, res) => {
   try {
     const api = await apiModel.findById(apiId);
 
-    console.log("api.providerId !== providerId", api.providerId, providerId);
-
     if (api.providerId != providerId) {
       return res.status(201).json({
         message: "you are not the provider of this api!",
         success: false,
       });
     }
-
-    console.log("-------->", status);
 
     if (status == "active") {
       api.status = "revoked";
@@ -824,13 +783,9 @@ module.exports.deleteApi = async (req, res) => {
   const providerId = req.id;
   const apiId = req.params.apiId;
 
-  console.log("---------->\n-------------->", providerId);
-
   try {
     const providerDetail = await providerModel.findById(providerId);
     const api = await apiModel.findById(apiId);
-
-    console.log(providerDetail);
 
     if (!api) {
       return res
@@ -931,7 +886,6 @@ module.exports.getApi = async (req, res) => {
     const apiEntry = userDetail.api.find((api) => api.apiId == apiId);
 
     if (apiEntry) {
-      console.log("apiEntry \n", apiEntry);
 
       const credentailKey = {
         key: apiEntry.keyCode,
@@ -947,7 +901,6 @@ module.exports.getApi = async (req, res) => {
         credentailKey: credentailKey,
       });
     } else {
-      console.log("apiEntry \n", apiEntry);
 
       // const credentailKey = {
       //     key: apiEntry.keyCode,

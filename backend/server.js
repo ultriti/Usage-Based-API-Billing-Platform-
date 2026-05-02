@@ -55,7 +55,7 @@ app.get("/data", (req, res) => {
 });
 
 app.use((req, res, next) => {
-  console.log("Incoming cookies:", req.cookies);
+  // console.log("Incoming cookies:", req.cookies);
   next();
 });
 
