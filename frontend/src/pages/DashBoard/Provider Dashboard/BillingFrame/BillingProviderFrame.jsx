@@ -22,10 +22,10 @@ const BillingProviderFrame = () => {
     } catch (err) {
       if (err.response) {
         console.error("Backend error:", err.response.data);
-        alert("Failed to fetch billing data: " + err.response.data.message);
+        // alert("Failed to fetch billing data: " + err.response.data.message);
       } else {
         console.error("Error fetching billing data:", err);
-        alert("Something went wrong!");
+        // alert("Something went wrong!");
       }
     }
   };

@@ -69,7 +69,7 @@ module.exports.isProviderAuthenticate = async (req, res, next) => {
 // admin middleware
 module.exports.isAdminAuthenticate = async (req, res, next) => {
     
-    const token = req.cookies.apiProviderToken || req.headers["apiProviderToken"];
+    const token = req.cookies.apiAdminToken || req.headers["apiAdminToken"];
     console.log('---> prpvider', token);
     // console.log('---> prpvider -> ', req.headers["apiProviderToken"] );
 
@@ -85,7 +85,7 @@ module.exports.isAdminAuthenticate = async (req, res, next) => {
 
             console.log("decoded?.role",decoded)
 
-            if (decoded?.role !== "Admin") {
+            if (decoded?.role !== "admin") {
                 return res.status(404).json({ message: 'you are not autherized ! -' })
             }
 

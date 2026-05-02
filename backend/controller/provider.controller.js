@@ -339,6 +339,7 @@ module.exports.getProviderApi = async (req, res) => {
     }
 
     const providerApi = await apiModel.find({ providerId });
+    
     if (!providerApi || providerApi.length === 0) {
       return res
         .status(400)

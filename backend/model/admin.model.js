@@ -14,6 +14,10 @@ const AdminSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    adminToken:{
+        type:String,
+        required : true,
+    },
     password: {
         type: String,
         required: true,
@@ -92,11 +96,6 @@ AdminSchema.methods.hashPassword = async function (password) {
 AdminSchema.methods.comparePassword = async function (password, userPassword) {
     return await bcrypt.compare(String(password), String(userPassword));
 };
-
-// const Provider = mongoose.model('Admin', AdminSchema);
-// module.exports = Provider;
-
-
 
 const adminModel = mongoose.model('Admin', AdminSchema);
 module.exports = adminModel;

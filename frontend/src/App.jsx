@@ -22,6 +22,7 @@ import CategoryFrame from "./pages/UserPages/CategoryPages/CategoryFrame";
 import DemoPayment from "./components/payment/DemoPayment";
 import PageNotFound from "./pages/CommonPages/PageNotFound";
 import BillingProviderFrame from "./pages/DashBoard/Provider Dashboard/BillingFrame/BillingProviderFrame";
+import UserProfilePage from "./pages/DashBoard/User Dashboard/UserProfilePage";
 
 const App = () => {
   return (
@@ -32,72 +33,21 @@ const App = () => {
 
         {/* user routes */}
         <Route path="/user/Register" element={<UserRegister />} />
-        <Route
-          path="/user/login"
-          element={
-            <>
-              <AdminContext>
-                <UserContext>
-                  <UserLogin />
-                </UserContext>
-              </AdminContext>
-            </>
-          }
-        />
+        <Route path="/user/login" element={<><AdminContext><UserContext><UserLogin /></UserContext></AdminContext></>}/>
 
-        <Route
-          path="/user/homePage"
-          element={
-            <>
-              <UserProtectedWrapper>
-                <UserHomePage />
-              </UserProtectedWrapper>
-            </>
-          }
-        />
+        <Route path="/user/homePage" element={<><UserProtectedWrapper><UserHomePage /></UserProtectedWrapper></>}/>
 
-        <Route
-          path="/user/apiDetailFrame"
-          element={<ApiDetailFrameTemplate />}
-        />
+        <Route path="/user/apiDetailFrame" element={<ApiDetailFrameTemplate />}/>
+        <Route path="/user/ProfilePage" element={<UserProfilePage />}/>
 
         <Route path="/user/apiDemoReq" element={<ApiRequest />} />
         <Route path="/user/category/:category" element={<CategoryFrame />} />
 
         {/* provider routes */}
-        <Route
-          path="/provider/Register"
-          element={
-            <AdminContext>
-              <UserContext>
-                <ProviderRegister />
-              </UserContext>{" "}
-            </AdminContext>
-          }
-        />
-        <Route
-          path="/provider/Login"
-          element={
-            <>
-              <AdminContext>
-                <UserContext>
-                  <ProviderLogin />
-                </UserContext>{" "}
-              </AdminContext>
-            </>
-          }
-        />
+        <Route path="/provider/Register" element={<AdminContext><UserContext><ProviderRegister /></UserContext>{" "}</AdminContext>} />
+        <Route path="/provider/Login" element={ <> <AdminContext><UserContext><ProviderLogin /></UserContext>{" "}</AdminContext></>}/>
 
-        <Route
-          path="/provider/Dashboard"
-          element={
-            <>
-              <AdminProtectedWrapper>
-                <ProviderDashboard />
-              </AdminProtectedWrapper>
-            </>
-          }
-        />
+        <Route path="/provider/Dashboard" element={<><AdminProtectedWrapper><ProviderDashboard /></AdminProtectedWrapper></>}/>
         <Route path="/provider/billing" element={<BillingProviderFrame />} />
         <Route path="/provider/providerApi" element={<ProviderApiFrame />} />
 

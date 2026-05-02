@@ -161,12 +161,12 @@ const ProviderLogin = () => {
         setAdminDeatils(res.data.providerDetail);
         navigate("/provider/dashboard");
       } else {
-        alert("Login failed: " + res.data.message);
+        // alert("Login failed: " + res.data.message);
       }
     } catch (err) {
       if (err.response) {
         console.error("Backend error:", err.response.data);
-        alert("Login failed: " + err.response.data.message);
+        // alert("Login failed: " + err.response.data.message);
       } else {
         console.error("Error logging in:", err);
         alert("Something went wrong!");

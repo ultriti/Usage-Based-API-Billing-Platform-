@@ -8,6 +8,7 @@ const user = require("./router/user.route");
 const provider = require("./router/provider.route");
 const apiGen = require("./router/apiProvider.route");
 const razorpay = require("./router/razorpay.route");
+const admin = require("./router/admin.route");
 
 dotenv.config();
 
@@ -63,6 +64,7 @@ app.use("/api/user", user);
 app.use("/api/provider", provider);
 app.use("/api/apiGen", apiGen);
 app.use("/api/ultriti/payment", razorpay);
+app.use("/api/admin", admin);
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

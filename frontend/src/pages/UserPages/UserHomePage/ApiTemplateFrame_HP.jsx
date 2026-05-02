@@ -10,7 +10,7 @@ const ApiTemplateFrame = ({name, link, description }) => {
     };
 
     return (
-        <div className="h-[20vh] w-[26vw] bg-gray-900 text-gray-100 rounded-lg shadow-md p-6">
+        <div className="h-[25vh] w-[26vw] bg-gray-900 text-gray-100 rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold mb-2">{name}</h2>
             
 
@@ -29,7 +29,11 @@ const ApiTemplateFrame = ({name, link, description }) => {
                 </button>
             </div>
 
-            <p className="text-[1vw] text-gray-400 mt-4">{description}</p>
+            <div className="h-[7vh] w-full  overflow-clip flex mt-4 ">
+                 <p className="text-[1vw] text-gray-400  ">{description}</p>
+            </div>
+
+           
         </div>
     )
 }

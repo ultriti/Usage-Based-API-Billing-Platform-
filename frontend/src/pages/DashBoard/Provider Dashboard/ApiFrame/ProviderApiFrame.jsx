@@ -37,10 +37,10 @@ const ProviderApiFrame = () => {
     } catch (err) {
       if (err.response) {
         console.error("Backend error:", err.response.data);
-        alert("Login failed: " + err.response.data.message);
+        // alert("Login failed: " + err.response.data.message);
       } else {
         console.error("Error logging in:", err);
-        alert("Something went wrong!");
+        // alert("Something went wrong!");
       }
     }
   };
@@ -64,7 +64,7 @@ const ProviderApiFrame = () => {
         console.log(toggleStatus.data.status == "active" ? true : false);
         setstatus_(toggleStatus.data.status);
       } else {
-        alert(`${toggleStatus.data.message}`);
+        // alert(`${toggleStatus.data.message}`);
       }
     } catch (error) {
       console.log(error.message);
