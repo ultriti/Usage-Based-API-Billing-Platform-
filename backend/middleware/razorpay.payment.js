@@ -24,11 +24,11 @@ export function verifyPayment({ razorpay_order_id, razorpay_payment_id, razorpay
 
 
   const generated_signature = crypto
-    .createHmac("sha256", key_secret)
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
     .update(razorpay_order_id + "|" + razorpay_payment_id)
     .digest("hex");
 
-  console.log("generated_signature === razorpay_signature :\n",generated_signature === razorpay_signature)
+  console.log("generated_signature === razorpay_signature :\n",generated_signature === razorpay_signature);
 
   return generated_signature === razorpay_signature;
 }

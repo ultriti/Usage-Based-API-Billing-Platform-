@@ -13,6 +13,7 @@ const { CLIENT_RENEG_WINDOW } = require("tls");
 const ms = require("ms");
 
 const { InfluxDB, Point } = require("@influxdata/influxdb-client");
+const { verifyPayment } = require("../middleware/razorpay.payment");
 
 // const url = process.env.INFLUXDB_URL;
 // const token = process.env.INFLUXDB_TOKEN;
@@ -677,15 +678,18 @@ module.exports.apiPartialPayment = async (req, res) => {
     const userDetail = await userModel.findById(consumerId);
     const userApi = userDetail.api.find((k) => k.apiId.equals(api._id));
 
+
     if (userApi.partialPayment) {
       return res
         .status(400)
         .json({ message: "payment alredy done ( 20)", success: false });
     }
 
+    
     // --------------- patial payment -----------
     if (type == "partialpayment") {
       api.billing.amount += amount;
+      api.billing.totalAmount += amount;
       userApi.Subscription.subscriptionPurchased = true;
       userApi.Subscription.type = type;
       userApi.Subscription.maxRequests = 500;
@@ -694,6 +698,7 @@ module.exports.apiPartialPayment = async (req, res) => {
     // ----------- monthly payment --------------
      else if (type == "monthlypayment") {
       api.billing.amount += amount;
+      api.billing.totalAmount += amount;
       userApi.Subscription.subscriptionPurchased = true;
       userApi.Subscription.ammount += amount;
       userApi.Subscription.type = type;
@@ -704,6 +709,7 @@ module.exports.apiPartialPayment = async (req, res) => {
     // -------------- annul payment --------------------------
     else if (type == "annualpayment") {
       api.billing.amount += amount;
+      api.billing.totalAmount += amount;
       userApi.Subscription.subscriptionPurchased = true;
       userApi.Subscription.ammount += amount;
       userApi.Subscription.type = type;
@@ -726,6 +732,7 @@ module.exports.apiPartialPayment = async (req, res) => {
     await userDetail.save();
     await userApi.save();
 
+    console.log('--------> enf of the paument!');
     return res
       .status(201)
       .json({ message: "payment done sucessfully", success: true });

@@ -104,7 +104,6 @@ const ApiDetailFrameTemplate = () => {
 
       if (subscribeToApiAxios.status === 200) {
         alert(subscribeToApiAxios.data?.message || "Subscription successful");
-        // getApiDetail();
       } else {
         alert(subscribeToApiAxios.data?.message || "Unexpected response");
       }
@@ -254,7 +253,8 @@ const ApiDetailFrameTemplate = () => {
                       Per recharge • 500 requests
                     </p>
                     <div className="w-full  text-white rounded-md font-medium">
-                      <UserPayment_razorpay amount={20} />
+                      {/* <UserPayment_razorpay amount={20} /> */}
+                      <UserPayment_razorpay amount={1} api={api} type={"partialpayment"} />
                     </div>
                     <div className="w-full  text-white rounded-md font-medium">
                       <button
@@ -283,7 +283,8 @@ const ApiDetailFrameTemplate = () => {
                       Per recharge • 25,000 requests
                     </p>
                     <div className="w-full  text-white rounded-md font-medium">
-                      <UserPayment_razorpay amount={499} />
+                      {/* <UserPayment_razorpay amount={499} /> */}
+                      <UserPayment_razorpay amount={4} />
                     </div>
                     <div className="w-full  text-white rounded-md font-medium">
                       <button
@@ -314,7 +315,8 @@ const ApiDetailFrameTemplate = () => {
                     </p>
 
                     <div className="w-full text-white rounded-md font-medium">
-                      <UserPayment_razorpay amount={15000} />
+                      {/* <UserPayment_razorpay amount={15000} /> */}
+                      <UserPayment_razorpay amount={15} />
                     </div>
                     <div className="w-full  text-white rounded-md font-medium">
                       <button

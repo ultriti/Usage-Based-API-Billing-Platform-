@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const  { createOrder, verifyPayment } = require("../middleware/razorpay.payment.js");
-
+const {
+  createOrder,
+  verifyPayment,
+} = require("../middleware/razorpay.payment.js");
 
 // Create order route
 router.post("/create-order", async (req, res) => {
