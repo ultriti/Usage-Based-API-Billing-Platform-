@@ -2,13 +2,14 @@ import React from "react";
 import axios from "axios";
 
 const UserPayment_razorpay = ({ amount }) => {
+  const serialized = localStorage.getItem("userDeatils");
+  const userDetail = serialized ? JSON.parse(serialized) : null;
+
   const razorpayKey =
     import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_live_SjYP78XCXQDWg2";
-  const apiBase = import.meta.env.VITE_BACKEND_URL || "";
+  const apiBase = import.meta.env.VITE_BACKEND_URL_RD || "";
 
   const handlePayment = async () => {
-
-
     if (!window.Razorpay) {
       alert("Razorpay SDK not loaded");
       return;
@@ -16,11 +17,7 @@ const UserPayment_razorpay = ({ amount }) => {
 
     try {
       // ✅ Step 1: Ask backend to create order
-      const { data: order } = await axios.post(
-        `${apiBase}/api/ultriti/payment/create-order`,
-        { amount },
-        { withCredentials: true },
-      );
+      const { data: order } = await axios.post(`${apiBase}/api/ultriti/payment/create-order`,{ amount },{ withCredentials: true });
 
       // ✅ Step 2: Configure Razorpay Checkout
       const options = {
@@ -44,8 +41,8 @@ const UserPayment_razorpay = ({ amount }) => {
           }
         },
         prefill: {
-          name: "Customer Name",
-          email: "customer@example.com",
+          name: `${userDetail?.username}`,
+          email: `${userDetail?.email}`,
           contact: "9999999999",
         },
         theme: {

@@ -19,10 +19,16 @@ export async function createOrder(amount) {
 
 // ✅ Verify payment signature function
 export function verifyPayment({ razorpay_order_id, razorpay_payment_id, razorpay_signature }) {
+
+  console.log("------------------\n-----------\n",razorpay_order_id, razorpay_payment_id, razorpay_signature)
+
+
   const generated_signature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .createHmac("sha256", key_secret)
     .update(razorpay_order_id + "|" + razorpay_payment_id)
     .digest("hex");
+
+  console.log("generated_signature === razorpay_signature :\n",generated_signature === razorpay_signature)
 
   return generated_signature === razorpay_signature;
 }
