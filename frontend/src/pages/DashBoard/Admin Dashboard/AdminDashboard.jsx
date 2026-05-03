@@ -5,6 +5,7 @@ import UserProfile from "../User Dashboard/UserProfile";
 import AdminApiFrame from "./AdminApiFrame";
 import AdminProtectedWrapper from "../../../context/AdminProtectedWrapper";
 import AdminProviderFrame from "./AdminProviderFrame";
+import AdminTransactionFrame from "./AdminTransactionFrame";
 
 const AdminDashboard = () => {
   const [activeSetting, setActiveSetting] = useState(null);
@@ -26,22 +27,22 @@ const AdminDashboard = () => {
             activeSetting={activeSetting}
           />
         );
-      // case "profileEdit":
-      //   return (
-      //     <UserProfileEdit
-      //       setActiveSetting={setActiveSetting}
-      //       activeSetting={activeSetting}
-      //     />
-      //   );
+      case "transaction":
+        return (
+          <AdminTransactionFrame
+            setActiveSetting={setActiveSetting}
+            activeSetting={activeSetting}
+          />
+        );
       // case "UserLogout":
       //   return <UserLogout />;
-      // default:
-      //   return (
-      //     <UserProfile
-      //       setActiveSetting={setActiveSetting}
-      //       activeSetting={activeSetting}
-      //     />
-      //   );
+      default:
+        return (
+          <AdminTransactionFrame
+            setActiveSetting={setActiveSetting}
+            activeSetting={activeSetting}
+          />
+        );
     }
   };
 

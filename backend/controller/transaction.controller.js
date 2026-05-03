@@ -34,7 +34,6 @@ module.exports.createTransaction = async (req, res) => {
 };
 
 module.exports.updateTransactionStatus = async (req, res) => {
-    console.log("---------------->update transacition ",req.body.txnId)
   try {
     const { txnId, status, transactionRef } = req.body;
 
@@ -102,7 +101,7 @@ module.exports.getAllTransactions = async (req, res) => {
 // Get transactions for a particular provider
 module.exports.getProviderTransactions = async (req, res) => {
   try {
-    const { providerId } = req.params;
+    const providerId  = req.id;
 
     if (!providerId) {
       return res.status(400).json({

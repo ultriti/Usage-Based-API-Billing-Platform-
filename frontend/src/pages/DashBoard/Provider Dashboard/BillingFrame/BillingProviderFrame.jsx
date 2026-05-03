@@ -38,9 +38,10 @@ const BillingProviderFrame = () => {
   return (
     <div className="providerApiFrame  bg_dark_Theme_70">
 
+
       <PageDecoration/>
       {/* nabbar frame */}
-      <div className="navbarFrame">
+      <div className="userNavbarFrame">
         <NavbarFrame />
       </div>
 

@@ -18,7 +18,7 @@ router.post("/updateTansaction", updateTransactionStatus);
 router.get("/transactions", isAdminAuthenticate, getAllTransactions);
 
 router.get(
-  "/transactions/provider/:providerId",
+  "/transactions/provider",
   isProviderAuthenticate,
   getProviderTransactions,
 );

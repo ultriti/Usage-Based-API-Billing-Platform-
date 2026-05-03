@@ -20,8 +20,8 @@ const AdminSidebar = ({ setActiveSetting, activeSetting }) => {
         <ul className="h-full w-full flex flex-col">
           <li
             className=""
-            onClick={() => setActiveSetting("Profile")}
-            className={`h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] ${getClassName("Profile")}`}
+            onClick={() => setActiveSetting("transaction")}
+            className={`h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] ${getClassName("transaction")}`}
           >
             Transaction
           </li>

@@ -10,7 +10,7 @@ const transactionSchema = new mongoose.Schema(
     },
     apiId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Api",
+      ref: "API",
       required: true,
     },
     amount: {

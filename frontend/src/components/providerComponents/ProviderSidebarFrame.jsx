@@ -42,6 +42,16 @@ const ProviderSidebarFrame = () => {
           >
             billing
           </NavLink>
+          <NavLink
+            to="/provider/transaction"
+            className={({ isActive }) =>
+              `h-[8vh] w-full flex flex-row items-center pl-2 text-[1.2vw] font-[600] hover:cursor-pointer hover:bg-gray-900 ${
+                isActive ? "bg-blue-900 text-white" : "bg-gray-800 text-gray-100"
+              }`
+            }
+          >
+            Transaction
+          </NavLink>
 
           <NavLink
             to="/provider/profile"

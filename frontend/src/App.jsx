@@ -27,6 +27,7 @@ import UserLogout from "./pages/AuthPages/UserAuth/UserLogout";
 import AdminDashboard from "./pages/DashBoard/Admin Dashboard/AdminDashboard";
 import AdminRegister from "./pages/AuthPages/AdminAuth/AdminRegister";
 import AdminLogin from "./pages/AuthPages/AdminAuth/AdminLogin";
+import TransactionFrame from "./pages/DashBoard/Provider Dashboard/Transaction frame/TransactionFrame";
 
 const App = () => {
   return (
@@ -55,6 +56,7 @@ const App = () => {
         <Route path="/provider/Dashboard" element={<><AdminProtectedWrapper><ProviderDashboard /></AdminProtectedWrapper></>}/>
         <Route path="/provider/billing" element={<BillingProviderFrame />} />
         <Route path="/provider/providerApi" element={<ProviderApiFrame />} />
+        <Route path="/provider/transaction" element={<TransactionFrame />} />
 
         <Route path="/provider/Graph" element={<PieChartExample />} />
 
