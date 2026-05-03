@@ -59,7 +59,7 @@ const ProviderApiDetaiFrame = ({ api }) => {
 
   return (
     <>
-      <div className="apiListedFrame h-[60vh] mb-5 w-full bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="apiListedFrame  mb-5 w-full bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
         {/* Top Frame */}
         <div className="apiTitleInfo h-[8vh] w-full bg-gray-700 flex flex-row items-center px-6 justify-between">
           {/* API Name */}

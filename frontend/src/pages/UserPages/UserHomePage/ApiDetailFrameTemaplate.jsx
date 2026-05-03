@@ -389,8 +389,8 @@ const ApiDetailFrameTemplate = () => {
           <p className="text-[7vw] font-[700] text-gray-300">{api?.name}</p>
         </div>
 
-        <div className="ApiDescNameFrame h-[10vh] w-full  flex items-center justify-center overflow-hidden">
-          <p className="text-[2vw] font-[500] text-gray-500">
+        <div className="ApiDescNameFrame h-[20vh] w-full text-center  flex items-center justify-center overflow-hidden px-10 pt-15">
+          <p className="text-[2vw] font-[500] text-gray-500 ">
             {api?.description}
           </p>
         </div>
@@ -475,7 +475,7 @@ const ApiDetailFrameTemplate = () => {
       {console.log("userDetailApi", userDetailApi)}
       {!apiParchased_ ? (
         <>
-          <div className="h-[90vh] w-full flex items-center justify-center top-0 right-0 z-800">
+          <div className="h-[90vh] w-full flex items-center justify-center top-0 right-0 z-200">
             <div className="h-[80vh] w-[100%] rounded-[1vw] overflow-hidden">
               <div className="grid mt-[1vw] grid-cols-1 md:grid-cols-3 gap-6 px-[4vw] py-[3vw] ">
                 {/* Left Card: Daily Plan */}

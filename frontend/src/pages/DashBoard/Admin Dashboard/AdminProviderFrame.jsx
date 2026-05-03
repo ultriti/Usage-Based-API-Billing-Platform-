@@ -68,7 +68,7 @@ const AdminProviderFrame = () => {
   };
 
   return (
-    <div className="mt-4 flex min-h-[92vh] w-full flex-col overflow-hidden rounded-xl bg-gray-900">
+    <div className="mt-[2vw] flex min-h-[92vh] w-full flex-col overflow-hidden rounded-xl bg-gray-900">
       {/* Top filter bar */}
       <div className="flex min-h-[10vh] w-full flex-col gap-3 rounded-md bg-gray-800 px-4 py-4 md:flex-row md:items-center">
         <input

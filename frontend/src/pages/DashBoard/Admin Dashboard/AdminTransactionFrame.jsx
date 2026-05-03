@@ -72,7 +72,7 @@ const AdminTransactionFrame = () => {
   const paidTx = transactions.filter((t) => t?.consumerDetail?.status === "paid").length;
 
   return (
-    <div className="mt-4 flex min-h-[92vh] w-full flex-col overflow-hidden rounded-xl bg-gray-900">
+    <div className="mt-[2vw] flex min-h-[92vh] w-full flex-col overflow-hidden bg-gray-900">
       <div className="flex w-full flex-col gap-3 rounded-md bg-gray-800 px-4 py-4 lg:flex-row lg:items-center">
         <input
           type="text"
