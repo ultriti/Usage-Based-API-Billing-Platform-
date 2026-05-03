@@ -23,6 +23,7 @@ import DemoPayment from "./components/payment/DemoPayment";
 import PageNotFound from "./pages/CommonPages/PageNotFound";
 import BillingProviderFrame from "./pages/DashBoard/Provider Dashboard/BillingFrame/BillingProviderFrame";
 import UserProfilePage from "./pages/DashBoard/User Dashboard/UserProfilePage";
+import UserLogout from "./pages/AuthPages/UserAuth/UserLogout";
 
 const App = () => {
   return (
@@ -34,6 +35,7 @@ const App = () => {
         {/* user routes */}
         <Route path="/user/Register" element={<UserRegister />} />
         <Route path="/user/login" element={<><AdminContext><UserContext><UserLogin /></UserContext></AdminContext></>}/>
+        <Route path="/user/logout" element={<><AdminContext><UserContext><UserLogout /></UserContext></AdminContext></>}/>
 
         <Route path="/user/homePage" element={<><UserProtectedWrapper><UserHomePage /></UserProtectedWrapper></>}/>
 

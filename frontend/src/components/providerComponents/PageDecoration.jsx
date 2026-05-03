@@ -3,7 +3,7 @@ import "./PageDecoration.css";
 
 const PageDecoration = () => {
   return (
-    <div className="pointer-events-none fixed inset-0 overflow-hidden w-[80%] ml-[16vw] mt-[4vw] top-0 left-0">
+    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden h-[100vh] w-[100%] mt-[4vw] top-0 left-0">
       <span className="absolute left-[-60px] top-[120px] h-[4px] w-[240px] rotate-[-44deg] rounded-full bg-cyan-400/10 blur-[1px] fadeInOut" />
       <span className="absolute left-[220px] top-[0px] h-[6px] w-[280px] rotate-[-49deg] rounded-full bg-cyan-400/8 blur-[1px] slideX" />
       <span className="absolute right-[85px] top-[35px] h-[18px] w-[300px] rotate-[-49deg] rounded-full bg-cyan-400/10 fadeInOut" />

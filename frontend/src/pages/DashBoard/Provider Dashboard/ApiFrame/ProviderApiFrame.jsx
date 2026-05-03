@@ -10,6 +10,7 @@ import { fetchProviderApis } from "../GetProviderApis";
 
 import { getGraphData } from "../../Graph";
 import ProviderApiDetaiFrame from "./ProviderApiDetaiFrame";
+import PageDecoration from "../../../../components/providerComponents/PageDecoration";
 
 const ProviderApiFrame = () => {
   const [formData, setFormData] = useState({
@@ -76,10 +77,11 @@ const ProviderApiFrame = () => {
   };
 
   return (
-    <div className="providerApiFrame">
+    <div className="providerApiFrame userHomePageFrame bg_dark_Theme_70">
+      <PageDecoration/>
       {/* create api  form */}
       {ToggleCreatApiFrom ? (
-        <div className="toggleCreateFrame h-[100%] w-[100%] z-900 flex items-center justify-center bg-gray-900 fixed top-0 left-0 ">
+        <div className="toggleCreateFrame h-[100%] w-[100%] z-900 flex items-center justify-center  fixed top-0 left-0 ">
           <CreateApiForm toggleCreateApiFrameFun={toggleCreateApiFrameFun} />
         </div>
       ) : (
@@ -96,16 +98,16 @@ const ProviderApiFrame = () => {
         <ProviderSidebarFrame />
       </div>
 
-      <div className="providerMainFrame_PAF bg-gray-900">
+      <div className="providerMainFrame_PAF z-500">
 
         
-        <div className="apiListFrame h-[10vh] w-full bg-gray-700 flex flex flex-row items-center justify-between px-[1vw]">
+        <div className="apiListFrame h-[10vh] w-full bg-gray-800 flex flex flex-row items-center justify-between px-[1vw]">
           <p className="text-gray-100 text-[2vw] font-[600] capitalize">
             your api's list
           </p>
 
           <button
-            className="h-[3vw] w-[12vw] bg-gray-800 rounded-2xl text-[1.3vw] font-semibold text-gray-100 cursor-pointer"
+            className="h-[3vw] w-[12vw] bg-gray-900 rounded-2xl text-[1.3vw] shadow shadow-gray-900 font-semibold text-gray-100 cursor-pointer hover:shadow-gray-700"
             onClick={() => {
               toggleCreateApiFrameFun(true);
             }}
@@ -115,7 +117,7 @@ const ProviderApiFrame = () => {
         </div>
 
         <div className="apiListInformationList  h-[120vh] w-full flex flex-col">
-          <div className="apiListInfoCont p-5 bg-gray-900">
+          <div className="apiListInfoCont p-5 ">
             {providerApis?.length > 0 ? (
               <>
                 {providerApis?.map((api, i) => (

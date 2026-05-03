@@ -15,8 +15,8 @@ const UserNavbar = () => {
 
                     <ul className='h-full w-[100%] flex flex-row gap-10 items-center justify-end pr-5 pl-5 text-[1.5vw] capitalize font-[600]'>
                         <NavLink to={"/user/HomePage"} className='cursor-pointer'>home</NavLink>
-                        <li className='cursor-pointer'>api</li>
-                        <li className='cursor-pointer'>profile</li>
+                        <NavLink to={"/user/ProfilePage"} className='cursor-pointer'>profile</NavLink>
+                        {/* <li className='cursor-pointer'>profile</li> */}
                     </ul>
 
                 </div>

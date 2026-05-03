@@ -71,7 +71,7 @@ const ProviderApiInfo = ({
 
   return (
     <div
-      className="apisListInfo h-[12vh] w-full bg-gray-600 rounded-2xl flex items-center px-6 shadow-md"
+      className="apisListInfo h-[12vh] w-full bg-gray-800 rounded-2xl flex items-center px-6 shadow-md"
       onClick={() => {
         fetchData(id);
       }}
@@ -104,7 +104,7 @@ const ProviderApiInfo = ({
             scales: { x: { display: false }, y: { display: false } }
           }}
         /> */}
-        <p className="text-[1.2vw] font-[600]">$ {revenue}</p>
+        <p className="text-[1.2vw] text-gray-300 font-[600]">$ {revenue}</p>
       </div>
 
       <div className="apiUrlCopyFrame h-[5vw] w-[5vw] py-5 px-5 ">

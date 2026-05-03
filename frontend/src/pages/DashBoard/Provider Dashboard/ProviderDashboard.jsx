@@ -9,6 +9,7 @@ import ProviderApiInfo from "./ProviderApiInfo";
 import { fetchProviderApis } from "./GetProviderApis";
 import { useNavigate } from "react-router-dom";
 
+
 import { Line } from "react-chartjs-2";
 import { Pie } from "react-chartjs-2";
 import {
@@ -22,6 +23,7 @@ import {
   Legend,
   ArcElement,
 } from "chart.js";
+import PageDecoration from "../../../components/providerComponents/PageDecoration";
 
 ChartJS.register(
   LineElement,
@@ -142,7 +144,10 @@ const ProviderDashboard = () => {
   }, [10000]);
 
   return (
-    <div className="mainFrameDashboard">
+    <div className="mainFrameDashboard bg_dark_Theme_70">
+
+      <PageDecoration/>
+      
       {/* navbar frame */}
       <div className="navbarFrame">
         <NavbarFrame />
@@ -159,7 +164,7 @@ const ProviderDashboard = () => {
         {/* Chart Section */}
         {chartData ? (
           <>
-            <div className="providerChartFrame flex flex-row p-4">
+            <div className="providerChartFrame flex flex-row p-4 z-500">
               <div
                 id="graphChart"
                 className="bg-gray-900 w-[70%] h-[70vh] text-white flex flex-col items-center p-4 rounded-lg shadow-lg"
@@ -248,8 +253,8 @@ const ProviderDashboard = () => {
           </div>
 
           {/* apis list  */}
-          <div className="h-[100%] w-full bg-gray-900 flex flex-col items-center ">
-            <div className="apiListCont flex flex-col items-center  w-[95%]  mt-5 gap-3">
+          <div className="h-[100%] w-full  flex flex-col items-center ">
+            <div className="apiListCont flex flex-col items-center w-[95%] mt-5 gap-3 z-500">
               {providerApis.length > 0 ? (
                 <>
                   {providerApis?.map((api, i) => (

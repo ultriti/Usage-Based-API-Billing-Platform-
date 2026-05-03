@@ -13,8 +13,15 @@ const ApiDetailFrameTemplate = () => {
   const [ApiCredentails, setApiCredentails] = useState(null);
   const [userDetailApi, setUserDetailApi] = useState(null);
   const [apiPurchase, setapiPurchase] = useState(false);
+  const [apiParchased_, setapiParchased_] = useState(false);
+
+  const serialized = localStorage.getItem("userDeatils");
+  const userDeatils = serialized ? JSON.parse(serialized) : null;
 
   const getApiDetail = async () => {
+    // if(userDeatils.api.includes(api.id){
+
+    // })
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/getApi/${api?.id}`,
@@ -30,17 +37,31 @@ const ApiDetailFrameTemplate = () => {
           res.data.apiEntry.Subscription.maxRequests,
         );
 
-        const isPurchnased_ = res.data.apiEntry.Subscription.requests == res.data.apiEntry.Subscription.maxRequests;
+        const isPurchnased_ =
+          res.data.apiEntry.Subscription.requests ==
+          res.data.apiEntry.Subscription.maxRequests;
 
-          console.log(( res.data?.apiEntry?.usage % 100 === 99),( res.data?.apiEntry?.Subscription?.subscriptionPurchased == false),(res.data?.apiEntry?.partialPayment == false));     
+        // console.log(
+        //   res.data?.apiEntry?.usage % 100 === 99,
+        //   res.data?.apiEntry?.Subscription?.subscriptionPurchased == false,
+        //   res.data?.apiEntry?.partialPayment == false,
+        // );
 
+        const apiList = res.data.userDetail.api;
+
+        // Get the full API entry object that matches api.id
+        const apiDetail = apiList.find((apiEntry) => apiEntry.apiId === api.id);
+
+        console.log("Matched API detail:", apiDetail.partialPayment);
+
+        setapiParchased_(apiDetail.partialPayment);
 
         if (res.data.apiEntry.usage > 498 || isPurchnased_) {
           const isPurchnased =
-           ( res.data?.apiEntry?.usage % 100 === 99) ||
-           ( res.data?.apiEntry?.Subscription?.subscriptionPurchased == false ||
-            res.data?.apiEntry?.partialPayment == false);
-            setapiPurchase(isPurchnased);
+            res.data?.apiEntry?.usage % 100 === 99 ||
+            res.data?.apiEntry?.Subscription?.subscriptionPurchased == false ||
+            res.data?.apiEntry?.partialPayment == false;
+          setapiPurchase(isPurchnased);
         }
 
         setApiCredentails(res.data?.credentailKey);
@@ -254,7 +275,11 @@ const ApiDetailFrameTemplate = () => {
                     </p>
                     <div className="w-full  text-white rounded-md font-medium">
                       {/* <UserPayment_razorpay amount={20} /> */}
-                      <UserPayment_razorpay amount={1} api={api} type={"partialpayment"} />
+                      <UserPayment_razorpay
+                        amount={1}
+                        api={api}
+                        type={"partialpayment"}
+                      />
                     </div>
                     <div className="w-full  text-white rounded-md font-medium">
                       <button
@@ -442,79 +467,115 @@ const ApiDetailFrameTemplate = () => {
         </div>
       </div>
 
+      {/* subsciption frame */}
+      {console.log("userDetailApi", userDetailApi)}
+      {!apiParchased_ ? (
+        <>
+          <div className="h-[90vh] w-full flex items-center justify-center top-0 right-0 z-800">
+            <div className="h-[80vh] w-[100%] rounded-[1vw] overflow-hidden">
+              <div className="grid mt-[1vw] grid-cols-1 md:grid-cols-3 gap-6 px-[4vw] py-[3vw] ">
+                {/* Left Card: Daily Plan */}
+                <div className="bg-gray-800 h-[60vh] rounded-xl shadow-lg p-6 flex flex-col items-center z-800">
+                  <h2 className="text-xl font-semibold text-white mb-2">
+                    Daily API Plan
+                  </h2>
+                  <p className="text-gray-400 mb-4">Buy credits for requests</p>
+                  <div className="text-4xl font-bold text-green-400 mb-2">
+                    ₹20
+                  </div>
+                  <p className="text-gray-300 mb-6">
+                    Per recharge • 500 requests
+                  </p>
+                  <div className="w-full  text-white rounded-md font-medium">
+                    {/* <UserPayment_razorpay amount={20} /> */}
+                    <UserPayment_razorpay
+                      amount={1}
+                      api={api}
+                      type={"partialpayment"}
+                    />
+                  </div>
+                  <div className="w-full  text-white rounded-md font-medium">
+                    <button
+                      className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
+                      onClick={() => {
+                        subcribeToApi(20, "partialpayment");
+                      }}
+                    >
+                      demo pay
+                    </button>
+                  </div>
+                </div>
+
+                {/* montly plan */}
+                <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center z-800">
+                  <h2 className="text-xl font-semibold text-white mb-2">
+                    Monthly API Plan
+                  </h2>
+                  <p className="text-gray-400 mb-4">Buy credits for requests</p>
+                  <div className="text-4xl font-bold text-green-400 mb-2">
+                    ₹499
+                  </div>
+                  <p className="text-gray-300 mb-6">
+                    Per recharge • 25,000 requests
+                  </p>
+                  <div className="w-full  text-white rounded-md font-medium">
+                    {/* <UserPayment_razorpay amount={499} /> */}
+                    <UserPayment_razorpay amount={4} />
+                  </div>
+                  <div className="w-full  text-white rounded-md font-medium">
+                    <button
+                      className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
+                      onClick={() => {
+                        subcribeToApi(499, "monthlypayment");
+                      }}
+                    >
+                      demo pay
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right Card: Yearly Plan */}
+                <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center z-800">
+                  <h2 className="text-xl font-semibold text-white mb-2">
+                    Yearly API Plan
+                  </h2>
+                  <p className="text-gray-400 mb-4 flex-wrap text-center">
+                    Unlimited access for one year, limit (5,00,000 requests)
+                  </p>
+                  <div className="text-4xl font-bold text-green-400 mb-2">
+                    ₹15,000
+                  </div>
+
+                  <p className="text-gray-300 mb-6">Flat annual subscription</p>
+
+                  <div className="w-full text-white rounded-md font-medium">
+                    {/* <UserPayment_razorpay amount={15000} /> */}
+                    <UserPayment_razorpay amount={15} />
+                  </div>
+                  <div className="w-full  text-white rounded-md font-medium">
+                    <button
+                      className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
+                      onClick={() => {
+                        subcribeToApi(15000, "annualpayment");
+                      }}
+                    >
+                      demo pay
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <></>
+      )}
+
       {/* user footer frame */}
       <div className="FooterFrame">
         <UserFooter />
       </div>
     </div>
-
-    //     <div className="min-h-screen bg-gradient-to-b from-purple-700 to-blue-900 flex items-center justify-center">
-    //       <div className="h-[100vh] w-[100vw] bg-gray-900 text-gray-100 rounded-lg shadow-lg p-8 space-y-6">
-    //         <h1 className="text-3xl font-bold text-center">{api?.name}</h1>
-    //         <p className="text-center text-gray-400">{api?.description}</p>
-
-    //         {/* Link */}
-    //         <div className="flex items-center space-x-2">
-    //           <input
-    //             type="text"
-    //             value={api?.platformUrl}
-    //             disabled
-    //             className="flex-1 px-3 py-2 rounded bg-gray-800 border border-gray-700 cursor-not-allowed text-gray-300"
-    //           />
-    //           <button
-    //             onClick={() => handleCopy(api?.platformUrl)}
-    //             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"
-    //           >
-    //             Copy
-    //           </button>
-    //         </div>
-
-    //         {/* Key Code */}
-    //         <div className="flex items-center space-x-2">
-
-    //             {
-    //                 console.log("ApiCredentails ----- \n",ApiCredentails)
-    //             }
-    //           <input
-    //             type="text"
-    //             value={ApiCredentails?.key || "not found"}
-    //             disabled
-    //             className="flex-1 px-3 py-2 rounded bg-gray-800 border border-gray-700 cursor-not-allowed text-gray-300"
-    //           />
-    //           <button
-    //             onClick={() =>
-    //               handleCopy(ApiCredentails?.key || "not found")
-    //             }
-    //             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"
-    //           >
-    //             Copy
-    //           </button>
-    //         </div>
-
-    //         {/* Key Password */}
-    //         <div className="flex items-center space-x-2">
-    //           <input
-    //             type="text"
-    //             value={ApiCredentails?.keyPassword || "*kZboe%3OkbU"}
-    //             disabled
-    //             className="flex-1 px-3 py-2 rounded bg-gray-800 border border-gray-700 cursor-not-allowed text-gray-300"
-    //           />
-    //           <button
-    //             onClick={() =>
-    //               handleCopy(ApiCredentails?.keyPassword || "*kZboe%3OkbU")
-    //             }
-    //             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"
-    //           >
-    //             Copy
-    //           </button>
-    //         </div>
-
-    //         {/* Usage */}
-    //         <div className="px-3 py-2 bg-gray-800 rounded border border-gray-700 text-center">
-    //           Usage: {api?.usage || 2}
-    //         </div>
-    //       </div>
-    //     </div>
   );
 };
 

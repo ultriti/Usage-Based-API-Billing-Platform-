@@ -76,7 +76,7 @@ const UserHomePage = () => {
           <SearchBarHPUser />
         </div>
 
-        <div className="apiTemplateFrame h-[100%] w-[100%] py-5 flex gap-5 flex-wrap">
+        <div className="apiTemplateFrame h-[100%] w-[100%] py-5 flex gap-5 flex-wrap z-500">
           {allApis ? (
             allApis?.map((api, i) => (
               <div

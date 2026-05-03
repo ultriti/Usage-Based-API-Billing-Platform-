@@ -6,6 +6,9 @@ const ProviderSidebarFrame = () => {
   return (
     <div className="ProviderSidebarFrame bg-gray-900">
       <div className="ProviderSidebarCont">
+        <div className="h-[20vh] w-full flex items-center ml-5 font-[700] text-[1.5vw] text-gray-200 border-b-stone-200">
+          Dashboard
+        </div>
         <ul className="h-full w-full flex flex-col">
           <NavLink
             to="/provider/dashboard"

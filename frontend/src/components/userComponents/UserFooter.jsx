@@ -48,7 +48,7 @@ const UserFooter = () => {
               <ul className="mt-6 space-y-4 text-sm text-white/80">
                 <li className="flex items-center gap-3">
                   <Phone size={18} className="text-cyan-300" />
-                  <span>+91 8951634490</span>
+                  <span>+91 895X6X4X9X</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Mail size={18} className="text-cyan-300" />

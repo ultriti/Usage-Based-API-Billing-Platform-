@@ -4,6 +4,7 @@ import NavbarFrame from "../../../../components/providerComponents/NavbarFrame";
 import ProviderSidebarFrame from "../../../../components/providerComponents/ProviderSidebarFrame";
 import axios from "axios";
 import ProviderApiDetaiFrame from "../ApiFrame/ProviderApiDetaiFrame";
+import PageDecoration from "../../../../components/providerComponents/PageDecoration";
 
 const BillingProviderFrame = () => {
   const [billingApiData, setbillingApiData] = useState(null);
@@ -35,7 +36,9 @@ const BillingProviderFrame = () => {
   }, []);
 
   return (
-    <div className="providerApiFrame bg-gray-800">
+    <div className="providerApiFrame  bg_dark_Theme_70">
+
+      <PageDecoration/>
       {/* nabbar frame */}
       <div className="navbarFrame">
         <NavbarFrame />
@@ -47,16 +50,16 @@ const BillingProviderFrame = () => {
       </div>
 
       {/* main frame */}
-      <div className="providerMainFrame bg-gray-900 ml-5">
+      <div className="providerMainFrame  ml-5">
 
         {/* graph */}
         {
           billingApiChart ? (
             <>
-              <div className="providerChartFrame flex flex-row p-4">
+              <div className="providerChartFrame flex flex-row p-4 z-500">
           <div
             id="graphChart"
-            className="bg-gray-800 w-[80%] h-[70vh] text-white flex flex-col items-center p-4 rounded-lg shadow-lg"
+            className=" w-[80%] h-[70vh] text-white flex flex-col items-center p-4 rounded-lg shadow-lg"
           ></div>
           <div className="allChartsLeft bg-gray-400 h-[70vh] px-5 w-[30%] flex flex-col justify-between"></div>
         </div>
@@ -68,15 +71,15 @@ const BillingProviderFrame = () => {
       
 
         {/* lower frame */}
-        <div className="providerListApiFrame mt-6">
+        <div className="providerListApiFrame mt-6 z-500">
           {/* apis list  */}
-          <div className="h-[100vh] w-[100%] bg-gray-900 flex flex-col items-center">
+          <div className="h-[100vh] w-[100%]  flex flex-col items-center">
             <div className="apiListCont flex flex-col items-center w-[95%] mt-5 gap-3">
               {billingApiData?.length > 0 ? (
                 <>
                   {billingApiData?.map((api, i) => (
                     <>
-                      <div className="h-[10vh] w-full bg-gray-600 rounded-2xl flex items-center justify-between px-6 text-white">
+                      <div className="h-[10vh] w-full bg-gray-800 rounded-2xl flex items-center justify-between px-6 text-white">
                         {/* Left side: profile image + name */}
                         <div className="flex items-center space-x-4">
                           <img

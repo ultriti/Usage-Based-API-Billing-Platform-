@@ -1,13 +1,13 @@
 .mainFrameDashboard {
   min-height: 100vh;
   width: 99.4vw;
-  background-color: #050a1e;
   display: flex;
   flex-direction: column;
-  overflow-y: auto; /* natural scroll */
+  overflow-y: auto; 
+  /* natural scroll
+  /* position: relative; */
+  position: relative;
 }
-
-
 
 .navbarFrame {
   height: 4vw;
@@ -30,7 +30,7 @@
 }
 
 .providerMainFrame {
-  flex: 1; 
+  flex: 1;
   margin-left: 16vw;
   margin-top: 4vw;
   /* background-color: rgba(32, 32, 32, 0.678); */
