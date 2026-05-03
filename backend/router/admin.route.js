@@ -5,6 +5,7 @@ const {
   adminLogin,
   getAllProvider,
   deleteProvider,
+  getAllApis,
 } = require("../controller/admin.controller");
 const { isAdminAuthenticate } = require("../middleware/auth.middleware");
 
@@ -15,6 +16,6 @@ router.delete("/provider/delete", isAdminAuthenticate, deleteProvider);
 
 
 router.get("/getAllProviders", isAdminAuthenticate, getAllProvider);
-router.get("/getAllApis", isAdminAuthenticate, getAllProvider);
+router.get("/getAllApis", isAdminAuthenticate, getAllApis);
 
 module.exports = router;

@@ -75,6 +75,10 @@ const BillingProviderFrame = () => {
           {/* apis list  */}
           <div className="h-[100vh] w-[100%]  flex flex-col items-center">
             <div className="apiListCont flex flex-col items-center w-[95%] mt-5 gap-3">
+              {
+                console.log('billingApiData',billingApiData)
+                
+              }
               {billingApiData?.length > 0 ? (
                 <>
                   {billingApiData?.map((api, i) => (
@@ -100,7 +104,7 @@ const BillingProviderFrame = () => {
                         {/* Center: requests */}
                         <div className="text-center">
                           <p className="text-xl font-bold">
-                            {api?.totalRequest} requests
+                            {/* {api?.totalRequest} requests */}
                           </p>
                         </div>
 

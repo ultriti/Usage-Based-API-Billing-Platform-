@@ -24,6 +24,9 @@ import PageNotFound from "./pages/CommonPages/PageNotFound";
 import BillingProviderFrame from "./pages/DashBoard/Provider Dashboard/BillingFrame/BillingProviderFrame";
 import UserProfilePage from "./pages/DashBoard/User Dashboard/UserProfilePage";
 import UserLogout from "./pages/AuthPages/UserAuth/UserLogout";
+import AdminDashboard from "./pages/DashBoard/Admin Dashboard/AdminDashboard";
+import AdminRegister from "./pages/AuthPages/AdminAuth/AdminRegister";
+import AdminLogin from "./pages/AuthPages/AdminAuth/AdminLogin";
 
 const App = () => {
   return (
@@ -54,6 +57,15 @@ const App = () => {
         <Route path="/provider/providerApi" element={<ProviderApiFrame />} />
 
         <Route path="/provider/Graph" element={<PieChartExample />} />
+
+
+        {/* admin routes */}
+        <Route path="/admin/12UHJI342BEHNDINER88496/register" element={<AdminRegister />} />
+        <Route path="/admin/12UHJI342BEHNDINER88496/login" element={<AdminLogin />} />
+
+        
+        <Route path="/admin/12UHJI342BEHNDINER88496/Dashboard" element={<AdminDashboard />} />
+
 
         {/* payment */}
         <Route path="/user/ultriti/payment" element={<DemoPayment />} />

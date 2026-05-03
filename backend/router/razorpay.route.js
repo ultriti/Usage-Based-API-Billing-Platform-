@@ -10,6 +10,10 @@ router.post("/create-order", async (req, res) => {
   try {
     const { amount } = req.body;
     const order = await createOrder(amount);
+
+    console.log("-razorpay details", order);
+
+
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: "Order creation failed" });

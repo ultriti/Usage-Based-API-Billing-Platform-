@@ -103,6 +103,8 @@ const UserPaymentRazorpay = ({ amount, api, type }) => {
         { withCredentials: true },
       );
 
+      const order_ = order;
+
       // Configure Razorpay Checkout
       const options = {
         key: razorpayKey,
@@ -121,6 +123,17 @@ const UserPaymentRazorpay = ({ amount, api, type }) => {
             );
 
             if (data.success) {
+
+              // transaction detaoils -----------------------
+              const TransactionData = {
+                consumerId: userDetail,
+                amount: amount,
+                apiId: api.id,
+                providerId: api?.providerId,
+              };
+
+              const  Transdata  = await axios.post(`${apiBase}/api/transaction/creatTansaction`,TransactionData,{ withCredentials: true });
+
               alert("Payment pending wait for a min!");
 
               const apiData = {
@@ -129,15 +142,42 @@ const UserPaymentRazorpay = ({ amount, api, type }) => {
                 type: type,
               };
 
-              // after payment conformation -> api paymnet proceed
-              const res = await axios.post(`${apiBase}/api/apiGen/partialPayApi/${userDetail?._id}`,apiData,
-                { withCredentials: true });
+
+              try {
+                // after payment conformation -> api paymnet proceed
+              const res = await axios.post(`${apiBase}/api/apiGen/partialPayApi/${userDetail?._id}`,apiData,{ withCredentials: true });
 
               if (res.status) {
+
+                console.log('Transdata\n\n\n',Transdata.data.transaction)
+                console.log('order\n\n\n',order || order_)
+                
+                // transaction data here ----------------------------------------------
+                const TransactionData = {
+                  txnId : Transdata.data.transaction._id, status : "settling", transactionRef : order?.receipt || order_?.receipt
+                };
+
+                console.log("TransactionData\n",TransactionData)
+
+                const TransUpdatedData = await axios.post(`${apiBase}/api/transaction/updateTansaction`,TransactionData,{ withCredentials: true });
+
+                if(TransUpdatedData.status == 200){
+                  alert("trnas updated succss!")
+                }else{
+                  alert("TransUpdatedData failed !")
+                }
+
+
+
                 alert("Payment successful!");
-              }else{
+              } else {
                 alert("Payment unsuccessful! ------------- ");
               }
+                
+              } catch (error) {
+                console.log(error)
+              }
+              
             } else {
               alert("Payment verification failed!");
             }

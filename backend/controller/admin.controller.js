@@ -168,34 +168,64 @@ module.exports.adminLogin = async (req, res) => {
 };
 
 
-// Admin get all providers (with optional filters)
+// Admin get all providers (with associated APIs + total amount)
 module.exports.getAllProvider = async (req, res) => {
   try {
-    const { id, name } = req.query;
+    // Optional filters
+    const { name } = req.query;
 
     let query = {};
-
-    if (id) {
-      query._id = id;
-    }
-
     if (name) {
       query.username = { $regex: name, $options: "i" };
     }
 
-    const providers = await providerModel.find(query);
+    // Fetch providers with limit
+    const providers = await providerModel
+      .find(query)
+      .limit(10)
+      .populate({
+        path: "apiCreated.apiId",
+        model: "API", // replace with your actual apiModel name
+        select: "name url billing",
+      });
 
     if (!providers || providers.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No providers found", success: false });
+      return res.status(404).json({
+        message: "No providers found",
+        success: false,
+      });
     }
+
+    // Build response array with total amount per provider
+    const providerData = providers.map((provider) => {
+      const apis = provider.apiCreated.map((entry) => entry.apiId).filter(Boolean);
+
+      let totalAmount = 0;
+      apis.forEach((api) => {
+        if (api.billing && api.billing.consumerDetail) {
+          api.billing.consumerDetail.forEach((bill) => {
+            totalAmount += bill.ammountPaid || 0;
+          });
+        }
+      });
+
+      return {
+        _id: provider._id,
+        username: provider.username,
+        email: provider.email,
+        profilePicture: provider.profilePicture,
+        isVerified: provider.isVerified,
+        subscriptionPlan: provider.subscriptionPlan,
+        apis,
+        totalAmount,
+      };
+    });
 
     return res.status(200).json({
       message: "Providers fetched successfully",
       success: true,
-      count: providers.length,
-      providers,
+      count: providerData.length,
+      providers: providerData,
     });
   } catch (error) {
     console.error("error :", error);
@@ -206,6 +236,8 @@ module.exports.getAllProvider = async (req, res) => {
     });
   }
 };
+
+
 
 
 

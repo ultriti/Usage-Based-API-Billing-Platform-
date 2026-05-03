@@ -67,6 +67,12 @@ const providerSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
+    paymentPrending:{
+        type:String,
+        enum : ["pending","paid","settling"],
+        default:"pending"
+
+    },
     verificationCode: {
         email: {
             type: Number,

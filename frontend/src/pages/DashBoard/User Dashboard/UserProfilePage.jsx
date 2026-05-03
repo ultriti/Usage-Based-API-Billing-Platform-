@@ -42,22 +42,6 @@ const UserProfilePage = () => {
         );
       case "UserLogout":
         return <UserLogout />;
-      // case "info":
-      //   return <SettingsInfoFrame />;
-      // case "Security":
-      //   return (
-      //     <Security_Frame
-      //       setActiveSetting={setActiveSetting}
-      //       activeSetting={activeSetting}
-      //     />
-      //   );
-      // case "MyApplication":
-      //   return <ApplicationFrame />;
-      // case "QNA":
-      //   return <QNA_Frame />;
-      // case "Settings":
-      //   return <QNA_Frame />;
-
       default:
         return (
           <UserProfile

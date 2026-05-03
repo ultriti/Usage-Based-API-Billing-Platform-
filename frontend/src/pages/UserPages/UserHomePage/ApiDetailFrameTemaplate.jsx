@@ -31,11 +31,11 @@ const ApiDetailFrameTemplate = () => {
       if (res.status === 200) {
         setUserDetailApi(res.data?.userDetail);
 
-        console.log(
-          "res.data.apiEntry.usage ",
-          res.data.apiEntry.Subscription.requests,
-          res.data.apiEntry.Subscription.maxRequests,
-        );
+        // console.log(
+        //   "res.data.apiEntry.usage ",
+        //   res.data.apiEntry.Subscription.requests,
+        //   res.data.apiEntry.Subscription.maxRequests,
+        // );
 
         const isPurchnased_ =
           res.data.apiEntry.Subscription.requests ==
@@ -234,6 +234,10 @@ const ApiDetailFrameTemplate = () => {
 
   return (
     <div className="m-h-[100vh] w-full bg_dark_Theme_70">
+      {
+        console.log('api',api)
+        
+      }
       <div className="userNavbarFrame">
         <UserNavbar />
       </div>
@@ -520,7 +524,7 @@ const ApiDetailFrameTemplate = () => {
                   </p>
                   <div className="w-full  text-white rounded-md font-medium">
                     {/* <UserPayment_razorpay amount={499} /> */}
-                    <UserPayment_razorpay amount={4} />
+                    <UserPayment_razorpay amount={4} api={api} />
                   </div>
                   <div className="w-full  text-white rounded-md font-medium">
                     <button

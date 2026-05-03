@@ -665,6 +665,8 @@ module.exports.apiPartialPayment = async (req, res) => {
 
   const { apiId, amount, type } = req.body;
 
+  console.log("----------------\n start od the partial payment ")
+
   if (!consumerId || !apiId) {
     return res.status(401).json({
       message: "Api or user not found ! ",
@@ -679,6 +681,7 @@ module.exports.apiPartialPayment = async (req, res) => {
     const userApi = userDetail.api.find((k) => k.apiId.equals(api._id));
 
 
+      console.log("----------------\n something ")
     if (userApi.partialPayment) {
       return res
         .status(400)
@@ -731,6 +734,7 @@ module.exports.apiPartialPayment = async (req, res) => {
     await api.save();
     await userDetail.save();
     await userApi.save();
+    
 
     console.log('--------> enf of the paument!');
     return res
