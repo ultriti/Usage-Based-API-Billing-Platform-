@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import CircularLoading_1 from "../../../components/CircularLoading_1";
 
 const AdminRegister = () => {
   const navigate = useNavigate();
@@ -9,10 +10,11 @@ const AdminRegister = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [adminToken, setAdminToken] = useState("");
+  const [isLoading, setisLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
-
+    setisLoading(true);
     const data = {
       username,
       email,
@@ -24,23 +26,27 @@ const AdminRegister = () => {
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL_RD}/api/admin/createAdmin`,
         data,
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       if (res.status === 201) {
         alert("Admin registered successfully!");
         console.log("Response: admin register ->", res.data);
         navigate("/admin/12UHJI342BEHNDINER88496/Dashboard");
+        setisLoading(false);
       } else {
         alert("Registration failed: " + res.data.message);
+        setisLoading(false);
       }
     } catch (err) {
       if (err.response) {
         console.error("Backend error:", err.response.data);
         alert("Registration failed: " + err.response.data.message);
+        setisLoading(false);
       } else {
         console.error("Error registering:", err);
         alert("Something went wrong!");
+        setisLoading(false);
       }
     }
   };
@@ -87,7 +93,9 @@ const AdminRegister = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Admin Token</label>
+            <label className="block text-sm font-medium mb-1">
+              Admin Token
+            </label>
             <input
               type="text"
               name="adminToken"
@@ -99,12 +107,20 @@ const AdminRegister = () => {
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold"
-          >
-            Register
-          </button>
+          {isLoading ? (
+            <>
+              <CircularLoading_1 />
+            </>
+          ) : (
+            <>
+              <button
+                type="submit"
+                className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold cursor-pointer"
+              >
+                Register
+              </button>
+            </>
+          )}
         </form>
 
         <div className="routeLoginFrame h-[10vh] w-full flex items-center justify-center">

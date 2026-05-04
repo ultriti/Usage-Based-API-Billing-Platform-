@@ -1,9 +1,18 @@
 // UserRegister.jsx
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import CircularLoading_1 from "../../../components/CircularLoading_1";
+
+import { UserDataContext } from "../../../context/UserContext";
+import { AdminDataContext } from "../../../context/AdminContext";
 
 const UserRegister = () => {
+  const { setUserDeatils, loadUserDetail, removeUserDetail } =
+    useContext(UserDataContext);
+  const { setAdminDeatils, loadAdminDetail, removeAdminDetail } =
+    useContext(AdminDataContext);
+
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
@@ -12,12 +21,16 @@ const UserRegister = () => {
     role: "user",
   });
 
+  const [isLoading, setisLoading] = useState(false);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setisLoading(true);
+
     try {
       const res = await axios.post(
         // `import.meta.env.BACKEND_URL_RD/api/user/userRegister`,
@@ -28,18 +41,26 @@ const UserRegister = () => {
 
       if (res.status === 201) {
         alert("Registration successful!");
+        removeAdminDetail();
+
+        setUserDeatils(res.data.user);
+
         navigate("/user/HomePage");
         console.log(res.data);
+        setisLoading(false);
       } else {
         alert(res.data.message || "Registration failed");
+        setisLoading(false);
       }
     } catch (err) {
       if (err.response) {
         console.error("Backend error:", err.response.data);
         alert("Login failed: " + err.response.data.message);
+        setisLoading(false);
       } else {
         console.error("Error logging in:", err);
         alert("Something went wrong!");
+        setisLoading(false);
       }
     }
   };
@@ -99,26 +120,21 @@ const UserRegister = () => {
             </p>
           </div>
 
-          {/* <div>
-            <label className="block text-sm font-medium mb-1">Role</label>
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-              <option value="provider">Provider</option>
-            </select>
-          </div> */}
-
-          <button
-            type="submit"
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold"
-          >
-            Register
-          </button>
+          {isLoading ? (
+            <>
+              <CircularLoading_1 />
+            </>
+          ) : (
+            <>
+              {" "}
+              <button
+                type="submit"
+                className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold cursor-pointer"
+              >
+                Register
+              </button>
+            </>
+          )}
         </form>
 
         <div className="routeRegisterFrame h-[10vh] w-full flex items-center justify-center">

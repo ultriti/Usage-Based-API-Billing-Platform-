@@ -14,9 +14,9 @@ const NavbarFrame = () => {
                 <div className="navRouteLink h-full w-[45vw] mr-10 text-gray-300">
 
                     <ul className='h-full w-[100%] flex flex-row gap-10 items-center justify-end pr-5 pl-5 text-[1.5vw] capitalize font-[600]'>
-                        <li className='cursor-pointer'>home</li>
+                        {/* <li className='cursor-pointer'>home</li>
                         <li className='cursor-pointer'>api</li>
-                        <li className='cursor-pointer'>profile</li>
+                        <li className='cursor-pointer'>profile</li> */}
                     </ul>
 
                 </div>

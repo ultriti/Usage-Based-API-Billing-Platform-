@@ -7,13 +7,16 @@ import UserNavbar from "../../../components/userComponents/UserNavbar";
 import UserSidebar from "../../../components/userComponents/UserSidebar";
 import UserFooter from "../../../components/userComponents/UserFooter";
 import PageDecoration from "../../../components/providerComponents/PageDecoration";
+import CircularLoading_1 from "../../../components/CircularLoading_1";
 
 const UserHomePage = () => {
   const navigate = useNavigate();
 
   const [allApis, getallApis] = useState([]);
+  const [isPageLoading, setisPageLoading] = useState(false);
 
   const getAllApis = async (req, res) => {
+    setisPageLoading(true);
     try {
       const getAllApisAxios = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/getAllApi`,
@@ -25,17 +28,21 @@ const UserHomePage = () => {
       if (getAllApisAxios.status === 200) {
         // alert("All APIs fetched successfully");
         console.log("---apis:", getAllApisAxios.data.allApi);
-        getallApis(getAllApisAxios.data.allApi); // update state/context
+        getallApis(getAllApisAxios.data.allApi);
+        setisPageLoading(false);
       } else {
         alert(getAllApisAxios.data.message || "Unexpected response");
+        setisPageLoading(false);
       }
     } catch (error) {
       if (error.response) {
         console.error("Backend error:", error.response.data);
         alert(error.response.data.message || "Request failed");
+        setisPageLoading(false);
       } else {
         console.error("Network error:", error);
         alert(error.message);
+        setisPageLoading(false);
       }
     }
   };
@@ -91,7 +98,7 @@ const UserHomePage = () => {
                         keyCode: api?.key,
                         status: api?.status,
                         usage: 2,
-                        providerId : api?.providerId
+                        providerId: api?.providerId,
                       },
                     },
                   });
@@ -104,6 +111,14 @@ const UserHomePage = () => {
                 />
               </div>
             ))
+          ) : (
+            <>
+            </>
+          )}
+          {isPageLoading ? (
+            <div className="h-[10vh] w-full flex items-center justify-center">
+              <CircularLoading_1 />
+            </div>
           ) : (
             <></>
           )}

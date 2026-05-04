@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import CircularLoading_1 from "../../../components/CircularLoading_1";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -8,10 +9,11 @@ const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [adminToken, setAdminToken] = useState("");
+  const [isLoading, setisLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
+    setisLoading(true);
     const data = {
       email,
       password,
@@ -22,23 +24,27 @@ const AdminLogin = () => {
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL_RD}/api/admin/loginAdmin`,
         data,
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       if (res.status === 200) {
         alert("Admin login successful!");
         console.log("Response: admin login ->", res.data);
         navigate("/admin/12UHJI342BEHNDINER88496/Dashboard");
+        setisLoading(false);
       } else {
         alert("Login failed: " + res.data.message);
+        setisLoading(false);
       }
     } catch (err) {
       if (err.response) {
         console.error("Backend error:", err.response.data);
         alert("Login failed: " + err.response.data.message);
+        setisLoading(false);
       } else {
         console.error("Error logging in:", err);
         alert("Something went wrong!");
+        setisLoading(false);
       }
     }
   };
@@ -73,7 +79,9 @@ const AdminLogin = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Admin Token</label>
+            <label className="block text-sm font-medium mb-1">
+              Admin Token
+            </label>
             <input
               type="text"
               name="adminToken"
@@ -85,12 +93,20 @@ const AdminLogin = () => {
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold"
-          >
-            Sign In
-          </button>
+          {isLoading ? (
+            <>
+              <CircularLoading_1 />
+            </>
+          ) : (
+            <>
+              <button
+                type="submit"
+                className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold cursor-pointer"
+              >
+                Sign In
+              </button>
+            </>
+          )}
         </form>
 
         <div className="routeRegisterFrame h-[10vh] w-full flex items-center justify-center">

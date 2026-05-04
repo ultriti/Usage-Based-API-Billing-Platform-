@@ -8,7 +8,6 @@ const UserLogout = () => {
 
   const handleLogout = async () => {
     try {
-      // Call your backend logout API
       await axios.get("/userLogout", { withCredentials: true });
 
       navigate("/user/login");

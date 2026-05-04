@@ -37,7 +37,7 @@ const App = () => {
         <Route path="*" element={<PageNotFound />} />
 
         {/* user routes */}
-        <Route path="/user/Register" element={<UserRegister />} />
+        <Route path="/user/Register" element={<><AdminContext><UserContext><UserRegister /></UserContext></AdminContext> </>} />
         <Route path="/user/login" element={<><AdminContext><UserContext><UserLogin /></UserContext></AdminContext></>}/>
         <Route path="/user/logout" element={<><AdminContext><UserContext><UserLogout /></UserContext></AdminContext></>}/>
 

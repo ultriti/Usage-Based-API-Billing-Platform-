@@ -5,12 +5,15 @@ import ProviderSidebarFrame from "../../../../components/providerComponents/Prov
 import axios from "axios";
 import ProviderApiDetaiFrame from "../ApiFrame/ProviderApiDetaiFrame";
 import PageDecoration from "../../../../components/providerComponents/PageDecoration";
+import CircularLoading_1 from "../../../../components/CircularLoading_1";
 
 const BillingProviderFrame = () => {
   const [billingApiData, setbillingApiData] = useState(null);
   const [billingApiChart, setbillingApiChart] = useState(null)
+const [isPageLoading, setisPageLoading] = useState(false)
 
   const getBillingData = async () => {
+    setisPageLoading(true)
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL_RD}/api/provider/getApiBilling`,
@@ -19,13 +22,16 @@ const BillingProviderFrame = () => {
 
       console.log("Billing data:", res.data);
       setbillingApiData(res.data.billingData);
+      setisPageLoading(false)
       // Process and display the billing data as needed
     } catch (err) {
       if (err.response) {
         console.error("Backend error:", err.response.data);
+        setisPageLoading(false)
         // alert("Failed to fetch billing data: " + err.response.data.message);
       } else {
         console.error("Error fetching billing data:", err);
+        setisPageLoading(false)
         // alert("Something went wrong!");
       }
     }
@@ -126,9 +132,16 @@ const BillingProviderFrame = () => {
               ) : (
                 <div className="h-[20vh] w-[100%] bg-gray-600 rounded-2xl flex items-center justify-center">
                   <p className="text-[2vw] font-[600] text-gray-300 capitalize">
-                    no api list{" "}
+                    no billing listed
                   </p>
                 </div>
+              )}
+               {isPageLoading ? (
+                <>
+                  <CircularLoading_1 />
+                </>
+              ) : (
+                <></>
               )}
             </div>
           </div>

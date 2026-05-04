@@ -36,3 +36,7 @@
 .createApiFrame{
     box-shadow: 0 0 10px 10px rgb(14, 14, 14);
 }
+
+.apiListInformationList{
+    min-height: 100vh;
+}

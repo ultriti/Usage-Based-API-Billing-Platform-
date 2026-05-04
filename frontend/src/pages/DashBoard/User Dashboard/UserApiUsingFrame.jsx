@@ -63,7 +63,7 @@ const UserApiUsingFrame = ({ setActiveSetting, activeSetting }) => {
       </div>
 
       {/* API List */}
-      <h3 className="text-lg font-semibold mb-4">Your APIs</h3>
+      <h3 className="text-lg font-semibold mb-4 z-500">Your APIs</h3>
       {allapi ? (
         allapi.map((api) => (
           // <div
@@ -124,10 +124,10 @@ const UserApiUsingFrame = ({ setActiveSetting, activeSetting }) => {
                 });
               }}
               key={api._id}
-              className="bg-gray-700 rounded-lg p-4 mb-4 shadow-md flex items-center justify-between mb-5"
+              className="bg-gray-700 rounded-lg p-4 mb-4 shadow-md flex items-center justify-between mb-5 z-500"
             >
               {/* Left side: API icon + name */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 z-500">
                 <div className="flex items-center justify-center w-12 h-12 bg-blue-600 rounded-full text-white font-bold">
                   API
                 </div>
@@ -165,7 +165,7 @@ const UserApiUsingFrame = ({ setActiveSetting, activeSetting }) => {
                     </>
                   ) : (
                     <>
-                      <div className="w-11 h-6 bg-gray-500 rounded-full bg-red-300 relative transition">
+                      <div className="m-w-11 h-8 px-3 py-2 z-500 bg-gray-500 rounded-full bg-gray-300 border border-red-600 relative transition flex items-center justify-center text-red-700">
                         <p>unpaid</p>
                       </div>
                     </>

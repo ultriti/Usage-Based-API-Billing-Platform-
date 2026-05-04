@@ -5,13 +5,16 @@ import UserSidebar from "../../../components/userComponents/UserSidebar";
 import axios from "axios";
 import ApiTemplateFrame from "../UserHomePage/ApiTemplateFrame_HP";
 import PageDecoration from "../../../components/providerComponents/PageDecoration";
+import CircularLoading_1 from "../../../components/CircularLoading_1";
 
 const CategoryFrame = () => {
   const navigate = useNavigate();
   const { category } = useParams();
   const [allApis, getallApis] = useState([]);
+  const [isPageLoading, setisPageLoading] = useState(false);
 
   const getAllApis = async () => {
+    setisPageLoading(true);
     try {
       const getAllApisAxios = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/getAllApi?category=${category}`,
@@ -24,16 +27,20 @@ const CategoryFrame = () => {
         // alert("All APIs fetched successfully");
         console.log("---apis:", getAllApisAxios.data.allApi);
         getallApis(getAllApisAxios.data.allApi); // update state/context
+        setisPageLoading(false);
       } else {
         alert(getAllApisAxios.data.message || "Unexpected response");
+        setisPageLoading(false);
       }
     } catch (error) {
       if (error.response) {
         console.error("Backend error:", error.response.data);
         alert(error.response.data.message || "Request failed");
+        setisPageLoading(false);
       } else {
         console.error("Network error:", error);
         alert(error.message);
+        setisPageLoading(false);
       }
     }
   };
@@ -88,7 +95,15 @@ const CategoryFrame = () => {
               <p>no api found for this category</p>
             </div>
           )}
+         
         </div>
+         {isPageLoading ? (
+            <div className="h-[10vh] w-full flex items-center justify-center">
+              <CircularLoading_1 />
+            </div>
+          ) : (
+            <></>
+          )}
       </div>
     </div>
   );

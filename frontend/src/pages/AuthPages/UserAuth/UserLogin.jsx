@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import { UserDataContext } from "../../../context/UserContext";
 import { AdminDataContext } from "../../../context/AdminContext";
+import CircularLoading_1 from "../../../components/CircularLoading_1";
 
 const UserLogin = () => {
   const { setUserDeatils, loadUserDetail, removeUserDetail } =
@@ -15,9 +16,11 @@ const UserLogin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setisLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setisLoading(true);
 
     const data = {
       email,
@@ -38,18 +41,20 @@ const UserLogin = () => {
         // removeUserDetail()
 
         setUserDeatils(res.data.user);
+        setisLoading(false);
         navigate("/user/homePage");
       } else {
-        console.log("---------->", res.data);
         alert("Login failed: " + res.data.message);
+        setisLoading(false);
       }
     } catch (err) {
       if (err.response) {
-        console.error("Backend error:", err.response.data);
         alert("Login failed: " + err.response.data.message);
+        setisLoading(false);
       } else {
         console.error("Error logging in:", err);
         alert("Something went wrong!");
+        setisLoading(false);
       }
     }
   };
@@ -100,12 +105,20 @@ const UserLogin = () => {
                         </a>
                     </div> */}
 
-          <button
-            type="submit"
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold"
-          >
-            Sign In
-          </button>
+          {isLoading ? (
+            <>
+              <CircularLoading_1 />
+            </>
+          ) : (
+            <>
+              <button
+                type="submit"
+                className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold cursor-pointer"
+              >
+                Sign In
+              </button>
+            </>
+          )}
         </form>
 
         <div className="routeRegisterFrame h-[10vh] w-full flex items-center justify-center">

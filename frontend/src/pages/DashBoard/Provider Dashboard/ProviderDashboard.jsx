@@ -3,12 +3,12 @@ import "./ProviderDashboard.css";
 import NavbarFrame from "../../../components/providerComponents/NavbarFrame";
 import ProviderSidebarFrame from "../../../components/providerComponents/ProviderSidebarFrame";
 import axios from "axios";
+import CircularLoading_1 from "../../../components/CircularLoading_1.jsx";
 
 import { getGraphData } from "../Graph";
 import ProviderApiInfo from "./ProviderApiInfo";
 import { fetchProviderApis } from "./GetProviderApis";
 import { useNavigate } from "react-router-dom";
-
 
 import { Line } from "react-chartjs-2";
 import { Pie } from "react-chartjs-2";
@@ -44,6 +44,7 @@ const ProviderDashboard = () => {
   const [providerApis, setproviderApis] = useState([]);
   const [pieChart, setpieChart] = useState(null);
   const [SelectTime, setSelectTime] = useState(1);
+  const [isPageLoading, setisPageLoading] = useState(false);
 
   // fitions
   const handleSearch = (e) => {
@@ -53,12 +54,15 @@ const ProviderDashboard = () => {
 
   const fetchData = async (apiId) => {
     // alert(`${apiId}`)
+    setisPageLoading(true);
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/getProviderInfo?apiId=${apiId}&time=${SelectTime}`,
         {},
         { withCredentials: true },
       );
+
+      setisPageLoading(false);
       const formatted = getGraphData(res.data);
       console.log("--------->", res.data);
       // console.log("---------> datasets",formatted.data.datasets.data)
@@ -67,6 +71,7 @@ const ProviderDashboard = () => {
       // navigate("/graphChart")
 
       if (res.data.request < 500) {
+        setisPageLoading(false);
         setpieChart({
           labels: ["requestSent", "totalRequests"],
           datasets: [
@@ -110,15 +115,19 @@ const ProviderDashboard = () => {
           },
         ],
       });
+      setisPageLoading(false);
     } catch (err) {
       console.error("Error fetching graph data:", err);
+      setisPageLoading(false);
     }
   };
 
   const getProviderApiFuntion = async () => {
+    setisPageLoading(true);
     const data = await fetchProviderApis();
     console.log("providerApis", data);
     setproviderApis(data.providerApi);
+    setisPageLoading(false);
   };
 
   const options = {
@@ -145,9 +154,8 @@ const ProviderDashboard = () => {
 
   return (
     <div className="mainFrameDashboard bg_dark_Theme_70">
+      <PageDecoration />
 
-      <PageDecoration/>
-      
       {/* navbar frame */}
       <div className="navbarFrame">
         <NavbarFrame />
@@ -212,17 +220,22 @@ const ProviderDashboard = () => {
                     <h2 className="text-xl font-semibold mb-4">API Status Distribution</h2>
                     <Pie data={data} options={options} />
                 </div> */}
-                
               </div>
             </div>
           </>
         ) : (
-          <></>
+          <>
+            <div className="h-[10vh] w-full flex items-center justify-center">
+              <div className="h-[8vh] w-[80%] rounded-2xl bg-gray-900 text-gray-200 text-[1.5vw] flex items-center justify-center">
+                <p>select an api to analyze the data</p>
+              </div>
+            </div>
+          </>
         )}
 
         {/* API List Section */}
-        <div className="providerListApiFrame mt-6">
-          <div className="apiListTitle flex justify-between items-center p-5 bg-gray-700">
+        <div className="providerListApiFrame z-500">
+          <div className="apiListTitle flex justify-between items-center p-5 bg-gray-700 z-500">
             <p className="apiTitle text-[1.5vw] font-medium  text-gray-50">
               Your API's Lists
             </p>
@@ -280,6 +293,13 @@ const ProviderDashboard = () => {
                     no api list{" "}
                   </p>
                 </div>
+              )}
+              {isPageLoading ? (
+                <>
+                  <CircularLoading_1 />
+                </>
+              ) : (
+                <></>
               )}
             </div>
           </div>

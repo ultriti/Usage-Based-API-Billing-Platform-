@@ -11,6 +11,7 @@ import { fetchProviderApis } from "../GetProviderApis";
 import { getGraphData } from "../../Graph";
 import ProviderApiDetaiFrame from "./ProviderApiDetaiFrame";
 import PageDecoration from "../../../../components/providerComponents/PageDecoration";
+import CircularLoading_1 from "../../../../components/CircularLoading_1";
 
 const ProviderApiFrame = () => {
   const [formData, setFormData] = useState({
@@ -22,25 +23,27 @@ const ProviderApiFrame = () => {
   const [chartData, setChartData] = useState(null);
   const [providerApis, setproviderApis] = useState([]);
   const [toggleCreateFrame, settoggleCreateFrame] = useState(false);
+  const [isPageLoading, setisPageLoading] = useState(false);
 
   const fetchData = async () => {
     const data_ = {
       name: "yash",
     };
     try {
-
+      setisPageLoading(true);
 
       const data = await fetchProviderApis();
       console.log("providerApis", data);
       setproviderApis(data.providerApi);
-
-
+      setisPageLoading(false);
     } catch (err) {
       if (err.response) {
         console.error("Backend error:", err.response.data);
+        setisPageLoading(false);
         // alert("Login failed: " + err.response.data.message);
       } else {
         console.error("Error logging in:", err);
+        setisPageLoading(false);
         // alert("Something went wrong!");
       }
     }
@@ -77,8 +80,8 @@ const ProviderApiFrame = () => {
   };
 
   return (
-    <div className="providerApiFrame userHomePageFrame bg_dark_Theme_70">
-      <PageDecoration/>
+    <div className="providerApiFrame userHomePageFrame bg_dark_Theme_70 m-h-[100vh]">
+      <PageDecoration />
       {/* create api  form */}
       {ToggleCreatApiFrom ? (
         <div className="toggleCreateFrame h-[100%] w-[100%] z-900 flex items-center justify-center  fixed top-0 left-0 ">
@@ -99,8 +102,6 @@ const ProviderApiFrame = () => {
       </div>
 
       <div className="providerMainFrame_PAF z-500">
-
-        
         <div className="apiListFrame h-[10vh] w-full bg-gray-800 flex flex flex-row items-center justify-between px-[1vw]">
           <p className="text-gray-100 text-[2vw] font-[600] capitalize">
             your api's list
@@ -116,7 +117,7 @@ const ProviderApiFrame = () => {
           </button>
         </div>
 
-        <div className="apiListInformationList  h-[120vh] w-full flex flex-col">
+        <div className="apiListInformationList  m-h-[120vh] w-full flex flex-col">
           <div className="apiListInfoCont p-5 ">
             {providerApis?.length > 0 ? (
               <>
@@ -125,13 +126,21 @@ const ProviderApiFrame = () => {
                 ))}
               </>
             ) : (
-              <div className="h-[20vh] w-[100%] bg-gray-600 rounded-2xl flex items-center justify-center">
+              <div className="h-[20vh] w-[100%] bg-gray-600 rounded-2xl flex items-center justify-center mb-10">
                 <p className="text-[2vw] font-[600] text-gray-300 capitalize">
                   no api list{" "}
                 </p>
               </div>
             )}
+              {isPageLoading ? (
+              <>
+                <CircularLoading_1 />
+              </>
+            ) : (
+              <></>
+            )}
           </div>
+        
         </div>
       </div>
     </div>

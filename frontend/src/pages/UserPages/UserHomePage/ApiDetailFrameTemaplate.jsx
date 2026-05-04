@@ -7,6 +7,8 @@ import UserFooter from "../../../components/userComponents/UserFooter";
 import PageDecoration from "../../../components/providerComponents/PageDecoration";
 import UserPayment_razorpay from "../../../components/payment/UserPayment_razorpay";
 
+import CircularLoading_1 from "../../../components/CircularLoading_1";
+
 const ApiDetailFrameTemplate = () => {
   const location = useLocation();
   const { api } = location?.state || {};
@@ -18,10 +20,13 @@ const ApiDetailFrameTemplate = () => {
   const serialized = localStorage.getItem("userDeatils");
   const userDeatils = serialized ? JSON.parse(serialized) : null;
 
+  const [isPageLoading, setisPageLoading] = useState(false);
+
   const getApiDetail = async () => {
     // if(userDeatils.api.includes(api.id){
 
     // })
+    setisPageLoading(true)
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/getApi/${api?.id}`,
@@ -46,6 +51,7 @@ const ApiDetailFrameTemplate = () => {
         //   res.data?.apiEntry?.Subscription?.subscriptionPurchased == false,
         //   res.data?.apiEntry?.partialPayment == false,
         // );
+        setisPageLoading(false)
 
         const apiList = res.data.userDetail.api;
 
@@ -55,6 +61,7 @@ const ApiDetailFrameTemplate = () => {
         console.log("Matched API detail:", apiDetail.partialPayment);
 
         setapiParchased_(apiDetail.partialPayment);
+        setisPageLoading(false)
 
         if (res.data.apiEntry.usage > 498 || isPurchnased_) {
           const isPurchnased =
@@ -65,14 +72,18 @@ const ApiDetailFrameTemplate = () => {
         }
 
         setApiCredentails(res.data?.credentailKey);
+        setisPageLoading(false)
       } else {
         alert(res.data?.message || "Unexpected response");
+        setisPageLoading(false)
       }
     } catch (error) {
       if (error.response) {
         alert(error.response.data.message || "Request failed");
+        setisPageLoading(false)
       } else {
         console.log("error:", error.message);
+        setisPageLoading(false)
         // alert(error.message);
       }
     }
@@ -83,6 +94,7 @@ const ApiDetailFrameTemplate = () => {
       const apiData = {
         providerApiId: api?.id,
       };
+      setisPageLoading(true);
 
       const getApiCredentailsAxios = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/setApi/${api?.id}`,
@@ -96,14 +108,18 @@ const ApiDetailFrameTemplate = () => {
           getApiCredentailsAxios.data?.credentailKey,
         );
         setApiCredentails(getApiCredentailsAxios?.data?.credentailKey);
+        setisPageLoading(false);
       } else {
         alert(getApiCredentailsAxios.data?.message || "Unexpected response");
+        setisPageLoading(false);
       }
     } catch (error) {
       if (error.response) {
         alert(error.response.data.message || "Request failed");
+        setisPageLoading(false);
       } else {
         alert(error.message);
+        setisPageLoading(false);
       }
     }
   };
@@ -234,10 +250,7 @@ const ApiDetailFrameTemplate = () => {
 
   return (
     <div className="m-h-[100vh] w-full bg_dark_Theme_70">
-      {
-        console.log('api',api)
-        
-      }
+      {console.log("api", api)}
       <div className="userNavbarFrame">
         <UserNavbar />
       </div>
@@ -248,9 +261,10 @@ const ApiDetailFrameTemplate = () => {
       <div className="h-full w-full pt-[10vw]">
         {/* purachse plan */}
         {apiPurchase ? (
+          // {true ? (
           <>
-            <div className="h-[100vh] w-full bg_dark_Theme_70 flex items-center justify-center top-0 right-0 fixed z-500">
-              <div className="h-[60vh] w-[80%] bg-gray-600 rounded-[1vw] overflow-hidden">
+            <div className="h-[100vh] w-full bg_dark_Theme_50 flex items-center justify-center top-0 right-0 fixed z-500">
+              <div className="h-[80vh] w-[90%] bg-gray-600 rounded-[1vw] overflow-hidden opacity-[100%]">
                 <div className="exitFrame h-[5vh] w-full flex items-center justify-end pr-5 bg-gray-900">
                   <button
                     onClick={() => {
@@ -262,21 +276,23 @@ const ApiDetailFrameTemplate = () => {
                   </button>
                 </div>
 
-                <div className="grid mt-[2vw] grid-cols-1 md:grid-cols-3 gap-6 px-[4vw] py-[5vw] bg-gray-600">
+                <div className="grid mt-[2vw] grid-cols-1 md:grid-cols-3 gap-6 px-[4vw]  bg-gray-600">
                   {/* Left Card: Daily Plan */}
-                  <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center">
-                    <h2 className="text-xl font-semibold text-white mb-2">
-                      Daily API Plan
-                    </h2>
-                    <p className="text-gray-400 mb-4">
-                      Buy credits for requests
-                    </p>
-                    <div className="text-4xl font-bold text-green-400 mb-2">
-                      ₹20
+                  <div className="bg-gray-800 h-[60vh] rounded-xl shadow-lg p-6 flex flex-col items-center justify-around">
+                    <div className="w-[100%] flex flex-col items-center justify-center">
+                      <h2 className="text-xl font-semibold text-white mb-2">
+                        Daily API Plan
+                      </h2>
+                      <p className="text-gray-400 mb-4">
+                        Buy credits for requests
+                      </p>
+                      <div className="text-4xl font-bold text-green-400 mb-2">
+                        ₹20
+                      </div>
+                      <p className="text-gray-300 mb-6">
+                        Per recharge • 500 requests
+                      </p>
                     </div>
-                    <p className="text-gray-300 mb-6">
-                      Per recharge • 500 requests
-                    </p>
                     <div className="w-full  text-white rounded-md font-medium">
                       {/* <UserPayment_razorpay amount={20} /> */}
                       <UserPayment_razorpay
@@ -285,7 +301,7 @@ const ApiDetailFrameTemplate = () => {
                         type={"partialpayment"}
                       />
                     </div>
-                    <div className="w-full  text-white rounded-md font-medium">
+                    {/* <div className="w-full  text-white rounded-md font-medium">
                       <button
                         className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
                         onClick={() => {
@@ -294,28 +310,31 @@ const ApiDetailFrameTemplate = () => {
                       >
                         demo pay
                       </button>
-                    </div>
+                    </div> */}
                   </div>
 
                   {/* montly plan */}
-                  <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center">
-                    <h2 className="text-xl font-semibold text-white mb-2">
-                      Monthly API Plan
-                    </h2>
-                    <p className="text-gray-400 mb-4">
-                      Buy credits for requests
-                    </p>
-                    <div className="text-4xl font-bold text-green-400 mb-2">
-                      ₹499
+                  <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center justify-around">
+                    <div className="w-[100%] flex flex-col items-center justify-center">
+                      <h2 className="text-xl font-semibold text-white mb-2">
+                        Monthly API Plan
+                      </h2>
+                      <p className="text-gray-400 mb-4">
+                        Buy credits for requests
+                      </p>
+                      <div className="text-4xl font-bold text-green-400 mb-2">
+                        ₹499
+                      </div>
+                      <p className="text-gray-300 mb-6">
+                        Per recharge • 25,000 requests
+                      </p>
                     </div>
-                    <p className="text-gray-300 mb-6">
-                      Per recharge • 25,000 requests
-                    </p>
+
                     <div className="w-full  text-white rounded-md font-medium">
                       {/* <UserPayment_razorpay amount={499} /> */}
                       <UserPayment_razorpay amount={4} />
                     </div>
-                    <div className="w-full  text-white rounded-md font-medium">
+                    {/* <div className="w-full  text-white rounded-md font-medium">
                       <button
                         className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
                         onClick={() => {
@@ -324,30 +343,32 @@ const ApiDetailFrameTemplate = () => {
                       >
                         demo pay
                       </button>
-                    </div>
+                    </div> */}
                   </div>
 
                   {/* Right Card: Yearly Plan */}
-                  <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center">
-                    <h2 className="text-xl font-semibold text-white mb-2">
-                      Yearly API Plan
-                    </h2>
-                    <p className="text-gray-400 mb-4 flex-wrap text-center">
-                      Unlimited access for one year, limit (5,00,000 requests)
-                    </p>
-                    <div className="text-4xl font-bold text-green-400 mb-2">
-                      ₹15,000
-                    </div>
+                  <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center justify-around">
+                    <div className="w-[100%] flex flex-col items-center justify-center">
+                      <h2 className="text-xl font-semibold text-white mb-2">
+                        Yearly API Plan
+                      </h2>
+                      <p className="text-gray-400 mb-4 flex-wrap text-center">
+                        Unlimited access for one year, limit (5,00,000 requests)
+                      </p>
+                      <div className="text-4xl font-bold text-green-400 mb-2">
+                        ₹15,000
+                      </div>
 
-                    <p className="text-gray-300 mb-6">
-                      Flat annual subscription
-                    </p>
+                      <p className="text-gray-300 mb-6">
+                        Flat annual subscription
+                      </p>
+                    </div>
 
                     <div className="w-full text-white rounded-md font-medium">
                       {/* <UserPayment_razorpay amount={15000} /> */}
                       <UserPayment_razorpay amount={15} />
                     </div>
-                    <div className="w-full  text-white rounded-md font-medium">
+                    {/* <div className="w-full  text-white rounded-md font-medium">
                       <button
                         className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
                         onClick={() => {
@@ -356,7 +377,7 @@ const ApiDetailFrameTemplate = () => {
                       >
                         demo pay
                       </button>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -396,17 +417,24 @@ const ApiDetailFrameTemplate = () => {
         </div>
 
         <div className="ApiButtonFrame h-[30vh] gap-2 w-full flex  flex-row items-center justify-center overflow-hidden">
-          {console.log("ApiCredentails", ApiCredentails)}
           {!ApiCredentails ? (
             <>
-              <button
-                onClick={() => {
-                  getApicredentails();
-                }}
-                className="h-[4vw] w-[28vw] px-5 bg-blue-600 mr-15 hover:bg-blue-700 rounded text-[1.5vw] text-white font-medium cursor-pointer"
-              >
-                get api key (per 500 free credits)
-              </button>
+              {isPageLoading ? (
+                <>
+                  <CircularLoading_1 />
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      getApicredentails();
+                    }}
+                    className="h-[4vw] w-[28vw] px-5 bg-blue-600 mr-15 hover:bg-blue-700 rounded text-[1.5vw] text-white font-medium cursor-pointer"
+                  >
+                    get api key (per 500 free credits)
+                  </button>
+                </>
+              )}
             </>
           ) : (
             <>
@@ -474,12 +502,13 @@ const ApiDetailFrameTemplate = () => {
       {/* subsciption frame */}
       {console.log("userDetailApi", userDetailApi)}
       {!apiParchased_ ? (
+        // {true ? (
         <>
           <div className="h-[90vh] w-full flex items-center justify-center top-0 right-0 z-200">
             <div className="h-[80vh] w-[100%] rounded-[1vw] overflow-hidden">
               <div className="grid mt-[1vw] grid-cols-1 md:grid-cols-3 gap-6 px-[4vw] py-[3vw] ">
                 {/* Left Card: Daily Plan */}
-                <div className="bg-gray-800 h-[60vh] rounded-xl shadow-lg p-6 flex flex-col items-center z-800">
+                <div className="bg-gray-800 h-[60vh] rounded-xl shadow-lg p-6 flex flex-col items-center z-200">
                   <h2 className="text-xl font-semibold text-white mb-2">
                     Daily API Plan
                   </h2>
@@ -493,12 +522,12 @@ const ApiDetailFrameTemplate = () => {
                   <div className="w-full  text-white rounded-md font-medium">
                     {/* <UserPayment_razorpay amount={20} /> */}
                     <UserPayment_razorpay
-                      amount={1}
+                      amount={20}
                       api={api}
                       type={"partialpayment"}
                     />
                   </div>
-                  <div className="w-full  text-white rounded-md font-medium">
+                  {/* <div className="w-full  text-white rounded-md font-medium">
                     <button
                       className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
                       onClick={() => {
@@ -507,11 +536,11 @@ const ApiDetailFrameTemplate = () => {
                     >
                       demo pay
                     </button>
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* montly plan */}
-                <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center z-800">
+                <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center z-200">
                   <h2 className="text-xl font-semibold text-white mb-2">
                     Monthly API Plan
                   </h2>
@@ -524,9 +553,13 @@ const ApiDetailFrameTemplate = () => {
                   </p>
                   <div className="w-full  text-white rounded-md font-medium">
                     {/* <UserPayment_razorpay amount={499} /> */}
-                    <UserPayment_razorpay amount={4} api={api} />
+                    <UserPayment_razorpay
+                      amount={499}
+                      api={api}
+                      type={"monthlypayment"}
+                    />
                   </div>
-                  <div className="w-full  text-white rounded-md font-medium">
+                  {/* <div className="w-full  text-white rounded-md font-medium">
                     <button
                       className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
                       onClick={() => {
@@ -535,11 +568,11 @@ const ApiDetailFrameTemplate = () => {
                     >
                       demo pay
                     </button>
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Right Card: Yearly Plan */}
-                <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center z-800">
+                <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center z-200">
                   <h2 className="text-xl font-semibold text-white mb-2">
                     Yearly API Plan
                   </h2>
@@ -554,9 +587,13 @@ const ApiDetailFrameTemplate = () => {
 
                   <div className="w-full text-white rounded-md font-medium">
                     {/* <UserPayment_razorpay amount={15000} /> */}
-                    <UserPayment_razorpay amount={15} />
+                    <UserPayment_razorpay
+                      amount={15000}
+                      api={api}
+                      type={"annualpayment"}
+                    />
                   </div>
-                  <div className="w-full  text-white rounded-md font-medium">
+                  {/* <div className="w-full  text-white rounded-md font-medium">
                     <button
                       className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
                       onClick={() => {
@@ -565,7 +602,7 @@ const ApiDetailFrameTemplate = () => {
                     >
                       demo pay
                     </button>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

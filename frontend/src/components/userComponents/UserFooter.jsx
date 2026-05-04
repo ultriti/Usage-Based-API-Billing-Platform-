@@ -14,9 +14,7 @@ const UserFooter = () => {
               Let’s Create Something Great Together
             </h2>
             <p className="mx-auto mt-6 max-w-2xl text-sm leading-6 text-white/60 md:text-base">
-              Consectetur adipiscing elit sed do eiusmod tempor incididunt ut
-              labore et dolore magna aliqua. Ut enim ad minim veniam quis
-              nostrud exercitation
+              Welcome to your personal API dashboard. Here you can view your active API keys, track request usage in real time, monitor billing, and manage your subscription plan. Stay on top of your API activity with clear analytics and secure access.
             </p>
             <button
               className="mt-10 inline-flex items-center justify-center rounded-full bg-[#57f0ea] px-10 py-4 text-sm font-extrabold uppercase tracking-[0.18em] text-[#061318] transition hover:scale-[1.02] hover:bg-[#6df6f1] cursor-pointer"
@@ -82,10 +80,9 @@ const UserFooter = () => {
                 Quick Links
               </h3>
               <ul className="mt-6 space-y-4 text-sm text-white/80">
-                <li>About</li>
-                <li>Projects</li>
-                <li>Contact</li>
-                <li>Services</li>
+                <li ><a href="/user/HomePage">Home</a></li>
+                <li><a href="/user/ProfilePage">Profile</a></li>
+                <li><a href="https://www.ultriticart.in/" target="blank_">Services</a></li>
               </ul>
             </div>
           </div>
@@ -97,9 +94,9 @@ const UserFooter = () => {
                   <span>Privacy Policy</span>
                   <span>Terms Of Use</span>
                   <span>
-                    Copyright © 2025 ultriti. Powered by{" "}
+                    Copyright © 2025 meterflow. Powered by{" "}
                     <span className="text-cyan-300">
-                      Gutenverse Blocks Addons.
+                      ULTRITI
                     </span>
                   </span>
                 </div>
