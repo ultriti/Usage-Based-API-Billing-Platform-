@@ -94,7 +94,7 @@ const UserFooter = () => {
                   <span>Privacy Policy</span>
                   <span>Terms Of Use</span>
                   <span>
-                    Copyright © 2025 meterflow. Powered by{" "}
+                    Copyright © 2026 meterflow. Powered by{" "}
                     <span className="text-cyan-300">
                       ULTRITI
                     </span>
