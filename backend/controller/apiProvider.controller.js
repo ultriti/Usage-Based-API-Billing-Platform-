@@ -43,7 +43,9 @@ function generateSecureCode(length) {
 module.exports.createApi = async (req, res) => {
   const provId = req.id;
 
-  const { baseUrl, name, categories, description } = req.body;
+  const { baseUrl, name, categories, description, subscriptionPlan, custom  } = req.body;
+
+  console.log("baseUrl, name, categories, description, subscriptionPlan, custom:\n",baseUrl,"\n", name, "\n",categories,"\n", description,"\n", subscriptionPlan,"\n", custom)
 
   if (!baseUrl || !name) {
     return res
@@ -72,13 +74,181 @@ module.exports.createApi = async (req, res) => {
 
     const createdApi = await apiModel.create({
       providerId: provId,
-      name: name,
-      baseUrl: baseUrl,
-      description: description,
-      categories: categories,
+      name,
+      baseUrl,
+      description,
+      categories,
       apiKeys: [],
       platformUrl: platformUrl + `?apiName=${name}`,
     });
+
+    // Decide plan type
+
+    if (subscriptionPlan === "basic") {
+      createdApi.subscriptionPlan = {
+        subscriptionType: "basic",
+        // billingModel: "request_based",
+        // platformCut: PLATFORM_CUT,
+        // providerCut: PROVIDER_CUT,
+        price: {
+          partialpayment: {
+            amount: 20,
+            requestLimit: 800,
+            timeLimit: Date.now(),
+          },
+          monthlypayment: {
+            amount: 99,
+            requestLimit: 2500,
+            timeLimit: Date.now(),
+          },
+          annualpayment: {
+            amount: 999,
+            requestLimit: 40000,
+            timeLimit: Date.now(),
+          },
+        },
+      };
+    }
+
+    if (subscriptionPlan === "pro") {
+      createdApi.subscriptionPlan = {
+        subscriptionType: "pro",
+        price: {
+          partialpayment: {
+            amount: 49,
+            requestLimit: 800,
+            timeLimit: Date.now(),
+          },
+          monthlypayment: {
+            amount: 499,
+            requestLimit: 12000,
+            timeLimit: Date.now(),
+          },
+          annualpayment: {
+            amount: 4999,
+            requestLimit: 150000,
+            timeLimit: Date.now(),
+          },
+        },
+      };
+    }
+
+    if (subscriptionPlan === "Model") {
+      createdApi.subscriptionPlan = {
+        subscriptionType: "Model",
+        // billingModel: "request_based",
+        // usageNote: "Strict token cap required",
+        // platformCut: PLATFORM_CUT,
+        // providerCut: PROVIDER_CUT,
+        // maxTokensPerRequest: 2000,
+        price: {
+          partialpayment: {
+            amount: 199,
+            requestLimit: 1500,
+            timeLimit: Date.now(),
+          },
+          monthlypayment: {
+            amount: 1999,
+            requestLimit: 15000,
+            timeLimit: Date.now(),
+          },
+          annualpayment: {
+            amount: 19999,
+            requestLimit: 180000,
+            timeLimit: Date.now(),
+          },
+        },
+      };
+    }
+
+    if (subscriptionPlan === "Heavy Model") {
+      createdApi.subscriptionPlan = {
+        subscriptionType: "Heavy Model",
+        price: {
+          partialpayment: {
+            amount: 499,
+            requestLimit: 250,
+            timeLimit: Date.now(),
+          },
+          monthlypayment: {
+            amount: 4999,
+            requestLimit: 4000,
+            timeLimit: Date.now(),
+          },
+          annualpayment: {
+            amount: 49999,
+            requestLimit: 60000,
+            timeLimit: Date.now(),
+          },
+        },
+      };
+    }
+
+    if (subscriptionPlan === "Ultra Heavy") {
+      createdApi.subscriptionPlan = {
+        subscriptionType: "Ultra Heavy",
+        price: {
+          partialpayment: {
+            amount: 999,
+            requestLimit: 15,
+            timeLimit: Date.now(),
+          },
+          monthlypayment: {
+            amount: 9999,
+            requestLimit: 400,
+            timeLimit: Date.now(),
+          },
+          annualpayment: {
+            amount: 99999,
+            requestLimit: 6000,
+            timeLimit: Date.now(),
+          },
+        },
+      };
+    }
+
+    if (subscriptionPlan === "custom") {
+      createdApi.subscriptionPlan = {
+        subscriptionType: "custom",
+        price: {
+          partialpayment: {
+            amount: Math.max(
+              custom.partialpayment?.amount ||
+                defaultPrice.partialpayment.amount,
+              50,
+            ), // enforce minimum
+            requestLimit:
+              custom.partialpayment?.requestLimit ||
+              defaultPrice.partialpayment.requestLimit,
+            timeLimit: Date.now(),
+          },
+          monthlypayment: {
+            amount: Math.max(
+              custom.monthlypayment?.amount ||
+                defaultPrice.monthlypayment.amount,
+              99,
+            ),
+            requestLimit:
+              custom.monthlypayment?.requestLimit ||
+              defaultPrice.monthlypayment.requestLimit,
+            timeLimit: Date.now(),
+          },
+          annualpayment: {
+            amount: Math.max(
+              custom.annualpayment?.amount || defaultPrice.annualpayment.amount,
+              999,
+            ),
+            requestLimit:
+              custom.annualpayment?.requestLimit ||
+              defaultPrice.annualpayment.requestLimit,
+            timeLimit: Date.now(),
+          },
+        },
+      };
+    }
+
+    console.log("subscriptionPlan:\n,subscriptionPlan")
+    await createdApi.save();
 
     // Generate codes
     const apiKeyCode = generateSecureCode(25);
@@ -665,7 +835,7 @@ module.exports.apiPartialPayment = async (req, res) => {
 
   const { apiId, amount, type } = req.body;
 
-  console.log("----------------\n start od the partial payment ")
+  console.log("----------------\n start od the partial payment ");
 
   if (!consumerId || !apiId) {
     return res.status(401).json({
@@ -680,15 +850,13 @@ module.exports.apiPartialPayment = async (req, res) => {
     const userDetail = await userModel.findById(consumerId);
     const userApi = userDetail.api.find((k) => k.apiId.equals(api._id));
 
-
-      console.log("----------------\n something ")
+    console.log("----------------\n something ");
     if (userApi.partialPayment) {
       return res
         .status(400)
         .json({ message: "payment alredy done ( 20)", success: false });
     }
 
-    
     // --------------- patial payment -----------
     if (type == "partialpayment") {
       api.billing.amount += amount;
@@ -699,7 +867,7 @@ module.exports.apiPartialPayment = async (req, res) => {
       userApi.partialPayment = true;
     }
     // ----------- monthly payment --------------
-     else if (type == "monthlypayment") {
+    else if (type == "monthlypayment") {
       api.billing.amount += amount;
       api.billing.totalAmount += amount;
       userApi.Subscription.subscriptionPurchased = true;
@@ -708,7 +876,7 @@ module.exports.apiPartialPayment = async (req, res) => {
       userApi.Subscription.maxRequests = 25000;
       userApi.partialPayment = true;
       userApi.usage = true;
-    } 
+    }
     // -------------- annul payment --------------------------
     else if (type == "annualpayment") {
       api.billing.amount += amount;
@@ -734,9 +902,8 @@ module.exports.apiPartialPayment = async (req, res) => {
     await api.save();
     await userDetail.save();
     await userApi.save();
-    
 
-    console.log('--------> enf of the paument!');
+    console.log("--------> enf of the paument!");
     return res
       .status(201)
       .json({ message: "payment done sucessfully", success: true });
@@ -897,7 +1064,6 @@ module.exports.getApi = async (req, res) => {
     const apiEntry = userDetail.api.find((api) => api.apiId == apiId);
 
     if (apiEntry) {
-
       const credentailKey = {
         key: apiEntry.keyCode,
         keyPassword: apiEntry.keyPassword,
@@ -912,7 +1078,6 @@ module.exports.getApi = async (req, res) => {
         credentailKey: credentailKey,
       });
     } else {
-
       // const credentailKey = {
       //     key: apiEntry.keyCode,
       //     keyPassword: apiEntry.keyPassword

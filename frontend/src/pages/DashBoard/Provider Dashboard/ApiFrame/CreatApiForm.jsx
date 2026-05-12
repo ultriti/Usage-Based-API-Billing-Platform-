@@ -1,12 +1,16 @@
 import React, { useState } from "react";
 import axios from "axios";
 import "./providerApiFrame.css";
+import { useNavigate } from "react-router-dom";
 
 const CreateApiForm = ({ toggleCreateApiFrameFun }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     providerId: "",
     baseUrl: "",
     name: "",
+    categories: "",
+    subscriptionPlan: "",
   });
 
   const handleChange = (e) => {
@@ -16,14 +20,20 @@ const CreateApiForm = ({ toggleCreateApiFrameFun }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/createApi`,
-        formData,
-        { withCredentials: true },
-      );
-      console.log("API Created:", res.data);
-      alert("API created successfully!");
-      toggleCreateApiFrameFun(false);
+      if (formData.subscriptionPlan === "custom") {
+        navigate("/provider/providerApi/custom", {
+          state: { formData },
+        });
+      } else {
+        const res = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/createApi`,
+          formData,
+          { withCredentials: true },
+        );
+        console.log("API Created:", res.data);
+        alert("API created successfully!");
+        toggleCreateApiFrameFun(false);
+      }
     } catch (err) {
       console.error(err);
       alert("Error creating API");
@@ -127,6 +137,25 @@ const CreateApiForm = ({ toggleCreateApiFrameFun }) => {
             <option value="support">Support</option>
             <option value="marketing">Marketing</option>
             <option value="operations">Operations</option>
+            <option value="LLM Model">LLM Model</option>
+          </select>
+        </div>
+        <div className="col-span-2 flex flex-col">
+          <label className="mb-1 text-sm font-medium">subscriptionPlan</label>
+          <select
+            name="subscriptionPlan"
+            value={formData.subscriptionPlan}
+            onChange={handleChange}
+            className="px-3 py-2 rounded-md bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            required
+          >
+            {/* <option value="">Select a subscriptionPlan!</option> */}
+            <option value="basic">basic</option>
+            <option value="pro">pro </option>
+            <option value="Model">LLM Models ( chat) </option>
+            <option value="Heavy Model">Heavy LLM Models (image gen ) </option>
+            <option value="Ultra Heavy">Ultra Heavy (video gen ) </option>
+            <option value="custom">custom </option>
           </select>
         </div>
 

@@ -8,6 +8,7 @@ import PageDecoration from "../../../components/providerComponents/PageDecoratio
 import UserPayment_razorpay from "../../../components/payment/UserPayment_razorpay";
 
 import CircularLoading_1 from "../../../components/CircularLoading_1";
+import ApiSubscriptionFrame from "./ApiSubscriptionFrame";
 
 const ApiDetailFrameTemplate = () => {
   const location = useLocation();
@@ -16,6 +17,7 @@ const ApiDetailFrameTemplate = () => {
   const [userDetailApi, setUserDetailApi] = useState(null);
   const [apiPurchase, setapiPurchase] = useState(false);
   const [apiParchased_, setapiParchased_] = useState(false);
+  const [apiDeatil, setapiDeatil] = useState(null);
 
   const serialized = localStorage.getItem("userDeatils");
   const userDeatils = serialized ? JSON.parse(serialized) : null;
@@ -26,7 +28,7 @@ const ApiDetailFrameTemplate = () => {
     // if(userDeatils.api.includes(api.id){
 
     // })
-    setisPageLoading(true)
+    setisPageLoading(true);
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL_RD}/api/apiGen/getApi/${api?.id}`,
@@ -36,32 +38,21 @@ const ApiDetailFrameTemplate = () => {
       if (res.status === 200) {
         setUserDetailApi(res.data?.userDetail);
 
-        // console.log(
-        //   "res.data.apiEntry.usage ",
-        //   res.data.apiEntry.Subscription.requests,
-        //   res.data.apiEntry.Subscription.maxRequests,
-        // );
-
         const isPurchnased_ =
           res.data.apiEntry.Subscription.requests ==
           res.data.apiEntry.Subscription.maxRequests;
 
-        // console.log(
-        //   res.data?.apiEntry?.usage % 100 === 99,
-        //   res.data?.apiEntry?.Subscription?.subscriptionPurchased == false,
-        //   res.data?.apiEntry?.partialPayment == false,
-        // );
-        setisPageLoading(false)
+        setisPageLoading(false);
 
         const apiList = res.data.userDetail.api;
 
         // Get the full API entry object that matches api.id
         const apiDetail = apiList.find((apiEntry) => apiEntry.apiId === api.id);
 
-        console.log("Matched API detail:", apiDetail.partialPayment);
+        console.log("Matched API detail:", res.data);
 
         setapiParchased_(apiDetail.partialPayment);
-        setisPageLoading(false)
+        setisPageLoading(false);
 
         if (res.data.apiEntry.usage > 498 || isPurchnased_) {
           const isPurchnased =
@@ -72,18 +63,19 @@ const ApiDetailFrameTemplate = () => {
         }
 
         setApiCredentails(res.data?.credentailKey);
-        setisPageLoading(false)
+        setapiDeatil(res?.data?.api);
+        setisPageLoading(false);
       } else {
         alert(res.data?.message || "Unexpected response");
-        setisPageLoading(false)
+        setisPageLoading(false);
       }
     } catch (error) {
       if (error.response) {
         alert(error.response.data.message || "Request failed");
-        setisPageLoading(false)
+        setisPageLoading(false);
       } else {
         console.log("error:", error.message);
-        setisPageLoading(false)
+        setisPageLoading(false);
         // alert(error.message);
       }
     }
@@ -276,109 +268,9 @@ const ApiDetailFrameTemplate = () => {
                   </button>
                 </div>
 
-                <div className="grid mt-[2vw] grid-cols-1 md:grid-cols-3 gap-6 px-[4vw]  bg-gray-600">
-                  {/* Left Card: Daily Plan */}
-                  <div className="bg-gray-800 h-[60vh] rounded-xl shadow-lg p-6 flex flex-col items-center justify-around">
-                    <div className="w-[100%] flex flex-col items-center justify-center">
-                      <h2 className="text-xl font-semibold text-white mb-2">
-                        Daily API Plan
-                      </h2>
-                      <p className="text-gray-400 mb-4">
-                        Buy credits for requests
-                      </p>
-                      <div className="text-4xl font-bold text-green-400 mb-2">
-                        ₹20
-                      </div>
-                      <p className="text-gray-300 mb-6">
-                        Per recharge • 500 requests
-                      </p>
-                    </div>
-                    <div className="w-full  text-white rounded-md font-medium">
-                      {/* <UserPayment_razorpay amount={20} /> */}
-                      <UserPayment_razorpay
-                        amount={1}
-                        api={api}
-                        type={"partialpayment"}
-                      />
-                    </div>
-                    {/* <div className="w-full  text-white rounded-md font-medium">
-                      <button
-                        className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
-                        onClick={() => {
-                          subcribeToApi(20, "partialpayment");
-                        }}
-                      >
-                        demo pay
-                      </button>
-                    </div> */}
-                  </div>
-
-                  {/* montly plan */}
-                  <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center justify-around">
-                    <div className="w-[100%] flex flex-col items-center justify-center">
-                      <h2 className="text-xl font-semibold text-white mb-2">
-                        Monthly API Plan
-                      </h2>
-                      <p className="text-gray-400 mb-4">
-                        Buy credits for requests
-                      </p>
-                      <div className="text-4xl font-bold text-green-400 mb-2">
-                        ₹499
-                      </div>
-                      <p className="text-gray-300 mb-6">
-                        Per recharge • 25,000 requests
-                      </p>
-                    </div>
-
-                    <div className="w-full  text-white rounded-md font-medium">
-                      {/* <UserPayment_razorpay amount={499} /> */}
-                      <UserPayment_razorpay amount={4} />
-                    </div>
-                    {/* <div className="w-full  text-white rounded-md font-medium">
-                      <button
-                        className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
-                        onClick={() => {
-                          subcribeToApi(499, "monthlypayment");
-                        }}
-                      >
-                        demo pay
-                      </button>
-                    </div> */}
-                  </div>
-
-                  {/* Right Card: Yearly Plan */}
-                  <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center justify-around">
-                    <div className="w-[100%] flex flex-col items-center justify-center">
-                      <h2 className="text-xl font-semibold text-white mb-2">
-                        Yearly API Plan
-                      </h2>
-                      <p className="text-gray-400 mb-4 flex-wrap text-center">
-                        Unlimited access for one year, limit (5,00,000 requests)
-                      </p>
-                      <div className="text-4xl font-bold text-green-400 mb-2">
-                        ₹15,000
-                      </div>
-
-                      <p className="text-gray-300 mb-6">
-                        Flat annual subscription
-                      </p>
-                    </div>
-
-                    <div className="w-full text-white rounded-md font-medium">
-                      {/* <UserPayment_razorpay amount={15000} /> */}
-                      <UserPayment_razorpay amount={15} />
-                    </div>
-                    {/* <div className="w-full  text-white rounded-md font-medium">
-                      <button
-                        className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
-                        onClick={() => {
-                          subcribeToApi(15000, "annualpayment");
-                        }}
-                      >
-                        demo pay
-                      </button>
-                    </div> */}
-                  </div>
+                <div className="h-[100vh] w-full">
+                  <ApiSubscriptionFrame apiDeatil={apiDeatil} api={api} />
+                  {/*  */}
                 </div>
               </div>
             </div>
@@ -501,116 +393,33 @@ const ApiDetailFrameTemplate = () => {
 
       {/* subsciption frame */}
       {console.log("userDetailApi", userDetailApi)}
+       {
+                  ApiCredentails ? <>
       {!apiParchased_ ? (
         // {true ? (
         <>
           <div className="h-[90vh] w-full flex items-center justify-center top-0 right-0 z-200">
             <div className="h-[80vh] w-[100%] rounded-[1vw] overflow-hidden">
-              <div className="grid mt-[1vw] grid-cols-1 md:grid-cols-3 gap-6 px-[4vw] py-[3vw] ">
-                {/* Left Card: Daily Plan */}
-                <div className="bg-gray-800 h-[60vh] rounded-xl shadow-lg p-6 flex flex-col items-center z-200">
-                  <h2 className="text-xl font-semibold text-white mb-2">
-                    Daily API Plan
-                  </h2>
-                  <p className="text-gray-400 mb-4">Buy credits for requests</p>
-                  <div className="text-4xl font-bold text-green-400 mb-2">
-                    ₹20
-                  </div>
-                  <p className="text-gray-300 mb-6">
-                    Per recharge • 500 requests
-                  </p>
-                  <div className="w-full  text-white rounded-md font-medium">
-                    {/* <UserPayment_razorpay amount={20} /> */}
-                    <UserPayment_razorpay
-                      amount={20}
-                      api={api}
-                      type={"partialpayment"}
-                    />
-                  </div>
-                  {/* <div className="w-full  text-white rounded-md font-medium">
-                    <button
-                      className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
-                      onClick={() => {
-                        subcribeToApi(20, "partialpayment");
-                      }}
-                    >
-                      demo pay
-                    </button>
-                  </div> */}
+              <div className="h-[80vh] w-full flex flex-col item-center justify-center px-[4vw]">
+
+                
+               
+                  <div className="h-[8vh] w-full flex item-center justify-center font-[700] text-[2vw] text-gray-300">
+                  <h1>{apiDeatil?.subscriptionPlan?.subscriptionType} ( Subscription Plan )</h1>
                 </div>
+                <ApiSubscriptionFrame apiDeatil={apiDeatil} api={api} />
+              
 
-                {/* montly plan */}
-                <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center z-200">
-                  <h2 className="text-xl font-semibold text-white mb-2">
-                    Monthly API Plan
-                  </h2>
-                  <p className="text-gray-400 mb-4">Buy credits for requests</p>
-                  <div className="text-4xl font-bold text-green-400 mb-2">
-                    ₹499
-                  </div>
-                  <p className="text-gray-300 mb-6">
-                    Per recharge • 25,000 requests
-                  </p>
-                  <div className="w-full  text-white rounded-md font-medium">
-                    {/* <UserPayment_razorpay amount={499} /> */}
-                    <UserPayment_razorpay
-                      amount={499}
-                      api={api}
-                      type={"monthlypayment"}
-                    />
-                  </div>
-                  {/* <div className="w-full  text-white rounded-md font-medium">
-                    <button
-                      className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
-                      onClick={() => {
-                        subcribeToApi(499, "monthlypayment");
-                      }}
-                    >
-                      demo pay
-                    </button>
-                  </div> */}
-                </div>
-
-                {/* Right Card: Yearly Plan */}
-                <div className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center z-200">
-                  <h2 className="text-xl font-semibold text-white mb-2">
-                    Yearly API Plan
-                  </h2>
-                  <p className="text-gray-400 mb-4 flex-wrap text-center">
-                    Unlimited access for one year, limit (5,00,000 requests)
-                  </p>
-                  <div className="text-4xl font-bold text-green-400 mb-2">
-                    ₹15,000
-                  </div>
-
-                  <p className="text-gray-300 mb-6">Flat annual subscription</p>
-
-                  <div className="w-full text-white rounded-md font-medium">
-                    {/* <UserPayment_razorpay amount={15000} /> */}
-                    <UserPayment_razorpay
-                      amount={15000}
-                      api={api}
-                      type={"annualpayment"}
-                    />
-                  </div>
-                  {/* <div className="w-full  text-white rounded-md font-medium">
-                    <button
-                      className="w-full mt-10 py-4 px-8 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium cursor-pointer"
-                      onClick={() => {
-                        subcribeToApi(15000, "annualpayment");
-                      }}
-                    >
-                      demo pay
-                    </button>
-                  </div> */}
-                </div>
               </div>
             </div>
           </div>
+           
+                
         </>
       ) : (
         <></>
       )}
+       </> : <></>}
 
       {/* user footer frame */}
       <div className="FooterFrame">

@@ -30,6 +30,58 @@ const apiSchema = new mongoose.Schema({
     default: "active",
   },
 
+  subscriptionPlan: {
+    subscriptionType: {
+      type: String,
+      enum: ["basic", "pro","Model","Heavy Model","Ultra Heavy","custom"],
+      default: "basic",
+    },
+    price: {
+      partialpayment: {
+        amount:{
+          type: Number,
+        default: 20,
+        },
+        requestLimit: {
+          type: Number,
+          default: 1000,
+        },
+        timeLimit: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+      monthlypayment: {
+        amount: {
+          type: Number,
+          default: 499,
+        },
+        requestLimit: {
+          type: Number,
+          default: 25000,
+        },
+        timeLimit: {  
+          type: Date,
+          default: Date.now,
+        },
+      },
+      annualpayment: {
+        amount: {
+          type: Number,
+          default: 12000,
+        },
+        requestLimit: {
+          type: Number,
+          default: 500000,
+        },
+        timeLimit: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    },
+  },
+
   // API Keys
   apiKeys: [
     {
@@ -88,6 +140,7 @@ const apiSchema = new mongoose.Schema({
     type: String,
     enum: [
       "development",
+      "LLM Model",
       "character",
       "design",
       "testing",

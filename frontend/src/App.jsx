@@ -9,6 +9,7 @@ import ProviderLogin from "./pages/AuthPages/ProviderAuth/ProviderLogin";
 
 import ProviderDashboard from "./pages/DashBoard/Provider Dashboard/ProviderDashboard";
 import ProviderApiFrame from "./pages/DashBoard/Provider Dashboard/ApiFrame/ProviderApiFrame";
+import CustomPricingForm from "./pages/DashBoard/Provider Dashboard/ApiFrame/CustomPricingForm";
 import PieChartExample from "./pages/DashBoard/Provider Dashboard/DemoProvderGraph";
 import AdminContext from "./context/AdminContext";
 import AdminProtectedWrapper from "./context/AdminProtectedWrapper";
@@ -56,6 +57,7 @@ const App = () => {
         <Route path="/provider/Dashboard" element={<><AdminProtectedWrapper><ProviderDashboard /></AdminProtectedWrapper></>}/>
         <Route path="/provider/billing" element={<BillingProviderFrame />} />
         <Route path="/provider/providerApi" element={<ProviderApiFrame />} />
+        <Route path="/provider/providerApi/custom" element={<CustomPricingForm />} />
         <Route path="/provider/transaction" element={<TransactionFrame />} />
 
         <Route path="/provider/Graph" element={<PieChartExample />} />
